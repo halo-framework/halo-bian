@@ -1,0 +1,130 @@
+{
+  "$id": "http://halo-framework.serverlessdjango.com/schemas/state.json#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Comment": {
+      "type": "string"
+    },
+    "StartAt": {
+      "type": "string"
+    },
+    "States": {
+      "type": "object",
+      "patternProperties": {
+        "^.{1,128}$": {
+          "type": "object",
+          "properties": {
+            "Type": {
+              "type": "string",
+              "pattern": "^Task$|^Fail$"
+            },
+            "Next": {
+              "type": "string"
+            },
+            "End": {
+              "enum": [
+                true
+              ]
+            },
+            "Comment": {
+              "type": "string"
+            },
+            "OutputPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "InputPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "Resource": {
+              "type": "string"
+            },
+            "ResultPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "Retry": {
+              "type": "array",
+              "items": {
+                "types": "object",
+                "properties": {
+                  "ErrorEquals": {
+                    "type": "array",
+                    "items": {
+                      "types": "string"
+                    }
+                  },
+                  "IntervalSeconds": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "MaxAttempts": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "BackoffRate": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "ErrorEquals"
+                ]
+              }
+            },
+            "Catch": {
+              "type": "array",
+              "items": {
+                "types": "object",
+                "properties": {
+                  "ErrorEquals": {
+                    "type": "array",
+                    "items": {
+                      "types": "string"
+                    }
+                  },
+                  "Next": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "ErrorEquals",
+                  "Next"
+                ]
+              }
+            },
+            "TimeoutSeconds": {
+              "type": "number",
+              "minimum": 1
+            },
+            "HeartbeatSeconds": {
+              "type": "number",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Version": {
+      "type": "string"
+    },
+    "TimeoutSeconds": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "StartAt",
+    "States"
+  ]
+}
