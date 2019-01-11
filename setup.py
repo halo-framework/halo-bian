@@ -10,14 +10,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='halolib',
-    version='0.14.8',
-    packages=['halolib', 'halolib.flask'],
-    url='https://github.com/yoramk2/halolib',
+    name='halo-bian',
+    version='0.10.3',
+    packages=['halo-bian'],
+    url='https://github.com/yoramk2/halo-bian',
     license='MIT License',
     author='yoramk2',
     author_email='yoramk2@yahoo.com',
-    description='this is the Halo framework library',
+    description='this is the Halo Bian library',
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[

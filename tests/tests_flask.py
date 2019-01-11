@@ -33,3 +33,31 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.t1.process_get(request, {})
             if ret.code == status.HTTP_200_OK:
                 return True
+
+    def test_post_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            ret = self.t1.process_post(request, {})
+            if ret.code == status.HTTP_200_OK:
+                return True
+
+    def test_patch_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            ret = self.t1.process_patch(request, {})
+            if ret.code == status.HTTP_200_OK:
+                return True
+
+    def test_put_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            ret = self.t1.process_put(request, {})
+            if ret.code == status.HTTP_200_OK:
+                return True
+
+    def test_delete_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            ret = self.t1.process_delete(request, {})
+            if ret.code == status.HTTP_200_OK:
+                return True
