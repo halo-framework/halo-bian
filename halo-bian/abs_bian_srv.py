@@ -135,6 +135,7 @@ class AbsBianMixin(AbsBaseMixin):
                     if response.bian_request.request.method == 'delete':
                         response.code = status.HTTP_200_OK
                     return response
+                raise ServiceOperationFailException(response.bian_request.service_operation)
         raise ServiceOperationFailException(response)
 
     def process_service_operation(self, action, request, vars):
