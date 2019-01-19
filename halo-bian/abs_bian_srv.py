@@ -2,6 +2,7 @@
 import json
 import logging
 
+from halolib.exceptions import ApiError
 from halolib.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halolib.flask.utilx import Util
 from halolib.settingsx import settingsx
@@ -47,9 +48,18 @@ class AbsBianMixin(AbsBaseMixin):
     def get_control_record(self):
         return self.control_record
 
+    def init_bq(self, bq_class_name):
+        import importlib
+        module = importlib.import_module("bian")
+        class_ = getattr(module, bq_class_name)
+        instance = class_()
+        instance.dict = settings.BEHAVIOR_QUALIFIER
+        return instance
+
     def get_behavior_qualifier(self, op, bq):
         bq_class = FunctionalPatterns.patterns[op][1]
-        bq_str = bq_class.get(bq)
+        bq_obj = self.init_bq(bq_class)
+        bq_str = bq_obj.get(bq)
         if bq_str:
             return bq_str
         raise IllegalBQException(bq)

@@ -381,24 +381,24 @@ class FunctionalPatterns:
     # Functional Pattern ==> Generic Artifact Type ==> Behavior Qualifier
     # pattern : [Generic Artifact,Behavior Qualifier Type]
     patterns = {
-        ADMINISTER: ['Administrative Plan', Routine()],
-        AGREETERMS: ['Agreement', Term],
-        ALLOCATE: ['Allocation', Assignment],
-        ANALYZE: ['Analysis', Algorithm],
-        ASSESS: ['Assessment', Test],
-        DESIGN: ['Specification', Aspect],
-        DEVELOP: ['Development Project', Deliverable],
-        DIRECT: ['Strategy', Goal],
-        MAINTAIN: ['Maintenance Agreement', Task],
-        MANAGE: ['Management Plan', Duty],
-        REGISTER: ['Directory Entry', Property],
-        TRACK: ['Log', Event],
-        MONITOR: ['Measurement', Signal],
-        OPERATE: ['Operating Session', Function],
-        FULFILL: ['Fulfillment Arrangement', Feature],
-        TRANSACT: ['Transaction', Step],
-        ENROLL: ['Membership', Clause],
-        PROCESS: ['Procedure', Workstep]
+        ADMINISTER: ['Administrative Plan', 'Routine'],
+        AGREETERMS: ['Agreement', 'Term'],
+        ALLOCATE: ['Allocation', 'Assignment'],
+        ANALYZE: ['Analysis', 'Algorithm'],
+        ASSESS: ['Assessment', 'Test'],
+        DESIGN: ['Specification', 'Aspect'],
+        DEVELOP: ['Development Project', 'Deliverable'],
+        DIRECT: ['Strategy', 'Goal'],
+        MAINTAIN: ['Maintenance Agreement', 'Task'],
+        MANAGE: ['Management Plan', 'Duty'],
+        REGISTER: ['Directory Entry', 'Property'],
+        TRACK: ['Log', 'Event'],
+        MONITOR: ['Measurement', 'Signal'],
+        OPERATE: ['Operating Session', 'Function'],
+        FULFILL: ['Fulfillment Arrangement', 'Feature'],
+        TRANSACT: ['Transaction', 'Step'],
+        ENROLL: ['Membership', 'Clause'],
+        PROCESS: ['Procedure', 'Workstep']
     }
 
     # service operations allowed for functional pattern
