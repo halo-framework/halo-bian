@@ -254,7 +254,10 @@ class AbsBianMixin(AbsBaseMixin):
     def do_retrieve(self, bian_request):
         logger.debug("in do_retrieve ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_retrieve_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_retrieve_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
         # 1. validate in params
         self.validate_req(bian_request)
         # 2. Code to access the BANK API  to retrieve data - url + vars dict

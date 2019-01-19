@@ -29,6 +29,10 @@ class ServiceOperationFailException(BianException):
 class IllegalBQException(BianException):
     pass
 
+
+class BianMethodNotImplementedException(BianException):
+    pass
+
 class BianRequest():
     service_operation = None
     behavior_qualifier = None
