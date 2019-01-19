@@ -80,9 +80,9 @@ class AbsBianMixin(AbsBaseMixin):
 
     # raise BianException()
 
-    def validate_req(self, bianRequest):
+    def validate_req(self, bian_request):
         logger.debug("in validate_req ")
-        if bianRequest:
+        if bian_request:
             return True
         raise BianException()
 
@@ -181,50 +181,80 @@ class AbsBianMixin(AbsBaseMixin):
             return self.process_ok(bian_response)
         raise IllegalServiceOperationException(bian_request.service_operation)
 
-    def do_initiate(self, bianRequest):
-        pass
+    def do_initiate(self, bian_request):
+        logger.debug("in do_initiate ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_initiate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_create(self, bianRequest):
-        pass
+    def do_create(self, bian_request):
+        logger.debug("in do_create ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_create_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_activate(self, bianRequest):
-        pass
+    def do_activate(self, bian_request):
+        logger.debug("in do_activate ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_activate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_configure(self, bianRequest):
-        pass
+    def do_configure(self, bian_request):
+        logger.debug("in do_configure ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_configure_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_update(self, bianRequest):
-        pass
+    def do_update(self, bian_request):
+        logger.debug("in do_update ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_update_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_register(self, bianRequest):
-        pass
+    def do_register(self, bian_request):
+        logger.debug("in do_register ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_register_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_record(self, bianRequest):
-        pass
+    def do_record(self, bian_request):
+        logger.debug("in do_record ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_record_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_execute(self, bianRequest):
-        pass
+    def do_execute(self, bian_request):
+        logger.debug("in do_execute ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_execute_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_evaluate(self, bianRequest):
-        pass
+    def do_evaluate(self, bian_request):
+        logger.debug("in do_evaluate ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_evaluate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_provide(self, bianRequest):
-        pass
+    def do_provide(self, bian_request):
+        logger.debug("in do_provide ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_provide_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_authorize(self, bianRequest):
-        pass
+    def do_authorize(self, bian_request):
+        logger.debug("in do_authorize ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_authorize_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_request(self, bianRequest):
-        pass
+    def do_request(self, bian_request):
+        logger.debug("in do_request ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_request_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_terminate(self, bianRequest):
-        pass
+    def do_terminate(self, bian_request):
+        logger.debug("in do_terminate ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_terminate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
-    def do_notify(self, bianRequest):
-        pass
+    def do_notify(self, bian_request):
+        logger.debug("in do_notify ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_notify_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
     def do_retrieve(self, bian_request):
         logger.debug("in do_retrieve ")
+        if bian_request.behavior_qualifier:
+            return getattr(self, 'do_retrieve_%s' % bian_request.behavior_qualifier.lower())(bian_request)
         # 1. validate in params
         self.validate_req(bian_request)
         # 2. Code to access the BANK API  to retrieve data - url + vars dict
@@ -232,7 +262,7 @@ class AbsBianMixin(AbsBaseMixin):
         # 3. array to store the headers required for the API Access
         back_headers = self.set_api_headers(bian_request.request)
         # 4. Sending the request to the BANK API with params
-        back_vars = self.set_api_vars(bian_request.behaviorQualifier, bian_request.referenceId)
+        back_vars = self.set_api_vars(bian_request.behavior_qualifier, bian_request.reference_id)
         back_response = self.execute_api(bian_request, back_api, back_vars, back_headers)
         # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = self.extract_json(back_response)

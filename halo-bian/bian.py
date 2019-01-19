@@ -31,14 +31,14 @@ class IllegalBQException(BianException):
 
 class BianRequest():
     service_operation = None
-    behaviorQualifier = None
-    referenceId = None
+    behavior_qualifier = None
+    reference_id = None
     request = None
 
-    def __init__(self, service_operation, behaviorQualifier, referenceId, request):
+    def __init__(self, service_operation, behavior_qualifier, reference_id, request):
         self.service_operation = service_operation
-        self.behaviorQualifier = behaviorQualifier
-        self.referenceId = referenceId
+        self.behavior_qualifier = behavior_qualifier
+        self.reference_id = reference_id
         self.request = request
 
 
