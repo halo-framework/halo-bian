@@ -26,6 +26,9 @@ class ServiceOperationFailException(BianException):
     pass
 
 
+class IllegalBQException(BianException):
+    pass
+
 class BianRequest():
     service_operation = None
     behaviorQualifier = None
@@ -78,10 +81,19 @@ class GenericArtifact:
 class BehaviorQualifier:
     __metaclass__ = ABCMeta
     BEHAVIOR_QUALIFIER_TYPE = None
+    dict = {}
+
+    def __init__(self, dict):
+        self.dict = dict
 
     def get_behavior_qualifier_type(self):
         return self.BEHAVIOR_QUALIFIER_TYPE
 
+    def get(self, key):
+        return self.dict.get(key)
+
+    def put(self, key, value):
+        self.dict.put(key, value)
 
 class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
     asset_type = None
@@ -369,24 +381,24 @@ class FunctionalPatterns:
     # Functional Pattern ==> Generic Artifact Type ==> Behavior Qualifier
     # pattern : [Generic Artifact,Behavior Qualifier Type]
     patterns = {
-        ADMINISTER: ['Administrative Plan', "Routines"],
-        AGREETERMS: ['Agreement', "Terms"],
-        ALLOCATE: ['Allocation', "Assignments"],
-        ANALYZE: ['Analysis', "Algorithms"],
-        ASSESS: ['Assessment', "Tests"],
-        DESIGN: ['Specification', "Aspects"],
-        DEVELOP: ['Development Project', "Deliverables"],
-        DIRECT: ['Strategy', "Goals"],
-        MAINTAIN: ['Maintenance Agreement', "Tasks"],
-        MANAGE: ['Management Plan', "Duties"],
-        REGISTER: ['Directory Entry', "Properties"],
-        TRACK: ['Log', "Events"],
-        MONITOR: ['Measurement', "Signals"],
-        OPERATE: ['Operating Session', "Functions"],
-        FULFILL: ['Fulfillment Arrangement', "Features"],
-        TRANSACT: ['Transaction', "Tasks/Steps"],
-        ENROLL: ['Membership', "Clauses"],
-        PROCESS: ['Procedure', "Worksteps"]
+        ADMINISTER: ['Administrative Plan', Routine()],
+        AGREETERMS: ['Agreement', Term],
+        ALLOCATE: ['Allocation', Assignment],
+        ANALYZE: ['Analysis', Algorithm],
+        ASSESS: ['Assessment', Test],
+        DESIGN: ['Specification', Aspect],
+        DEVELOP: ['Development Project', Deliverable],
+        DIRECT: ['Strategy', Goal],
+        MAINTAIN: ['Maintenance Agreement', Task],
+        MANAGE: ['Management Plan', Duty],
+        REGISTER: ['Directory Entry', Property],
+        TRACK: ['Log', Event],
+        MONITOR: ['Measurement', Signal],
+        OPERATE: ['Operating Session', Function],
+        FULFILL: ['Fulfillment Arrangement', Feature],
+        TRANSACT: ['Transaction', Step],
+        ENROLL: ['Membership', Clause],
+        PROCESS: ['Procedure', Workstep]
     }
 
     # service operations allowed for functional pattern

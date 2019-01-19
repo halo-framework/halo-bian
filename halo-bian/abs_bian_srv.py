@@ -47,6 +47,13 @@ class AbsBianMixin(AbsBaseMixin):
     def get_control_record(self):
         return self.control_record
 
+    def get_behavior_qualifier(self, op, bq):
+        bq_class = FunctionalPatterns.patterns[op][1]
+        bq_str = bq_class.get(bq)
+        if bq_str:
+            return bq_str
+        raise IllegalBQException(bq)
+
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         service_op = action.upper()
@@ -55,7 +62,7 @@ class AbsBianMixin(AbsBaseMixin):
         behavior_qualifier = None
         cr_reference_id = None
         if "behavior_qualifier" in vars:
-            behavior_qualifier = vars["behavior_qualifier"]
+            behavior_qualifier = self.get_behavior_qualifier(service_op, vars["behavior_qualifier"])
         if "cr_reference_id" in vars:
             cr_reference_id = vars["cr_reference_id"]
         return BianRequest(service_op, behavior_qualifier, cr_reference_id, request)
