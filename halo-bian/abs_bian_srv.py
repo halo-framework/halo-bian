@@ -52,12 +52,13 @@ class AbsBianMixin(AbsBaseMixin):
         import importlib
         module = importlib.import_module("bian")
         class_ = getattr(module, bq_class_name)
-        instance = class_()
-        instance.dict = settings.BEHAVIOR_QUALIFIER
+        instance = class_(settings.BEHAVIOR_QUALIFIER)
+        # instance.dict = settings.BEHAVIOR_QUALIFIER
         return instance
 
     def get_behavior_qualifier(self, op, bq):
-        bq_class = FunctionalPatterns.patterns[op][1]
+        bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
+        print(bq_class)
         bq_obj = self.init_bq(bq_class)
         bq_str = bq_obj.get(bq)
         if bq_str:

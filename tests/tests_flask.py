@@ -34,6 +34,21 @@ class TestUserDetailTestCase(unittest.TestCase):
             if ret.code == status.HTTP_200_OK:
                 return True
 
+    def test_get_request_with_ref_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            ret = self.t1.process_get(request, {"cr_reference_id": "123"})
+            if ret.code == status.HTTP_200_OK:
+                return True
+
+    def test_get_request_with_ref_bq_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "456"})
+            if ret.code == status.HTTP_200_OK:
+                return True
+
+
     def test_post_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
