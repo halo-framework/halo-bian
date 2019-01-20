@@ -99,6 +99,9 @@ class BehaviorQualifier:
     def put(self, key, value):
         self.dict[key] = value
 
+    def keys(self):
+        return self.dict.keys()
+
 class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
     asset_type = None
     generic_artifact = None

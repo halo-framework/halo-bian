@@ -58,11 +58,11 @@ class AbsBianMixin(AbsBaseMixin):
 
     def get_behavior_qualifier(self, op, bq):
         bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
-        print(bq_class)
         bq_obj = self.init_bq(bq_class)
-        bq_str = bq_obj.get(bq)
-        if bq_str:
-            return bq_str
+        if bq in bq_obj.keys():
+            bq_str = bq_obj.get(bq)
+            if bq_str:
+                return bq_str
         raise IllegalBQException(bq)
 
     def bian_validate_req(self, action, request, vars):
