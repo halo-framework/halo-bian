@@ -1,9 +1,8 @@
 #!/usr/bin/env python
+import logging
 
 from halolib.response import HaloResponse
 from halolib.settingsx import settingsx
-
-from exceptions import *
 
 # flask
 
