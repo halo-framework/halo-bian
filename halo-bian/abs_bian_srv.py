@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import json
-import logging
 
 from halolib.exceptions import ApiError
 from halolib.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halolib.flask.utilx import Util
-from halolib.settingsx import settingsx
 
 try:
     from halolib.flask.utilx import status
@@ -14,13 +12,13 @@ except:
         from halolib.util import status
     except:
         pass
-# flask
+
+from bian import *
+from exceptions import *
 
 settings = settingsx()
 
 logger = logging.getLogger(__name__)
-
-from bian import *
 
 
 class AbsBianMixin(AbsBaseMixin):

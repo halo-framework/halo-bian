@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import logging
 
-from halolib.exceptions import HaloException
 from halolib.response import HaloResponse
 from halolib.settingsx import settingsx
+
+from exceptions import *
 
 # flask
 
@@ -14,24 +14,6 @@ logger = logging.getLogger(__name__)
 from abc import ABCMeta
 
 
-class BianException(HaloException):
-    pass
-
-
-class IllegalServiceOperationException(BianException):
-    pass
-
-
-class ServiceOperationFailException(BianException):
-    pass
-
-
-class IllegalBQException(BianException):
-    pass
-
-
-class BianMethodNotImplementedException(BianException):
-    pass
 
 class BianRequest():
     service_operation = None
