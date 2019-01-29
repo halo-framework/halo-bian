@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+from abc import ABCMeta
 
 from halolib.response import HaloResponse
 from halolib.settingsx import settingsx
@@ -9,9 +10,6 @@ from halolib.settingsx import settingsx
 settings = settingsx()
 
 logger = logging.getLogger(__name__)
-
-from abc import ABCMeta
-
 
 
 class BianRequest():

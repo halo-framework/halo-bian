@@ -13,8 +13,8 @@ except:
     except:
         pass
 
-from bian import *
-from exceptions import *
+from bian.exceptions import *
+from bian.bian import *
 
 settings = settingsx()
 
@@ -48,7 +48,7 @@ class AbsBianMixin(AbsBaseMixin):
 
     def init_bq(self, bq_class_name):
         import importlib
-        module = importlib.import_module("bian")
+        module = importlib.import_module("bian.bian")
         class_ = getattr(module, bq_class_name)
         instance = class_(settings.BEHAVIOR_QUALIFIER)
         # instance.dict = settings.BEHAVIOR_QUALIFIER

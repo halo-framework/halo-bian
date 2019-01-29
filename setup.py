@@ -10,8 +10,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='halo-bian',
-    version='0.10.3',
+    name='halo_bian',
+    version='0.10.4',
     packages=['halo-bian'],
     url='https://github.com/yoramk2/halo-bian',
     license='MIT License',

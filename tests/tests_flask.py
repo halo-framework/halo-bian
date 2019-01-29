@@ -7,7 +7,7 @@ from flask_restful import Api
 fake = Faker()
 
 from halolib.flask.utilx import status
-from abs_bian_srv import AbsBianMixin
+from bian.abs_bian_srv import AbsBianMixin
 import unittest
 
 app = Flask(__name__)
@@ -31,33 +31,33 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_get(request, {})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
 
     def test_get_request_with_ref_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_get(request, {"cr_reference_id": "123"})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
 
     def test_get_request_with_ref_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             try:
                 ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "456"})
-                return False
+                assert False
             except Exception as e:
-                return type(e) == "bian.BianMethodNotImplementedException"
+                print(str(e) + " " + str(type(e).__name__))
+                assert type(e).__name__ == 'BianMethodNotImplementedException'
 
     def test_get_request_with_ref_bq_not_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             try:
                 ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "457"})
-                return False
+                assert False
             except Exception as e:
-                return type(e) == "bian.IllegalBQException"
+                print(str(e) + " " + str(type(e)))
+                assert type(e).__name__ == "IllegalBQException"
 
 
     def test_post_request_returns_a_given_string(self):
