@@ -13,8 +13,8 @@ except:
     except:
         pass
 
-from bian.exceptions import *
-from bian.bian import *
+from halo_bian.bian.exceptions import *
+from halo_bian.bian.bian import *
 
 settings = settingsx()
 
