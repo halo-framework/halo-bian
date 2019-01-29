@@ -13,7 +13,7 @@ setup(
     name='halo_bian',
     version='0.10.4',
     packages=['halo_bian'],
-    url='https://github.com/yoramk2/halo-bian',
+    url='https://github.com/yoramk2/halo_bian',
     license='MIT License',
     author='yoramk2',
     author_email='yoramk2@yahoo.com',
