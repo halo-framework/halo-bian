@@ -33,8 +33,14 @@ class AbsBianMixin(AbsBaseMixin):
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
-        self.service_domain = settings.SERVICE_DOMAIN
-        self.functional_pattern = settings.FUNCTIONAL_PATTERN
+        if settings.SERVICE_DOMAIN:
+            self.service_domain = settings.SERVICE_DOMAIN
+        else:
+            raise ServiceDomainNameException()
+        if settings.FUNCTIONAL_PATTERN:
+            self.functional_pattern = settings.FUNCTIONAL_PATTERN
+        else:
+            raise FunctionalPatternNameException()
         self.bian_service_info = BianServiceInfo(self.service_domain, self.functional_pattern,
                                                  self.get_control_record())
 
@@ -48,7 +54,7 @@ class AbsBianMixin(AbsBaseMixin):
 
     def init_bq(self, bq_class_name):
         import importlib
-        module = importlib.import_module("bian.bian")
+        module = importlib.import_module("halo_bian.bian.bian")
         class_ = getattr(module, bq_class_name)
         instance = class_(settings.BEHAVIOR_QUALIFIER)
         # instance.dict = settings.BEHAVIOR_QUALIFIER

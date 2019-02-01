@@ -21,3 +21,9 @@ class IllegalBQException(BianException):
 
 class BianMethodNotImplementedException(BianException):
     pass
+
+class ServiceDomainNameException(BianException):
+    pass
+
+class FunctionalPatternNameException(BianException):
+    pass
