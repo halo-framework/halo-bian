@@ -6,7 +6,7 @@ from flask_restful import Api
 
 fake = Faker()
 
-from halolib.flask.utilx import status
+from halo_flask.flask.utilx import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin
 import unittest
 

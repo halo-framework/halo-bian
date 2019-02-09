@@ -2,8 +2,8 @@
 import logging
 from abc import ABCMeta
 
-from halolib.response import HaloResponse
-from halolib.settingsx import settingsx
+from halo_flask.response import HaloResponse
+from halo_flask.settingsx import settingsx
 
 # flask
 

@@ -171,7 +171,6 @@ MEDIA_URL = ''
 # Examples: "http://foo.com/media/", "/media/".
 ADMIN_MEDIA_PREFIX = '/media/'
 
-ROOT_URLCONF = 'sdapiservice.urls'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -254,35 +253,35 @@ LOGGING = {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.views': {
+        'halo_flask.views': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.apis': {
+        'halo_flask.apis': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.events': {
+        'halo_flask.events': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.mixin': {
+        'halo_flask.mixin': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.models': {
+        'halo_flask.models': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.util': {
+        'halo_flask.util': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.ssm': {
+        'halo_flask.ssm': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
-        'halolib.saga': {
+        'halo_flask.saga': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
@@ -360,7 +359,7 @@ else:
 SSM_CONFIG = None
 print("get config from ssm")
 try:
-    from halolib.ssm import get_config, set_param_config
+    from halo_flask.ssm import get_config, set_param_config
 
     SSM_CONFIG = get_config(AWS_REGION)
 except Exception as e:
@@ -369,7 +368,7 @@ except Exception as e:
 SSM_APP_CONFIG = None
 print("get app config from ssm")
 try:
-    from halolib.ssm import get_app_config, set_app_param_config
+    from halo_flask.ssm import get_app_config, set_app_param_config
 
     SSM_APP_CONFIG = get_app_config(AWS_REGION)
 

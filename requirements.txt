@@ -11,4 +11,3 @@ boto3==1.7.16
 environs
 python-json-logger
 PyJWT==1.6.3
-halolib==0.14.10

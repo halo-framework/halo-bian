@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from halolib.exceptions import HaloException
+from halo_flask.exceptions import HaloException
 
 
 class BianException(HaloException):
