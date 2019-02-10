@@ -30,11 +30,13 @@ class AbsBianMixin(AbsBaseMixin):
         if settings.SERVICE_DOMAIN:
             self.service_domain = settings.SERVICE_DOMAIN
         else:
-            raise ServiceDomainNameException()
+            raise ServiceDomainNameException("missing Service Domain definition")
         if settings.FUNCTIONAL_PATTERN:
             self.functional_pattern = settings.FUNCTIONAL_PATTERN
         else:
-            raise FunctionalPatternNameException()
+            raise FunctionalPatternNameException("missing Functional Pattern definition")
+        if self.functional_pattern not in FunctionalPatterns.patterns.keys():
+            raise FunctionalPatternNameException("Functional Pattern name not in list")
         self.bian_service_info = BianServiceInfo(self.service_domain, self.functional_pattern,
                                                  self.get_control_record())
 
