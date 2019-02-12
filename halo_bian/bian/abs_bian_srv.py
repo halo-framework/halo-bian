@@ -24,6 +24,8 @@ class AbsBianMixin(AbsBaseMixin):
     control_record = None
     functional_pattern = None
     bian_service_info = None
+    bian_action = None
+    service_operations = ServiceOperations
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -39,6 +41,10 @@ class AbsBianMixin(AbsBaseMixin):
             raise FunctionalPatternNameException("Functional Pattern name not in list")
         self.bian_service_info = BianServiceInfo(self.service_domain, self.functional_pattern,
                                                  self.get_control_record())
+        self.set_action()
+
+    def set_action(self):
+        pass
 
     def set_control_record(self, control_record):
         self.control_record = control_record
@@ -290,27 +296,32 @@ class AbsBianMixin(AbsBaseMixin):
     def get_service_status(self):
         return self.service_status
 
+    def get_action(self,default):
+        if self.bian_action:
+            return self.bian_action
+        return default
+
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        action = "retrieve"
+        action = self.get_action("retrieve")
         return self.process_service_operation(action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        action = "create"
+        action = self.get_action("create")
         return self.process_service_operation(action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
-        action = "update"
+        action = self.get_action("update")
         return self.process_service_operation(action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
-        action = "update"
+        action = self.get_action("update")
         return self.process_service_operation(action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        action = "terminate"
+        action = self.get_action("terminate")
         return self.process_service_operation(action, request, vars)
