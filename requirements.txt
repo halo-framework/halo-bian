@@ -11,4 +11,4 @@ boto3==1.7.16
 environs
 python-json-logger
 PyJWT==1.6.3
-halo-flask==0.15.5
+halo-flask==0.15.6

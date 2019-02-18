@@ -92,30 +92,33 @@ class AbsBianMixin(AbsBaseMixin):
             return True
         raise BianException()
 
-    def set_back_api(self):
+    def set_back_api(self,bian_request):
         logger.debug("in set_back_api ")
         return None
 
     # raise BianException()
-    def set_api_headers(self, request):
+    def set_api_headers(self, bian_request):
         logger.debug("in set_api_headers ")
-        if request:
+        if bian_request:
             return []
         raise BianException()
 
-    def set_api_vars(self, bq, id):
-        logger.debug("in set_api_vars " + str(bq) + " " + str(id))
+    def set_api_vars(self, bian_request):
+        logger.debug("in set_api_vars " + str(bian_request))
         if True:
             ret = {}
-            ret["bq"] = bq
-            ret["id"] = id
+            ret["bq"] = bian_request.behavior_qualifier
+            ret["id"] = bian_request.reference_id
             return ret
         raise BianException()
 
-    def execute_api(self, bianRequest, back_api, back_vars, back_headers):
+    def set_api_auth(self, bian_request):
+        return None
+
+    def execute_api(self, bian_request, back_api, back_vars, back_headers,back_auth):
         logger.debug("in execute_api ")
         if back_api:
-            timeout = Util.get_timeout(bianRequest.request)
+            timeout = Util.get_timeout(bian_request.request)
             try:
                 ret = back_api.get(timeout)
                 return ret
@@ -267,12 +270,13 @@ class AbsBianMixin(AbsBaseMixin):
         # 1. validate in params
         self.validate_req(bian_request)
         # 2. Code to access the BANK API  to retrieve data - url + vars dict
-        back_api = self.set_back_api()
+        back_api = self.set_back_api(bian_request)
         # 3. array to store the headers required for the API Access
-        back_headers = self.set_api_headers(bian_request.request)
+        back_headers = self.set_api_headers(bian_request)
         # 4. Sending the request to the BANK API with params
-        back_vars = self.set_api_vars(bian_request.behavior_qualifier, bian_request.reference_id)
-        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers)
+        back_vars = self.set_api_vars(bian_request)
+        back_auth = self.set_api_auth(bian_request)
+        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers,back_auth)
         # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = self.extract_json(back_response)
         # 6. Build the payload target response structure which is IFX Compliant
