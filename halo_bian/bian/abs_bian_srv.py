@@ -96,7 +96,6 @@ class AbsBianMixin(AbsBaseMixin):
         logger.debug("in set_back_api ")
         return None
 
-    # raise BianException()
     def set_api_headers(self, bian_request):
         logger.debug("in set_api_headers ")
         if bian_request:
