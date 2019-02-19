@@ -228,11 +228,6 @@ LOGGING = {
         }
     },
     'loggers': {
-        'django.server': {
-            'handlers': ['django.server'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
         'sdapiservice.api.views': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
@@ -348,7 +343,7 @@ LOG_SAMPLE_RATE = 0.05  # 5%
 API_CONFIG = {}
 API_SETTINGS = ENV_NAME + '_api_settings.json'
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, '..', 'api', API_SETTINGS)
+file_path = os.path.join(file_dir, API_SETTINGS)
 if os.path.exists(file_path):
     with open(file_path, 'r') as fi:
         API_CONFIG = json.load(fi)

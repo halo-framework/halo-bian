@@ -126,14 +126,12 @@ class AbsBianMixin(AbsBaseMixin):
                 raise BianException(e)
         return None
 
-    # raise BianException()
     def extract_json(self, back_response):
         logger.debug("in extract_json ")
         if back_response:
             return json.loads(back_response.content)
         return json.loads("{}")
 
-    # raise BianException()
     def create_resp_payload(self, back_json):
         logger.debug("in create_resp_payload " + str(back_json))
         if back_json:

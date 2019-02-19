@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from halo_flask.exceptions import HaloException
-
+from abc import ABCMeta
 
 class BianException(HaloException):
     pass

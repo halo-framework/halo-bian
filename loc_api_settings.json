@@ -44,7 +44,7 @@
     "type": "service"
   },
   "Google": {
-    "url": "http://www.google.com",
-    "type": "service"
+    "url": "https://jsonplaceholder.typicode.com/todosx/$ID",
+    "type": "api"
   }
 }
