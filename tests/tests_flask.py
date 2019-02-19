@@ -83,9 +83,13 @@ class T2(AbsBianMixin):
     def create_resp_payload(self, back_json):
         print("in create_resp_payload " + str(back_json))
         if back_json:
-            return back_json
+            return self.map_from_json(back_json,{})
         return back_json
 
+    def map_from_json(self,back_json,payload):
+        print("in map_from_json")
+        payload['name'] = back_json["title"]
+        return payload
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -132,33 +136,29 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_post(request, {})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
 
     def test_patch_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_patch(request, {})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
 
     def test_put_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_put(request, {})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
 
     def test_delete_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_delete(request, {})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
 
     def test_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t2 = T2()
             ret = self.t2.process_get(request, {})
-            if ret.code == status.HTTP_200_OK:
-                return True
+            assert ret.code == status.HTTP_200_OK
+            assert ret.payload["name"] == 'delectus aut autem'
