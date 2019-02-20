@@ -68,7 +68,7 @@ class AbsBianMixin(AbsBaseMixin):
         if bq in bq_obj.keys():
             bq_str = bq_obj.get(bq)
             if bq_str:
-                return bq_str
+                return bq_str.strip().replace("-","_").replace(" ","_")
         raise IllegalBQException(bq)
 
     def bian_validate_req(self, action, request, vars):
