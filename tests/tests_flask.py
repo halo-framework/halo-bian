@@ -210,11 +210,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             try:
-                ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "457"})
+                ret = self.t1.process_get(request, {"cr_reference_id": "123", "bq_reference_id": "457"})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "IllegalBQException"
+                assert type(e).__name__ == "IllegalBQIdException"
 
 
     def test_post_request_returns_a_given_string(self):
@@ -244,13 +244,13 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t2 = T2()
-            ret = self.t2.process_get(request, {})
+            ret = self.t2.process_get(request, {"cr_reference_id":"1"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
 
     def test_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t3 = T3()
-            ret = self.t3.process_get(request, {"behavior_qualifier":"Deposit"})
+            ret = self.t3.process_get(request, {"behavior_qualifier":"deposit"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
