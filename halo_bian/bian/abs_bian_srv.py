@@ -59,30 +59,45 @@ class AbsBianMixin(AbsBaseMixin):
         module = importlib.import_module("halo_bian.bian.bian")
         class_ = getattr(module, bq_class_name)
         instance = class_(settings.BEHAVIOR_QUALIFIER)
-        # instance.dict = settings.BEHAVIOR_QUALIFIER
         return instance
 
     def get_behavior_qualifier(self, op, bq):
         bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
         bq_obj = self.init_bq(bq_class)
-        if bq in bq_obj.keys():
-            bq_str = bq_obj.get(bq)
-            if bq_str:
+        for bq_id in bq_obj.keys():
+            bq_str = bq_obj.get(bq_id)
+            if bq_str.lower() == bq.lower():
                 return bq_str.strip().replace("-","_").replace(" ","_")
         raise IllegalBQException(bq)
+
+    def get_behavior_qualifier_by_id(self, op, bq_id):
+        bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
+        bq_obj = self.init_bq(bq_class)
+        if bq_id in bq_obj.keys():
+            bq_str = bq_obj.get(bq_id)
+            if bq_str:
+                return bq_str.strip().replace("-","_").replace(" ","_")
+        raise IllegalBQIdException(bq_id)
 
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         service_op = action.upper()
         if service_op not in ServiceOperations.ops:
             raise IllegalServiceOperationException(action)
-        behavior_qualifier = None
         cr_reference_id = None
-        if "behavior_qualifier" in vars:
-            behavior_qualifier = self.get_behavior_qualifier(service_op, vars["behavior_qualifier"])
+        behavior_qualifier = None
+        bq_reference_id = None
+        collection_filter = None
         if "cr_reference_id" in vars:
             cr_reference_id = vars["cr_reference_id"]
-        return BianRequest(service_op, behavior_qualifier, cr_reference_id, request)
+        if "behavior_qualifier" in vars:
+            behavior_qualifier = self.get_behavior_qualifier(service_op, vars["behavior_qualifier"])
+        if "bq_reference_id" in vars:
+            bq_reference_id = vars["bq_reference_id"]
+            behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
+        if "collection-filter" in request.args:
+            collection_filter = request.args["collection-filter"]
+        return BianRequest(service_op, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
 
     # raise BianException()
 
@@ -107,7 +122,7 @@ class AbsBianMixin(AbsBaseMixin):
         if True:
             ret = {}
             ret["bq"] = bian_request.behavior_qualifier
-            ret["id"] = bian_request.reference_id
+            ret["id"] = bian_request.cr_reference_id
             return ret
         raise BianException()
 

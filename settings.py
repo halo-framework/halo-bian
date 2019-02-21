@@ -384,4 +384,4 @@ print('The base settings file has been loaded.')
 
 SERVICE_DOMAIN = "CurrentAccount"
 FUNCTIONAL_PATTERN = "Agree Terms"
-BEHAVIOR_QUALIFIER = {"456": "Tester","123":"deposit"}
+BEHAVIOR_QUALIFIER = {"456": "Tester","123":"Deposit"}

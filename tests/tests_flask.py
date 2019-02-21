@@ -53,7 +53,7 @@ class T2(AbsBianMixin):
             ret['name'] = name
         if bian_request:
             ret["bq"] = bian_request.behavior_qualifier
-            ret["id"] = bian_request.reference_id
+            ret["id"] = bian_request.cr_reference_id
         return ret
 
     def set_api_auth(self, bian_request):
@@ -125,7 +125,7 @@ class T3(AbsBianMixin):
             ret['name'] = name
         if bian_request:
             ret["bq"] = bian_request.behavior_qualifier
-            ret["id"] = bian_request.reference_id
+            ret["id"] = bian_request.cr_reference_id
         return ret
 
     def set_api_auth_deposit(self, bian_request):
@@ -190,11 +190,21 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             try:
-                ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "456"})
+                ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "Deposit"})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'BianMethodNotImplementedException'
+
+    def test_get_request_with_bad_bq_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.t1 = T1()
+            try:
+                ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "456"})
+                assert False
+            except Exception as e:
+                print(str(e) + " " + str(type(e).__name__))
+                assert type(e).__name__ == 'IllegalBQException'
 
     def test_get_request_with_ref_bq_not_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
@@ -241,6 +251,6 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t3 = T3()
-            ret = self.t3.process_get(request, {"behavior_qualifier":"123"})
+            ret = self.t3.process_get(request, {"behavior_qualifier":"Deposit"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'

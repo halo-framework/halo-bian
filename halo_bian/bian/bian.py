@@ -14,15 +14,19 @@ logger = logging.getLogger(__name__)
 
 class BianRequest():
     service_operation = None
-    behavior_qualifier = None
-    reference_id = None
     request = None
+    cr_reference_id = None
+    bq_reference_id = None
+    behavior_qualifier = None
+    collection_filter = None
 
-    def __init__(self, service_operation, behavior_qualifier, reference_id, request):
+    def __init__(self, service_operation, request, cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None):
         self.service_operation = service_operation
-        self.behavior_qualifier = behavior_qualifier
-        self.reference_id = reference_id
         self.request = request
+        self.cr_reference_id = cr_reference_id
+        self.behavior_qualifier = behavior_qualifier
+        self.bq_reference_id = bq_reference_id
+        self.collection_filter = collection_filter
 
 
 class BianResponse(HaloResponse):

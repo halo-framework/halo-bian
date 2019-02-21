@@ -18,6 +18,8 @@ class ServiceOperationFailException(BianException):
 class IllegalBQException(BianException):
     pass
 
+class IllegalBQIdException(BianException):
+    pass
 
 class BianMethodNotImplementedException(BianException):
     pass
