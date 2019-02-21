@@ -262,22 +262,23 @@ class AbsBianMixin(AbsBaseMixin):
         if bian_request.behavior_qualifier is None:
             raise IllegalBQException("missing behavior_qualifier value")
         try:
+            behavior_qualifier = bian_request.behavior_qualifier.lower()
             # 1. validate in params
-            getattr(self, 'validate_req_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            getattr(self, 'validate_req_%s' % behavior_qualifier)(bian_request)
             # 2. Code to access the BANK API  to retrieve data - url + vars dict
-            back_api = getattr(self, 'set_back_api_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request)
             # 3. array to store the headers required for the API Access
-            back_headers = getattr(self, 'set_api_headers_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request)
             # 4. Sending the request to the BANK API with params
-            back_vars = getattr(self, 'set_api_vars_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            back_auth = getattr(self, 'set_api_auth_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            back_response = getattr(self, 'execute_api_%s' % bian_request.behavior_qualifier.lower())(bian_request, back_api, back_vars, back_headers, back_auth)
+            back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
+            back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
+            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth)
             # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = getattr(self, 'extract_json_%s' % bian_request.behavior_qualifier.lower())(back_response)
+            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(back_response)
             # 6. Build the payload target response structure which is IFX Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % bian_request.behavior_qualifier.lower())(back_json)
+            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(back_json)
             logger.debug("payload=" + str(payload))
-            headers = getattr(self, 'set_resp_headers_%s' % bian_request.behavior_qualifier.lower())(bian_request.request.headers)
+            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request.request.headers)
             # 7. build json and add to bian response
             ret = BianResponse(bian_request, payload, headers)
             # return json response
