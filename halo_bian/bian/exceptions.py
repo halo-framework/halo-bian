@@ -29,3 +29,6 @@ class ServiceDomainNameException(BianException):
 
 class FunctionalPatternNameException(BianException):
     pass
+
+class BianApiException(BianException):
+    pass

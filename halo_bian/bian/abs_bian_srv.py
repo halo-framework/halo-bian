@@ -79,6 +79,12 @@ class AbsBianMixin(AbsBaseMixin):
                 return bq_str.strip().replace("-","_").replace(" ","_")
         raise IllegalBQIdException(bq_id)
 
+    def get_collection_filter(self, collection_filter):
+        ret = {}
+        if collection_filter is not None:
+            if ";" in collection_filter:
+                arr = collection_filter.split(";")
+
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         service_op = action.upper()
@@ -96,7 +102,7 @@ class AbsBianMixin(AbsBaseMixin):
             bq_reference_id = vars["bq_reference_id"]
             behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
         if "collection-filter" in request.args:
-            collection_filter = request.args["collection-filter"]
+            collection_filter = self.get_collection_filter(request.args["collection-filter"])
         return BianRequest(service_op, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
 
     # raise BianException()
