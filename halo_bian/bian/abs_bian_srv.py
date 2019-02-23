@@ -80,10 +80,15 @@ class AbsBianMixin(AbsBaseMixin):
         raise IllegalBQIdException(bq_id)
 
     def get_collection_filter(self, collection_filter):
-        ret = {}
+        ret = None
+        arr = []
         if collection_filter is not None:
             if ";" in collection_filter:
                 arr = collection_filter.split(";")
+            else:
+                arr.append(collection_filter)
+            ret = arr
+        return ret
 
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))

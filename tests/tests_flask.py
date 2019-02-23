@@ -254,3 +254,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.t3.process_get(request, {"behavior_qualifier":"deposit"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
+
+    def test_cf_request_returns_a_given_string(self):
+        with app.test_request_context('/?collection-filter=amount>100'):
+            self.t3 = T3()
+            ret = self.t3.process_get(request, {})
+            assert ret.bian_request.collection_filter[0] == "amount>100"
