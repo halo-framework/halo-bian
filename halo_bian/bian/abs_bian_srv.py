@@ -105,7 +105,7 @@ class AbsBianMixin(AbsBaseMixin):
             behavior_qualifier = self.get_behavior_qualifier(service_op, vars["behavior_qualifier"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
-            behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
+            #behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
         if "collection-filter" in request.args:
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
         return BianRequest(service_op, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
@@ -151,20 +151,20 @@ class AbsBianMixin(AbsBaseMixin):
                 raise BianException(e)
         return None
 
-    def extract_json(self, back_response):
+    def extract_json(self, bian_request, back_response):
         logger.debug("in extract_json ")
         if back_response:
             return json.loads(back_response.content)
         return json.loads("{}")
 
-    def create_resp_payload(self, back_json):
+    def create_resp_payload(self, bian_request, back_json):
         logger.debug("in create_resp_payload " + str(back_json))
         if back_json:
             return back_json
         return back_json
 
     # raise BianException()
-    def set_resp_headers(self, headers):
+    def set_resp_headers(self, bian_request, headers):
         logger.debug("in set_resp_headers " + str(headers))
         if headers:
             return []
@@ -300,11 +300,11 @@ class AbsBianMixin(AbsBaseMixin):
             back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
             back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth)
             # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(back_response)
+            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response)
             # 6. Build the payload target response structure which is IFX Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(back_json)
+            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(bian_request,back_json)
             logger.debug("payload=" + str(payload))
-            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request.request.headers)
+            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request,bian_request.request.headers)
             # 7. build json and add to bian response
             ret = BianResponse(bian_request, payload, headers)
             # return json response
@@ -331,11 +331,11 @@ class AbsBianMixin(AbsBaseMixin):
         back_auth = self.set_api_auth(bian_request)
         back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth)
         # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = self.extract_json(back_response)
+        back_json = self.extract_json(bian_request,back_response)
         # 6. Build the payload target response structure which is IFX Compliant
-        payload = self.create_resp_payload(back_json)
+        payload = self.create_resp_payload(bian_request,back_json)
         logger.debug("payload=" + str(payload))
-        headers = self.set_resp_headers(bian_request.request.headers)
+        headers = self.set_resp_headers(bian_request,bian_request.request.headers)
         # 7. build json and add to bian response
         ret = BianResponse(bian_request, payload, headers)
         # return json response

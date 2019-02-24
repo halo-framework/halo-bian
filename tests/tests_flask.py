@@ -74,13 +74,13 @@ class T2(AbsBianMixin):
                 raise BianException(e)
         return None
 
-    def extract_json(self, back_response):
+    def extract_json(self, bian_request,back_response):
         print("in extract_json: "+str(back_response.status_code))
         if back_response:
             return json.loads(back_response.content)
         return json.loads("{}")
 
-    def create_resp_payload(self, back_json):
+    def create_resp_payload(self, bian_request,back_json):
         print("in create_resp_payload " + str(back_json))
         if back_json:
             return self.map_from_json(back_json,{})
@@ -146,13 +146,13 @@ class T3(AbsBianMixin):
                 raise BianException(e)
         return None
 
-    def extract_json_deposit(self, back_response):
+    def extract_json_deposit(self, bian_request,back_response):
         print("in extract_json_deposit: "+str(back_response.status_code))
         if back_response:
             return json.loads(back_response.content)
         return json.loads("{}")
 
-    def create_resp_payload_deposit(self, back_json):
+    def create_resp_payload_deposit(self, bian_request,back_json):
         print("in create_resp_payload_deposit " + str(back_json))
         if back_json:
             return self.map_from_json_deposit(back_json,{})
@@ -163,8 +163,8 @@ class T3(AbsBianMixin):
         payload['name'] = back_json["title"]
         return payload
 
-    def set_resp_headers_deposit(self, headers):
-        return self.set_resp_headers(headers)
+    def set_resp_headers_deposit(self, bian_request,headers):
+        return self.set_resp_headers(bian_request,headers)
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -208,7 +208,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_get_request_with_ref_bq_not_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            self.t1 = T1()
+            self.t1 = T2()
             try:
                 ret = self.t1.process_get(request, {"cr_reference_id": "123", "bq_reference_id": "457"})
                 assert False
