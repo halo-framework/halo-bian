@@ -358,6 +358,8 @@ class AbsBianMixin(AbsBaseMixin):
             return self.bian_action
         return default
 
+    #this is the http part
+
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
         action = self.get_action("retrieve")
