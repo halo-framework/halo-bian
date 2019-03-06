@@ -7,10 +7,10 @@
 The **Halo Bian** library is based on the [**Halo**](https://github.com/yoramk2/halo_flask) library which is a python based library utilizing [**Serverless**](https://logz.io/blog/serverless-vs-containers/) technology and [**microservices architecture**](http://blog.binaris.com/your-guide-to-migrating-existing-microservices-to-serverless/) 
 
 
-BIAN (Banking Industry Architecture Network) is a membership group committed to developing open standards around banking and financial services.  A key deliverable of this group is the BIAN Service Landscape model which defines a comprehensive services architecture for financial transactions and facilities.  This library is an implementation of the BIAN model leveraging the Flask framework and allows a developer to rapidly create BIAN-compliant services while hiding much of the underlying BIAN model details.  See www.bian.org for more information on BIAN.
+BIAN (Banking Industry Architecture Network) is a membership group committed to developing open standards around banking and financial services.  A key deliverable of this group is the BIAN Service Landscape model which defines a comprehensive services architecture for financial transactions and facilities.  This library is an implementation of the BIAN model leveraging the Flask framework and allows a developer to **rapidly create BIAN-compliant services** while hiding much of the underlying BIAN model details.  See www.bian.org for more information on BIAN.
 
 This library leverages not only the Flask framework, but a number of the Flask Cloud Services components as well to facilitate building robust and resilient cloud-native BIAN microservices. 
-use Serverless or zappa to deploy your Service Domain to AWS.
+deploy your Service Domain to your local environment or use [**Serverless Framework**](https://serverless.com/) and [**zappa**](https://github.com/Miserlou/Zappa) to deploy your Service Domain to AWS.
 
 ## BIAN Basics
 
@@ -26,11 +26,23 @@ The **Control Record** is used to track the state of a service domain, and like 
 
 ### In Addition
 
--  The commercial behaviors that are called Functional Patterns:     ADMINISTER     AGREETERMS     ALLOCATE     ANALYZE     ASSESS     DESIGN     DEVELOP     DIRECT     MAINTAIN     MANAGE     REGISTER     TRACK     MONITOR     OPERATE     FULFILL     TRANSACT     ENROLL     PROCESS 
--  A Service Domain applies one of the 18 functional patterns to instances of one type of asset
--  Functional Patterns, Generic Artifacts and Behavior Qualifier Types are mapped and correlated
--  The standard set of ‘action terms’ that characterize the range of service operation calls :     INITIATE    CREATE     ACTIVATE     CONFIGURE     UPDATE     REGISTER     RECORD     EXECUTE     EVALUATE     PROVIDE     AUTHORIZE     REQUEST     TERMINATE     NOTIFY     RETRIEVE 
--  The Default Action Term By Functional Pattern matrix
+-  The commercial behaviors that are called Functional Patterns. Functional Patterns, Generic Artifacts and Behavior Qualifier Types are mapped and correlated:     
+![Flask BIAN Functional Patterns](docs/internal_sd.png)<p/>
+[**Image From Bian Manual**](https://bian.org)
+
+-  A Service Domain applies one of the 18 functional patterns to instances of one type of asset:
+![Flask BIAN Asset Types](docs/asset_types.png)<p/>
+[**Image From Bian Manual**](https://bian.org)
+
+-  The standard set of ‘action terms’ that characterize the range of service operation calls : 
+![Flask BIAN Action Items](docs/action_items.png)<p/>
+[**Image From Bian Manual**](https://bian.org)
+
+-  The Default Action Term By Functional Pattern matrix:
+
+![Flask BIAN Matrix](docs/matrix.png)<p/>
+[**Image From Bian Manual**](https://bian.org)
+
 
 ### BIAN Summary
 
@@ -48,7 +60,7 @@ So to summarize the above:
 
 The Flask BIAN library implements a BIAN service domain wrapper that acts as an API and data translator while hiding much of the BIAN model complexity from the developer.
 
-![Flask BIAN Service Domain](Halo-BIANServiceDomain.png)
+![Flask BIAN Service Domain](docs/Halo-BIANServiceDomain.png)
 
 <p/>Halo Bian provides the following features:
 
@@ -97,4 +109,9 @@ This project is licensed under the MIT License
 ## Acknowledgments
 
 * Pivotal-Field-Engineering - https://github.com/Pivotal-Field-Engineering/spring-bian
+
+* Bian api - https://github.com/bianapis
+
+* Bian - http://bian.org
+
 
