@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='halo_bian',
-    version='0.11.17',
+    version='0.11.18',
     packages=['halo_bian', 'halo_bian.bian','docs'],
     url='https://github.com/yoramk2/halo_bian',
     license='MIT License',
