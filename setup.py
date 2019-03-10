@@ -5,6 +5,7 @@ from setuptools import setup
 # python setup.py sdist --formats=zip
 # python setup.py sdist bdist_wheel
 # twine upload dist/halolib-0.13.8.tar.gz -r pypitest
+# twine upload dist/halolib-0.13.8.tar.gz -r pypi
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
