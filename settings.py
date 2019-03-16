@@ -256,6 +256,10 @@ LOGGING = {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']
         },
+        'halo_flask.circuitbreaker': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'console_debug_false', 'mail_admins']
+        },
         'halo_flask.events': {
             'level': 'DEBUG',
             'handlers': ['console', 'console_debug_false', 'mail_admins']

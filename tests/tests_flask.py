@@ -208,9 +208,9 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_get_request_with_ref_bq_not_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            self.t1 = T2()
+            self.t2 = T2()
             try:
-                ret = self.t1.process_get(request, {"cr_reference_id": "123", "bq_reference_id": "457"})
+                ret = self.t2.process_get(request, {"cr_reference_id": "123", "bq_reference_id": "457"})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
