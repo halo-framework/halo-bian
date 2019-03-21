@@ -213,6 +213,56 @@ class AbsBianMixin(AbsBaseMixin):
             return self.process_ok(bian_response)
         raise IllegalServiceOperationException(bian_request.service_operation)
 
+    def do_operation_bq(self,bian_request):
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        try:
+            behavior_qualifier = bian_request.behavior_qualifier.lower()
+            # 1. validate input params
+            getattr(self, 'validate_req_%s' % behavior_qualifier)(bian_request)
+            # 2. Code to access the BANK API  to retrieve data - url + vars dict
+            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request)
+            # 3. array to store the headers required for the API Access
+            back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request)
+            # 4. Sending the request to the BANK API with params
+            back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
+            back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
+            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth)
+            # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response)
+            # 6. Build the payload target response structure which is IFX Compliant
+            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(bian_request,back_json)
+            logger.debug("payload=" + str(payload))
+            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request,bian_request.request.headers)
+            # 7. build json and add to bian response
+            ret = BianResponse(bian_request, payload, headers)
+            # return json response
+            return ret
+        except AttributeError as ex:
+            raise BianMethodNotImplementedException(ex)
+
+    def do_operation(self,bian_request):
+        # 1. validate input params
+        self.validate_req(bian_request)
+        # 2. get api definition to access the BANK API  - url + vars dict
+        back_api = self.set_back_api(bian_request)
+        # 3. array to store the headers required for the API Access
+        back_headers = self.set_api_headers(bian_request)
+        # 4. Sending the request to the BANK API with params
+        back_vars = self.set_api_vars(bian_request)
+        back_auth = self.set_api_auth(bian_request)
+        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth)
+        # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+        back_json = self.extract_json(bian_request,back_response)
+        # 6. Build the payload target response structure which is IFX Compliant
+        payload = self.create_resp_payload(bian_request,back_json)
+        logger.debug("payload=" + str(payload))
+        headers = self.set_resp_headers(bian_request,bian_request.request.headers)
+        # 7. build json and add to bian response
+        ret = BianResponse(bian_request, payload, headers)
+        # return json response
+        return ret
+
     def do_initiate(self, bian_request):
         logger.debug("in do_initiate ")
         if bian_request.behavior_qualifier:
@@ -278,40 +328,26 @@ class AbsBianMixin(AbsBaseMixin):
         if bian_request.behavior_qualifier:
             return getattr(self, 'do_terminate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
 
+    def do_notify_bq(self, bian_request):
+        logger.debug("in do_notify_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
     def do_notify(self, bian_request):
         logger.debug("in do_notify ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_notify_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_notify_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
 
     def do_retrieve_bq(self, bian_request):
         logger.debug("in do_retrieve_bq ")
         if bian_request.behavior_qualifier is None:
             raise IllegalBQException("missing behavior_qualifier value")
-        try:
-            behavior_qualifier = bian_request.behavior_qualifier.lower()
-            # 1. validate in params
-            getattr(self, 'validate_req_%s' % behavior_qualifier)(bian_request)
-            # 2. Code to access the BANK API  to retrieve data - url + vars dict
-            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request)
-            # 3. array to store the headers required for the API Access
-            back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request)
-            # 4. Sending the request to the BANK API with params
-            back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
-            back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
-            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth)
-            # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response)
-            # 6. Build the payload target response structure which is IFX Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(bian_request,back_json)
-            logger.debug("payload=" + str(payload))
-            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request,bian_request.request.headers)
-            # 7. build json and add to bian response
-            ret = BianResponse(bian_request, payload, headers)
-            # return json response
-            return ret
-        except AttributeError as ex:
-            raise BianMethodNotImplementedException(ex)
-
+        return self.do_operation_bq(bian_request)
 
     def do_retrieve(self, bian_request):
         logger.debug("in do_retrieve ")
@@ -320,26 +356,9 @@ class AbsBianMixin(AbsBaseMixin):
                 return getattr(self, 'do_retrieve_%s' % bian_request.behavior_qualifier.lower())(bian_request)
             except AttributeError as ex:
                 raise BianMethodNotImplementedException(ex)
-        # 1. validate in params
-        self.validate_req(bian_request)
-        # 2. Code to access the BANK API  to retrieve data - url + vars dict
-        back_api = self.set_back_api(bian_request)
-        # 3. array to store the headers required for the API Access
-        back_headers = self.set_api_headers(bian_request)
-        # 4. Sending the request to the BANK API with params
-        back_vars = self.set_api_vars(bian_request)
-        back_auth = self.set_api_auth(bian_request)
-        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth)
-        # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = self.extract_json(bian_request,back_response)
-        # 6. Build the payload target response structure which is IFX Compliant
-        payload = self.create_resp_payload(bian_request,back_json)
-        logger.debug("payload=" + str(payload))
-        headers = self.set_resp_headers(bian_request,bian_request.request.headers)
-        # 7. build json and add to bian response
-        ret = BianResponse(bian_request, payload, headers)
-        # return json response
-        return ret
+        return self.do_operation(bian_request)
+
+    #get props
 
     def get_service_domain(self):
         return self.service_domain
@@ -362,25 +381,25 @@ class AbsBianMixin(AbsBaseMixin):
 
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        action = self.get_action("retrieve")
+        action = self.get_action(ServiceOperations.RETRIEVE)
         return self.process_service_operation(action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        action = self.get_action("create")
+        action = self.get_action(ServiceOperations.CREATE)
         return self.process_service_operation(action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
-        action = self.get_action("update")
+        action = self.get_action(ServiceOperations.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
-        action = self.get_action("update")
+        action = self.get_action(ServiceOperations.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        action = self.get_action("terminate")
+        action = self.get_action(ServiceOperations.TERMINATE)
         return self.process_service_operation(action, request, vars)
