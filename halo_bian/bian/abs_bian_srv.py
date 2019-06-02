@@ -263,70 +263,200 @@ class AbsBianMixin(AbsBaseMixin):
         # return json response
         return ret
 
+    def do_initiate_bq(self, bian_request):
+        logger.debug("in do_initiate_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
     def do_initiate(self, bian_request):
         logger.debug("in do_initiate ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_initiate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_initiate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_create_bq(self, bian_request):
+        logger.debug("in do_create_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_create(self, bian_request):
         logger.debug("in do_create ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_create_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_create_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_activate_bq(self, bian_request):
+        logger.debug("in do_activate_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_activate(self, bian_request):
         logger.debug("in do_activate ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_activate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_activate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_configure_bq(self, bian_request):
+        logger.debug("in do_configure_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_configure(self, bian_request):
         logger.debug("in do_configure ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_configure_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_configure_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_update_bq(self, bian_request):
+        logger.debug("in do_update_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_update(self, bian_request):
         logger.debug("in do_update ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_update_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_update_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_register_bq(self, bian_request):
+        logger.debug("in do_register_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_register(self, bian_request):
         logger.debug("in do_register ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_register_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_register_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_record_bq(self, bian_request):
+        logger.debug("in do_record_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_record(self, bian_request):
         logger.debug("in do_record ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_record_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_record_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_execute_bq(self, bian_request):
+        logger.debug("in do_execute_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_execute(self, bian_request):
         logger.debug("in do_execute ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_execute_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_execute_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_evaluate_bq(self, bian_request):
+        logger.debug("in do_evaluate_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_evaluate(self, bian_request):
         logger.debug("in do_evaluate ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_evaluate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_evaluate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_provide_bq(self, bian_request):
+        logger.debug("in do_provide_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_provide(self, bian_request):
         logger.debug("in do_provide ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_provide_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_provide_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_authorize_bq(self, bian_request):
+        logger.debug("in do_authorize_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_authorize(self, bian_request):
         logger.debug("in do_authorize ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_authorize_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_authorize_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_request_bq(self, bian_request):
+        logger.debug("in do_request_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_request(self, bian_request):
         logger.debug("in do_request ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_request_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_request_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
+
+    def do_terminate_bq(self, bian_request):
+        logger.debug("in do_terminate_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
 
     def do_terminate(self, bian_request):
         logger.debug("in do_terminate ")
         if bian_request.behavior_qualifier:
-            return getattr(self, 'do_terminate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            try:
+                return getattr(self, 'do_terminate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
+            except AttributeError as ex:
+                raise BianMethodNotImplementedException(ex)
+        return self.do_operation(bian_request)
 
     def do_notify_bq(self, bian_request):
         logger.debug("in do_notify_bq ")

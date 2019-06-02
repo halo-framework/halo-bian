@@ -220,8 +220,12 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_post_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
-            ret = self.t1.process_post(request, {})
-            assert ret.code == status.HTTP_200_OK
+            try:
+                ret = self.t1.process_post(request, {})
+                assert ret.code == status.HTTP_200_OK
+            except Exception as e:
+                print(str(e) + " " + str(type(e)))
+                assert type(e).__name__ == "IllegalServiceOperationException"
 
     def test_patch_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
