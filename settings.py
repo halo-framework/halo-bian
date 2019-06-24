@@ -3,8 +3,8 @@
 
 import json
 import os
-
 from environs import Env
+from halo_flask.const import LOC,DEV,TST,PRD
 
 print("start base")
 
@@ -25,23 +25,13 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 WEBPACK_MANIFEST_PATH = 'webpack/manifest.json'
 WTF_CSRF_CHECK_DEFAULT = False
 
-LOC = 'loc'
-DEV = 'dev'
-TST = 'tst'
-PRD = 'prd'
-ENV_TYPE = None
 
+ENV_NAME = LOC
 
-def get_env():
-    if 'HALO_STAGE' in os.environ:
-        return os.environ['HALO_STAGE']
-    return LOC
+ENV_TYPE = LOC
 
-
-ENV_NAME = get_env()
-
-os.environ.setdefault("DJANGO_CONFIGURATION", ENV_NAME)
 FUNC_NAME = 'sdapi'
+APP_NAME = 'sdapp'
 
 # @TODO load config data from env var if possible and if not from env file
 SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
@@ -344,6 +334,23 @@ LOG_SAMPLE_RATE = 0.05  # 5%
 
 ############################################################################################
 
+
+API_CONFIG = None
+API_SETTINGS = ENV_NAME + '_api_settings.json'
+
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir, API_SETTINGS)
+with open(file_path, 'r') as fi:
+    API_CONFIG = json.load(fi)
+    print("api_config:" + str(API_CONFIG))
+
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir, 'loc_settings.json')
+with open(file_path, 'r') as fi:
+    LOC_TABLE = json.load(fi)
+    print("loc_settings:" + str(LOC_TABLE))
+
+"""
 API_CONFIG = {}
 API_SETTINGS = ENV_NAME + '_api_settings.json'
 file_dir = os.path.dirname(__file__)
@@ -383,7 +390,7 @@ try:
     print(str(API_CONFIG))
 except Exception as e:
     print("error loading app ssm:" + str(e))
-
+"""
 print('The base settings file has been loaded.')
 
 SERVICE_DOMAIN = "CurrentAccount"
