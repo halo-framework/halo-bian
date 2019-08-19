@@ -5,8 +5,7 @@ from halo_flask.exceptions import ApiError
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.utilx import status
-from halo_flask import settingsx
-
+from halo_flask.logs import log_json
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
 
@@ -26,9 +25,36 @@ class AbsBianMixin(AbsBaseMixin):
     bian_service_info = None
     bian_action = None
     service_operations = ServiceOperations
+    behavior_qualifier = None
+
+    filter_chars = None
+    filter_sign = "sign"
+    filter_key = "key"
+    filter_val = "val"
+
+    def get_filter_char(self, item):
+        if self.filter_chars:
+            for c in self.filter_chars:
+                if c in item:
+                    return c
+            raise BianException("wrong comperator for query var collection-filter :"+item)
+        raise BianException("no comperator for query collection-filter defined")
+
+    def check_in_filter(self,bian_request, key):
+        if bian_request:
+            if bian_request.collection_filter:
+                for f in bian_request.collection_filter:
+                    if key in f:
+                        sign = self.get_filter_char(f)
+                        key = f.split(sign)[0].strip()
+                        val = f.split(sign)[1].strip()
+                        return {self.filter_sign:sign,self.filter_key:key,self.filter_val:val}
+        return None
+
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
+        logger.debug("in __init__ ")
         if settings.SERVICE_DOMAIN:
             self.service_domain = settings.SERVICE_DOMAIN
         else:
@@ -41,6 +67,8 @@ class AbsBianMixin(AbsBaseMixin):
             raise FunctionalPatternNameException("Functional Pattern name not in list")
         self.bian_service_info = BianServiceInfo(self.service_domain, self.functional_pattern,
                                                  self.get_control_record())
+        if settings.BEHAVIOR_QUALIFIER:
+            self.behavior_qualifier = self.get_bq_obj();
         self.set_action()
 
     def set_action(self):
@@ -61,9 +89,13 @@ class AbsBianMixin(AbsBaseMixin):
         instance = class_(settings.BEHAVIOR_QUALIFIER)
         return instance
 
-    def get_behavior_qualifier(self, op, bq):
+    def get_bq_obj(self):
         bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
         bq_obj = self.init_bq(bq_class)
+        return bq_obj
+
+    def get_behavior_qualifier(self, op, bq):
+        bq_obj = self.behavior_qualifier
         for bq_id in bq_obj.keys():
             bq_str = bq_obj.get(bq_id)
             if bq_str.lower() == bq.lower():
@@ -71,8 +103,7 @@ class AbsBianMixin(AbsBaseMixin):
         raise IllegalBQException(bq)
 
     def get_behavior_qualifier_by_id(self, op, bq_id):
-        bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
-        bq_obj = self.init_bq(bq_class)
+        bq_obj = self.behavior_qualifier
         if bq_id in bq_obj.keys():
             bq_str = bq_obj.get(bq_id)
             if bq_str:
@@ -184,12 +215,15 @@ class AbsBianMixin(AbsBaseMixin):
                         response.code = status.HTTP_202_ACCEPTED
                     if response.bian_request.request.method == 'delete':
                         response.code = status.HTTP_200_OK
+                    logger.info('process_service_operation : '+response.bian_request.request.method,
+                                extra=log_json(Util.get_req_context(response.bian_request.request),  {"return": "success"}))
                     return response
                 raise ServiceOperationFailException(response.bian_request.service_operation)
         raise ServiceOperationFailException(response)
 
     def process_service_operation(self, action, request, vars):
-        logger.debug("in process_service_operation " + str(vars))
+        #logger.debug("in process_service_operation " + str(vars))
+        logger.info('process_service_operation : ', extra=log_json(Util.get_req_context(request),vars,{"action":action}))
         bian_request = self.bian_validate_req(action, request, vars)
         functionName = {
             ServiceOperations.INITIATE: self.do_initiate,
