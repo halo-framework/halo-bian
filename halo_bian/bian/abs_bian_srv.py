@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import json
-
-from halo_flask.exceptions import ApiError
+import re
+from halo_flask.exceptions import ApiError,BadRequestError
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.utilx import status
@@ -24,33 +24,16 @@ class AbsBianMixin(AbsBaseMixin):
     functional_pattern = None
     bian_service_info = None
     bian_action = None
-    service_operations = ServiceOperations
+    service_operation = None
     behavior_qualifier = None
 
+    filter_key_values = None
     filter_chars = None
     filter_sign = "sign"
     filter_key = "key"
     filter_val = "val"
-
-    def get_filter_char(self, item):
-        if self.filter_chars:
-            for c in self.filter_chars:
-                if c in item:
-                    return c
-            raise BianException("wrong comperator for query var collection-filter :"+item)
-        raise BianException("no comperator for query collection-filter defined")
-
-    def check_in_filter(self,bian_request, key):
-        if bian_request:
-            if bian_request.collection_filter:
-                for f in bian_request.collection_filter:
-                    if key in f:
-                        sign = self.get_filter_char(f)
-                        key = f.split(sign)[0].strip()
-                        val = f.split(sign)[1].strip()
-                        return {self.filter_sign:sign,self.filter_key:key,self.filter_val:val}
-        return None
-
+    filter_separator = settings.FILTER_SEPARATOR
+    cr_reference_id_mask = settings.CR_REFERENCE_ID_MASK
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -68,17 +51,80 @@ class AbsBianMixin(AbsBaseMixin):
         self.bian_service_info = BianServiceInfo(self.service_domain, self.functional_pattern,
                                                  self.get_control_record())
         if settings.BEHAVIOR_QUALIFIER:
-            self.behavior_qualifier = self.get_bq_obj();
-        self.set_action()
+            self.behavior_qualifier = self.get_bq_obj()
 
-    def set_action(self):
-        pass
+    def get_filter_char(self,bian_request, item):
+        the_filter_chars = self.get_filter_chars(bian_request)
+        if len(the_filter_chars) == 0:
+            raise BadRequestError("no defined comperator for query collection-filter defined")
+        for c in the_filter_chars:
+            if c in item:
+                return c
+        raise BadRequestError("wrong comperator for query var collection-filter :"+item)
+
+    def validate_collection_filter(self, bian_request):
+        logger.debug("in validate_collection_filter ")
+        if bian_request:
+            if bian_request.collection_filter:
+                for f in bian_request.collection_filter:
+                    sign = self.get_filter_char(bian_request,f)
+                    key = f.split(sign)[0].strip()
+                    val = f.split(sign)[1].strip()
+                    the_filter_chars = self.get_filter_chars(bian_request)
+                    the_filter_key_values = self.get_filter_key_values(bian_request)
+                    if sign not in the_filter_chars:
+                        raise BadRequestError("filter sign for query var collection-filter is not allowed: " + sign)
+                    if key not in the_filter_key_values.keys():
+                        raise BadRequestError("filter key value for query var collection-filter is not allowed: " + key)
+                    if not val:
+                        raise BadRequestError("missing value for query var collection-filter")
+        return True
+
+    def break_filter(self,bian_request,f):
+        if f:
+            sign = self.get_filter_char(bian_request,f)
+            key = f.split(sign)[0].strip()
+            val = f.split(sign)[1].strip()
+            return {self.filter_sign: sign, self.filter_key: key, self.filter_val: val}
+        return None
+
+    def check_in_filter(self,bian_request, filter_key):
+        if bian_request:
+            if bian_request.collection_filter:
+                for f in bian_request.collection_filter:
+                    if filter_key in f:
+                        bf = self.break_filter(bian_request,f)
+                        if bf != None and bf.key == filter_key:
+                            return {self.filter_sign:bf.sign,self.filter_key:bf.key,self.filter_val:bf.val}
+        return None
+
+    def validate_cr_reference_id(self, bian_request):
+        logger.debug("in validate_validate_cr_reference_id ")
+        if bian_request:
+            if bian_request.cr_reference_id and self.cr_reference_id_mask:
+                if re.match(self.cr_reference_id_mask,bian_request.cr_reference_id):
+                    return
+                raise BadRequestError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
+
+    def validate_filter_key_values(self):
+        if self.filter_key_values:
+            for bq in self.filter_key_values.keys():
+                if bq is not None and bq not in self.behavior_qualifier.keys():
+                    raise SystemBQIdException("bq in filter_key_values is not valid:"+bq)
+
+    def validate_filter_chars(self):
+        if self.filter_chars:
+            for bq in self.filter_chars.keys():
+                if bq is not None and bq not in self.behavior_qualifier.keys():
+                    raise SystemBQIdException("bq in filter_chars is not valid:"+bq)
+
+    def set_bian_action(self,action):
+        self.bian_action = action
 
     def set_control_record(self, control_record):
         self.control_record = control_record
         self.bian_service_info = BianServiceInfo(self.get_service_domain(), self.get_functional_pattern(),
                                                  self.get_control_record())
-
     def get_control_record(self):
         return self.control_record
 
@@ -114,12 +160,30 @@ class AbsBianMixin(AbsBaseMixin):
         ret = None
         arr = []
         if collection_filter is not None:
-            if ";" in collection_filter:
-                arr = collection_filter.split(";")
+            if self.filter_separator in collection_filter:
+                arr = collection_filter.split(self.filter_separator)
             else:
                 arr.append(collection_filter)
             ret = arr
         return ret
+
+    def get_filter_key_values(self, bian_request):
+        if bian_request:
+            if bian_request.behavior_qualifier:
+                if bian_request.behavior_qualifier in self.filter_key_values.keys():
+                    return self.filter_key_values[bian_request.behavior_qualifier]
+            if None in self.filter_key_values.keys():
+                return self.filter_key_values[None]
+        return {}
+
+    def get_filter_chars(self, bian_request):
+        if bian_request:
+            if bian_request.behavior_qualifier:
+                if bian_request.behavior_qualifier in self.filter_chars.keys():
+                    return self.filter_chars[bian_request.behavior_qualifier]
+            if None in self.filter_chars.keys():
+                return self.filter_chars[None]
+        return []
 
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
@@ -134,20 +198,23 @@ class AbsBianMixin(AbsBaseMixin):
             cr_reference_id = vars["cr_reference_id"]
         if "behavior_qualifier" in vars:
             behavior_qualifier = self.get_behavior_qualifier(service_op, vars["behavior_qualifier"])
+            # behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
-            #behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
         if "collection-filter" in request.args:
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
         return BianRequest(service_op, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
 
-    # raise BianException()
-
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
         if bian_request:
+            self.validate_cr_reference_id(bian_request)
+            #self.validate_bq_reference_id(bian_request)
+            self.validate_filter_key_values()
+            self.validate_filter_chars()
+            self.validate_collection_filter(bian_request)
             return True
-        raise BianException()
+        raise BianException("no Bian Request")
 
     def set_back_api(self,bian_request):
         logger.debug("in set_back_api ")
@@ -171,7 +238,10 @@ class AbsBianMixin(AbsBaseMixin):
     def set_api_auth(self, bian_request):
         return None
 
-    def execute_api(self, bian_request, back_api, back_vars, back_headers,back_auth):
+    def set_api_data(self, bian_request):
+        return bian_request.request.data
+
+    def execute_api(self,bian_request, back_api, back_vars, back_headers,back_auth,back_data=None):
         logger.debug("in execute_api ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -261,7 +331,11 @@ class AbsBianMixin(AbsBaseMixin):
             # 4. Sending the request to the BANK API with params
             back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
             back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
-            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth)
+            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+                back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(bian_request)
+            else:
+                back_data = None
+            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
             # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
             back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response)
             # 6. Build the payload target response structure which is IFX Compliant
@@ -285,7 +359,11 @@ class AbsBianMixin(AbsBaseMixin):
         # 4. Sending the request to the BANK API with params
         back_vars = self.set_api_vars(bian_request)
         back_auth = self.set_api_auth(bian_request)
-        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth)
+        if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+            back_data = self.set_api_data(bian_request)
+        else:
+            back_data = None
+        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
         # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = self.extract_json(bian_request,back_response)
         # 6. Build the payload target response structure which is IFX Compliant
@@ -536,7 +614,7 @@ class AbsBianMixin(AbsBaseMixin):
     def get_service_status(self):
         return self.service_status
 
-    def get_action(self,default):
+    def get_bian_action(self,default):
         if self.bian_action:
             return self.bian_action
         return default
@@ -545,25 +623,25 @@ class AbsBianMixin(AbsBaseMixin):
 
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        action = self.get_action(ServiceOperations.RETRIEVE)
+        action = self.get_bian_action(ServiceOperations.RETRIEVE)
         return self.process_service_operation(action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        action = self.get_action(ServiceOperations.CREATE)
+        action = self.get_bian_action(ServiceOperations.CREATE)
         return self.process_service_operation(action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
-        action = self.get_action(ServiceOperations.UPDATE)
+        action = self.get_bian_action(ServiceOperations.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
-        action = self.get_action(ServiceOperations.UPDATE)
+        action = self.get_bian_action(ServiceOperations.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        action = self.get_action(ServiceOperations.TERMINATE)
+        action = self.get_bian_action(ServiceOperations.TERMINATE)
         return self.process_service_operation(action, request, vars)
