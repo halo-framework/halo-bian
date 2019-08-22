@@ -62,7 +62,7 @@ class T2(AbsBianMixin):
         pswd = ''
         return HTTPBasicAuth(user,pswd)
 
-    def execute_api(self, bian_request, back_api, back_vars, back_headers,back_auth):
+    def execute_api(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data):
         print("in execute_api ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -134,7 +134,7 @@ class T3(AbsBianMixin):
         pswd = ''
         return HTTPBasicAuth(user,pswd)
 
-    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth):
+    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data):
         print("in execute_api_deposit ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
