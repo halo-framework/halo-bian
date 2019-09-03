@@ -451,3 +451,45 @@ class FunctionalPatterns:
                   ServiceOperations.RECORD, ServiceOperations.REQUEST, ServiceOperations.EXECUTE,
                   ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
     }
+
+
+#Define Business Events for the Service Domains – four established BIAN categories are used to classify the business events:
+#a. Origination – results in a new control record instance
+#b. Invocation – acts on an active control record instance
+#c. Reporting – provides information about one or more active instances
+#d. Delegation – results in service calls to other Service Domains
+
+class BusinessEventCategory:
+    Origination = "Origination"
+    Invocation = "Invocation"
+    Reporting = "Reporting"
+    Delegation = "Delegation"
+
+class BusinessEvent:
+    __metaclass__ = ABCMeta
+
+    EVENT_NAME = None
+    EVENT_CATEGORY = None
+    dict = {}
+
+    def __init__(self,event_name,event_category, dict):
+        self.EVENT_NAME = event_name
+        self.EVENT_CATEGORY = event_category
+        self.dict = dict #target service domain/service operation
+
+    def get_business_event_name(self):
+        return self.EVENT_NAME
+
+    def get_business_category(self):
+        return self.EVENT_CATEGORY
+
+    def get(self, key):
+        return self.dict[key]
+
+    def put(self, key, value):
+        self.dict[key] = value
+
+    def keys(self):
+        return self.dict.keys()
+
+#Capture service operation connections – The service operation connections are codified and captured in the BIAN Workbench tooling environment for each business event

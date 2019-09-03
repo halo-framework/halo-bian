@@ -92,6 +92,9 @@ class T2(AbsBianMixin):
         return payload
 
 class T3(AbsBianMixin):
+    filter_separator = ";"
+    filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount'}}
+    filter_chars = {None: ['=','>']}
 
     def do_retrieve_deposit(self, bian_request):
         print("in do_retrieve_deposit ")

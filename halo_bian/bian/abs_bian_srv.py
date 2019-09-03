@@ -26,6 +26,7 @@ class AbsBianMixin(AbsBaseMixin):
     bian_action = None
     service_operation = None
     behavior_qualifier = None
+    business_event = None
 
     filter_key_values = None
     filter_chars = None
@@ -160,7 +161,7 @@ class AbsBianMixin(AbsBaseMixin):
         ret = None
         arr = []
         if collection_filter is not None:
-            if self.filter_separator in collection_filter:
+            if self.filter_separator and self.filter_separator in collection_filter:
                 arr = collection_filter.split(self.filter_separator)
             else:
                 arr.append(collection_filter)
@@ -181,7 +182,7 @@ class AbsBianMixin(AbsBaseMixin):
             if bian_request.behavior_qualifier:
                 if bian_request.behavior_qualifier in self.filter_chars.keys():
                     return self.filter_chars[bian_request.behavior_qualifier]
-            if None in self.filter_chars.keys():
+            if self.filter_chars and None in self.filter_chars.keys():
                 return self.filter_chars[None]
         return []
 

@@ -21,6 +21,9 @@ class IllegalBQException(BianException):
 class IllegalBQIdException(BianException):
     pass
 
+class SystemBQIdException(BianException):
+    pass
+
 class BianMethodNotImplementedException(BianException):
     pass
 
