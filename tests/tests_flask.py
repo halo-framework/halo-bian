@@ -11,7 +11,7 @@ from halo_bian.bian.abs_bian_srv import AbsBianMixin
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.utilx import Util
-from halo_bian.bian.bian import BusinessEvent,BusinessEventCategory
+from halo_bian.bian.bian import BusinessEvent,BianCategory,ActionTerms
 
 import unittest
 
@@ -100,10 +100,10 @@ class Api(AbsBaseApi):
     name = "Google"
 
 class T3(AbsBianMixin):
-    filter_separator = ";"
-    filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount'}}
+    filter_separator = "#"
+    filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount','user':'user','page_no':'page_no','count':'count'}}
     filter_chars = {None: ['=','>']}
-    #business_event = MyBusinessEvent("test event",BusinessEventCategory.Delegation, {1:Api()})
+    business_event = MyBusinessEvent("test event",BianCategory.DELEGATION, {1:Api})
 
     def do_retrieve_deposit(self, bian_request):
         print("in do_retrieve_deposit ")
@@ -216,7 +216,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQException'
 
-    def test_get_request_with_ref_bq_not_returns_a_given_string(self):
+    def test_get_request_with_ref_bq_not_returns_a_given_string_remote(self):
         with app.test_request_context('/?name=Peter'):
             self.t2 = T2()
             try:
@@ -269,8 +269,36 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
 
+    def test_bq_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=1'):
+            self.t3 = T3()
+            self.t3.filter_separator = ";"
+            ret = self.t3.process_get(request, {"behavior_qualifier":"deposit"})
+            assert ret.code == status.HTTP_200_OK
+            assert ret.payload["name"] == 'delectus aut autem'
+
     def test_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
             ret = self.t3.process_get(request, {})
             assert ret.bian_request.collection_filter[0] == "amount>100"
+
+    def test_cf_request_returns_a_given_list(self):
+        with app.test_request_context('/?collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
+            self.t3 = T3()
+            self.t3.filter_separator = ";"
+            ret = self.t3.process_get(request, {})
+            assert ret.bian_request.collection_filter[0] == "amount>100"
+            assert ret.bian_request.collection_filter[1] == "user = 100"
+            assert ret.bian_request.collection_filter[2] == "page_no = 2"
+            assert ret.bian_request.collection_filter[3] == "count=20"
+
+    def test_action_request_returns_a_given_error(self):
+        with app.test_request_context('/?collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
+            self.t3 = T3()
+            self.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.t3.process_get(request, {})
+                assert ret.bian_request.collection_filter[0] != "amount>100"
+            except Exception as e:
+                assert type(e).__name__ == "BadRequestError"

@@ -87,15 +87,41 @@ class BehaviorQualifier:
     def keys(self):
         return self.dict.keys()
 
+#Define Business Events for the Service Domains – four established BIAN categories are used to classify the business events:
+#a. Origination – results in a new control record instance
+#b. Invocation – acts on an active control record instance
+#c. Reporting – provides information about one or more active instances
+#d. Delegation – results in service calls to other Service Domains
+
+class BianCategory:
+    ORIGINATION = "Origination"
+    INVOCATION = "Invocation"
+    REPORTING = "Reporting"
+    DELEGATION = "Delegation"
+
+class LifeCycleState:
+    __metaclass__ = ABCMeta
+    #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
+    Unassigned = "Unassigned"
+    Assigned_strategy_pending = "Assigned-strategy-pending"
+    Strategy_in_force = "Strategy-in-force"
+    Strateg_under_review = "Strategy-under-review"
+    Strategy_suspended = "Strategy-suspended"
+    Strategy_concluded = "Strategy-concluded"
+
+
 class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
+    __metaclass__ = ABCMeta
     asset_type = None
     generic_artifact = None
     behavior_qualifier = None
+    life_cycle_state = None
 
-    def __init__(self, asset_type, generic_artifact, behavior_qualifier):
+    def __init__(self, asset_type, generic_artifact, behavior_qualifier,life_cycle_state):
         self.asset_type = asset_type
         self.generic_artifact = generic_artifact
         self.behavior_qualifier = behavior_qualifier
+        self.life_cycle_state = life_cycle_state
 
     def get_asset_type(self):
         return self.asset_type.get_asset_type()
@@ -114,6 +140,9 @@ class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
 
     def get_behavior_qualifier(self):
         self.behavior_qualifier
+
+    def get_life_cycle_state(self):
+        self.life_cycle_state
 
 
 class BianServiceInfo:
@@ -169,7 +198,7 @@ class BianServiceInfo:
 
 
 # Service Operations - action terms
-class ServiceOperations:
+class ActionTerms:
     INITIATE = 'INITIATE'
     CREATE = 'CREATE'
     ACTIVATE = 'ACTIVATE'
@@ -201,6 +230,24 @@ class ServiceOperations:
         TERMINATE,
         NOTIFY,
         RETRIEVE]
+    categories = {
+        INITIATE: BianCategory.ORIGINATION,
+        CREATE: BianCategory.ORIGINATION,
+        ACTIVATE: BianCategory.ORIGINATION,
+        CONFIGURE: BianCategory.ORIGINATION,
+
+        UPDATE: BianCategory.INVOCATION,
+        REGISTER: BianCategory.INVOCATION,
+        RECORD: BianCategory.INVOCATION,
+        EXECUTE: BianCategory.INVOCATION,
+        EVALUATE: BianCategory.INVOCATION,
+        PROVIDE: BianCategory.INVOCATION,
+        AUTHORIZE: BianCategory.INVOCATION,
+        REQUEST: BianCategory.INVOCATION,
+        TERMINATE: BianCategory.INVOCATION,
+
+        NOTIFY: BianCategory.REPORTING,
+        RETRIEVE: BianCategory.REPORTING}
 
 
 # BehaviorQualifiers
@@ -393,82 +440,92 @@ class FunctionalPatterns:
         PROCESS: ['Procedure', 'Workstep']
     }
 
-    # service operations allowed for functional pattern
-    # pattern : [service operations]
+    # action terms allowed for functional pattern
+    # pattern : [action terms]
     operations = {
-        ADMINISTER: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.UPDATE,
-                     ServiceOperations.RECORD, ServiceOperations.REQUEST, ServiceOperations.TERMINATE,
-                     ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        AGREETERMS: [ServiceOperations.INITIATE, ServiceOperations.EVALUATE, ServiceOperations.UPDATE,
-                     ServiceOperations.REQUEST, ServiceOperations.TERMINATE,
-                     ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        ALLOCATE: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.UPDATE,
-                   ServiceOperations.RECORD, ServiceOperations.PROVIDE,
-                   ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        ANALYZE: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE,
-                  ServiceOperations.RECORD, ServiceOperations.REQUEST,
-                  ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        ASSESS: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.EVALUATE,
-                 ServiceOperations.RECORD, ServiceOperations.REQUEST, ServiceOperations.AUTHORIZE,
-                 ServiceOperations.RETRIEVE],
-        DESIGN: [ServiceOperations.CREATE, ServiceOperations.UPDATE,
-                 ServiceOperations.RECORD, ServiceOperations.REQUEST,
-                 ServiceOperations.RETRIEVE],
-        DEVELOP: [ServiceOperations.CREATE,
-                  ServiceOperations.RECORD, ServiceOperations.REQUEST,
-                  ServiceOperations.RETRIEVE],
-        DIRECT: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.RECORD,
-                 ServiceOperations.AUTHORIZE, ServiceOperations.REQUEST,
-                 ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        MAINTAIN: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE,
-                   ServiceOperations.RECORD, ServiceOperations.REQUEST,
-                   ServiceOperations.RETRIEVE],
-        MANAGE: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.RECORD,
-                 ServiceOperations.REQUEST, ServiceOperations.TERMINATE,
-                 ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        REGISTER: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.UPDATE,
-                   ServiceOperations.REGISTER,
-                   ServiceOperations.RECORD, ServiceOperations.REQUEST,
-                   ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        TRACK: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.UPDATE,
-                ServiceOperations.RECORD, ServiceOperations.TERMINATE,
-                ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        MONITOR: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE,
-                  ServiceOperations.RECORD, ServiceOperations.REQUEST, ServiceOperations.TERMINATE,
-                  ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        OPERATE: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE,
-                  ServiceOperations.RECORD, ServiceOperations.EXECUTE, ServiceOperations.REQUEST,
-                  ServiceOperations.TERMINATE,
-                  ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        FULFILL: [ServiceOperations.INITIATE, ServiceOperations.EXECUTE, ServiceOperations.UPDATE,
-                  ServiceOperations.RECORD, ServiceOperations.REQUEST, ServiceOperations.TERMINATE,
-                  ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        TRANSACT: [ServiceOperations.INITIATE, ServiceOperations.UPDATE,
-                   ServiceOperations.EXECUTE, ServiceOperations.REQUEST,
-                   ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
-        ENROLL: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.UPDATE,
-                 ServiceOperations.REQUEST,
-                 ServiceOperations.RETRIEVE],
-        PROCESS: [ServiceOperations.ACTIVATE, ServiceOperations.CONFIGURE, ServiceOperations.UPDATE,
-                  ServiceOperations.RECORD, ServiceOperations.REQUEST, ServiceOperations.EXECUTE,
-                  ServiceOperations.NOTIFY, ServiceOperations.RETRIEVE],
+        ADMINISTER: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+                     ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.TERMINATE,
+                     ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        AGREETERMS: [ActionTerms.INITIATE, ActionTerms.EVALUATE, ActionTerms.UPDATE,
+                     ActionTerms.REQUEST, ActionTerms.TERMINATE,
+                     ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        ALLOCATE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+                   ActionTerms.RECORD, ActionTerms.PROVIDE,
+                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        ANALYZE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
+                  ActionTerms.RECORD, ActionTerms.REQUEST,
+                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        ASSESS: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.EVALUATE,
+                 ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.AUTHORIZE,
+                 ActionTerms.RETRIEVE],
+        DESIGN: [ActionTerms.CREATE, ActionTerms.UPDATE,
+                 ActionTerms.RECORD, ActionTerms.REQUEST,
+                 ActionTerms.RETRIEVE],
+        DEVELOP: [ActionTerms.CREATE,
+                  ActionTerms.RECORD, ActionTerms.REQUEST,
+                  ActionTerms.RETRIEVE],
+        DIRECT: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.RECORD,
+                 ActionTerms.AUTHORIZE, ActionTerms.REQUEST,
+                 ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        MAINTAIN: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
+                   ActionTerms.RECORD, ActionTerms.REQUEST,
+                   ActionTerms.RETRIEVE],
+        MANAGE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.RECORD,
+                 ActionTerms.REQUEST, ActionTerms.TERMINATE,
+                 ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        REGISTER: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+                   ActionTerms.REGISTER,
+                   ActionTerms.RECORD, ActionTerms.REQUEST,
+                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        TRACK: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+                ActionTerms.RECORD, ActionTerms.TERMINATE,
+                ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        MONITOR: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
+                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.TERMINATE,
+                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        OPERATE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
+                  ActionTerms.RECORD, ActionTerms.EXECUTE, ActionTerms.REQUEST,
+                  ActionTerms.TERMINATE,
+                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        FULFILL: [ActionTerms.INITIATE, ActionTerms.EXECUTE, ActionTerms.UPDATE,
+                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.TERMINATE,
+                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        TRANSACT: [ActionTerms.INITIATE, ActionTerms.UPDATE,
+                   ActionTerms.EXECUTE, ActionTerms.REQUEST,
+                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        ENROLL: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+                 ActionTerms.REQUEST,
+                 ActionTerms.RETRIEVE],
+        PROCESS: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.EXECUTE,
+                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+    }
+
+    # Functional Pattern main Service Domain states
+    # pattern : [life cycle states]
+    states = {
+        ADMINISTER: [],
+        AGREETERMS: [],
+        ALLOCATE: [],
+        ANALYZE: [],
+        ASSESS: [],
+        DESIGN: [],
+        DEVELOP: [],
+        DIRECT: [LifeCycleState.Unassigned, LifeCycleState.Assigned_strategy_pending,LifeCycleState.Strateg_under_review,LifeCycleState.Strategy_concluded,LifeCycleState.Strategy_in_force,LifeCycleState.Strategy_suspended],
+        MAINTAIN: [],
+        MANAGE: [],
+        REGISTER: [],
+        TRACK: [],
+        MONITOR: [],
+        OPERATE: [],
+        FULFILL: [],
+        TRANSACT: [],
+        ENROLL: [],
+        PROCESS: [],
     }
 
 
-#Define Business Events for the Service Domains – four established BIAN categories are used to classify the business events:
-#a. Origination – results in a new control record instance
-#b. Invocation – acts on an active control record instance
-#c. Reporting – provides information about one or more active instances
-#d. Delegation – results in service calls to other Service Domains
 
-class ControlRecordLifeCycle:
-    pass
-
-class BusinessEventCategory:
-    Origination = "Origination"
-    Invocation = "Invocation"
-    Reporting = "Reporting"
-    Delegation = "Delegation"
 
 class BusinessEvent:
     __metaclass__ = ABCMeta

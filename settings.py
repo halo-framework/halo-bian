@@ -393,7 +393,11 @@ except Exception as e:
 """
 print('The base settings file has been loaded.')
 
-SERVICE_DOMAIN = "CurrentAccount"
-FUNCTIONAL_PATTERN = "Agree Terms"
+from halo_bian.bian.bian import FunctionalPatterns,Feature
+
+SERVICE_DOMAIN = "halo_current_account_service"
+FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
 BEHAVIOR_QUALIFIER = {"456": "Tester","123":"Deposit"}
-FILTER_SEPARATOR = ";"
+FILTER_SEPARATOR = "@"
+CR_REFERENCE_ID_MASK = "[0-9]{1,5}"#None
+BQ_REFERENCE_ID_MASK = "[0-9]{1,5}"#None

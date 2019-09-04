@@ -17,24 +17,28 @@ logger = logging.getLogger(__name__)
 class AbsBianMixin(AbsBaseMixin):
     __metaclass__ = ABCMeta
 
-    service_domain = None
+    #service data
     service_properties = None
     service_status = None
+    bian_service_info = None
+    #bian data
+    service_domain = None
     control_record = None
     functional_pattern = None
-    bian_service_info = None
     bian_action = None
-    service_operation = None
+    #service_operation = None
     behavior_qualifier = None
     business_event = None
-
+    #collection filter
     filter_key_values = None
     filter_chars = None
     filter_sign = "sign"
     filter_key = "key"
     filter_val = "val"
-    filter_separator = settings.FILTER_SEPARATOR
-    cr_reference_id_mask = settings.CR_REFERENCE_ID_MASK
+    filter_separator = ";"
+    #id masks
+    cr_reference_id_mask = None
+    bq_reference_id_mask = None
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -53,6 +57,12 @@ class AbsBianMixin(AbsBaseMixin):
                                                  self.get_control_record())
         if settings.BEHAVIOR_QUALIFIER:
             self.behavior_qualifier = self.get_bq_obj()
+        if settings.FILTER_SEPARATOR:
+            self.filter_separator = settings.FILTER_SEPARATOR
+        if settings.CR_REFERENCE_ID_MASK:
+            self.cr_reference_id_mask = settings.CR_REFERENCE_ID_MASK
+        if settings.BQ_REFERENCE_ID_MASK:
+            self.bq_reference_id_mask = settings.BQ_REFERENCE_ID_MASK
 
     def get_filter_char(self,bian_request, item):
         the_filter_chars = self.get_filter_chars(bian_request)
@@ -162,7 +172,7 @@ class AbsBianMixin(AbsBaseMixin):
         arr = []
         if collection_filter is not None:
             if self.filter_separator and self.filter_separator in collection_filter:
-                arr = collection_filter.split(self.filter_separator)
+                arr = [x.strip() for x in collection_filter.split(self.filter_separator)]
             else:
                 arr.append(collection_filter)
             ret = arr
@@ -189,7 +199,7 @@ class AbsBianMixin(AbsBaseMixin):
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         service_op = action.upper()
-        if service_op not in ServiceOperations.ops:
+        if service_op not in ActionTerms.ops:
             raise IllegalServiceOperationException(action)
         cr_reference_id = None
         behavior_qualifier = None
@@ -297,21 +307,21 @@ class AbsBianMixin(AbsBaseMixin):
         logger.info('process_service_operation : ', extra=log_json(Util.get_req_context(request),vars,{"action":action}))
         bian_request = self.bian_validate_req(action, request, vars)
         functionName = {
-            ServiceOperations.INITIATE: self.do_initiate,
-            ServiceOperations.CREATE: self.do_create,
-            ServiceOperations.ACTIVATE: self.do_activate,
-            ServiceOperations.CONFIGURE: self.do_configure,
-            ServiceOperations.UPDATE: self.do_update,
-            ServiceOperations.REGISTER: self.do_register,
-            ServiceOperations.RECORD: self.do_record,
-            ServiceOperations.EXECUTE: self.do_execute,
-            ServiceOperations.EVALUATE: self.do_evaluate,
-            ServiceOperations.PROVIDE: self.do_provide,
-            ServiceOperations.AUTHORIZE: self.do_authorize,
-            ServiceOperations.REQUEST: self.do_request,
-            ServiceOperations.TERMINATE: self.do_terminate,
-            ServiceOperations.NOTIFY: self.do_notify,
-            ServiceOperations.RETRIEVE: self.do_retrieve
+            ActionTerms.INITIATE: self.do_initiate,
+            ActionTerms.CREATE: self.do_create,
+            ActionTerms.ACTIVATE: self.do_activate,
+            ActionTerms.CONFIGURE: self.do_configure,
+            ActionTerms.UPDATE: self.do_update,
+            ActionTerms.REGISTER: self.do_register,
+            ActionTerms.RECORD: self.do_record,
+            ActionTerms.EXECUTE: self.do_execute,
+            ActionTerms.EVALUATE: self.do_evaluate,
+            ActionTerms.PROVIDE: self.do_provide,
+            ActionTerms.AUTHORIZE: self.do_authorize,
+            ActionTerms.REQUEST: self.do_request,
+            ActionTerms.TERMINATE: self.do_terminate,
+            ActionTerms.NOTIFY: self.do_notify,
+            ActionTerms.RETRIEVE: self.do_retrieve
         }[bian_request.service_operation]
         if bian_request.service_operation in FunctionalPatterns.operations[self.functional_pattern]:
             bian_response = functionName(bian_request)
@@ -655,25 +665,25 @@ class AbsBianMixin(AbsBaseMixin):
 
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        action = self.get_bian_action(ServiceOperations.RETRIEVE)
+        action = self.get_bian_action(ActionTerms.RETRIEVE)
         return self.process_service_operation(action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        action = self.get_bian_action(ServiceOperations.CREATE)
+        action = self.get_bian_action(ActionTerms.CREATE)
         return self.process_service_operation(action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
-        action = self.get_bian_action(ServiceOperations.UPDATE)
+        action = self.get_bian_action(ActionTerms.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
-        action = self.get_bian_action(ServiceOperations.UPDATE)
+        action = self.get_bian_action(ActionTerms.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        action = self.get_bian_action(ServiceOperations.TERMINATE)
+        action = self.get_bian_action(ActionTerms.TERMINATE)
         return self.process_service_operation(action, request, vars)
