@@ -350,7 +350,7 @@ class AbsBianMixin(AbsBaseMixin):
         except AttributeError as ex:
             raise BianMethodNotImplementedException(ex)
 
-    def do_operation(self,bian_request):
+    def do_operation(self, bian_request):
         # 1. validate input params
         self.validate_req(bian_request)
         # 2. get api definition to access the BANK API  - url + vars dict
@@ -364,10 +364,41 @@ class AbsBianMixin(AbsBaseMixin):
             back_data = self.set_api_data(bian_request)
         else:
             back_data = None
-        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
+        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
         # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = self.extract_json(bian_request,back_response)
+        back_json = self.extract_json(bian_request, back_response)
         # 6. Build the payload target response structure which is IFX Compliant
+        payload = self.create_resp_payload(bian_request, back_json)
+        logger.debug("payload=" + str(payload))
+        headers = self.set_resp_headers(bian_request, bian_request.request.headers)
+        # 7. build json and add to bian response
+        ret = BianResponse(bian_request, payload, headers)
+        # return json response
+        return ret
+
+    def do_operation1(self,bian_request):
+        # 1. validate input params
+        self.validate_req(bian_request)
+        # 2. run pre conditions
+        self.validate_pre(bian_request)
+        # 3. orchestrate foi for event
+        for seq in self.business_event.keys():
+            foi = self.business_event.get(seq)
+            # 4. get api definition to access the BANK API  - url + vars dict
+            back_api = self.set_back_api(bian_request,foi)
+            # 3. array to store the headers required for the API Access
+            back_headers = self.set_api_headers(bian_request)
+            # 4. Sending the request to the BANK API with params
+            back_vars = self.set_api_vars(bian_request)
+            back_auth = self.set_api_auth(bian_request)
+            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+                back_data = self.set_api_data(bian_request)
+            else:
+                back_data = None
+            back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
+            # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+            back_json = self.extract_json(bian_request,back_response)
+        # 6. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(bian_request,back_json)
         logger.debug("payload=" + str(payload))
         headers = self.set_resp_headers(bian_request,bian_request.request.headers)

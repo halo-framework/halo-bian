@@ -11,6 +11,7 @@ from halo_bian.bian.abs_bian_srv import AbsBianMixin
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.utilx import Util
+from halo_bian.bian.bian import BusinessEvent,BusinessEventCategory
 
 import unittest
 
@@ -91,10 +92,18 @@ class T2(AbsBianMixin):
         payload['name'] = back_json["title"]
         return payload
 
+class MyBusinessEvent(BusinessEvent):
+    pass
+
+
+class Api(AbsBaseApi):
+    name = "Google"
+
 class T3(AbsBianMixin):
     filter_separator = ";"
     filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount'}}
     filter_chars = {None: ['=','>']}
+    #business_event = MyBusinessEvent("test event",BusinessEventCategory.Delegation, {1:Api()})
 
     def do_retrieve_deposit(self, bian_request):
         print("in do_retrieve_deposit ")
@@ -111,8 +120,6 @@ class T3(AbsBianMixin):
 
     def set_back_api_deposit(self,bian_request):
         print("in set_back_api_deposit ")
-        class Api(AbsBaseApi):
-            name = "Google"
         return Api(Util.get_req_context(bian_request.request))
 
     def set_api_headers_deposit(self, bian_request):

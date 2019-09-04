@@ -2,6 +2,7 @@
 import logging
 from abc import ABCMeta
 
+from collections import OrderedDict
 from halo_flask.response import HaloResponse
 from halo_flask.settingsx import settingsx
 
@@ -11,6 +12,7 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
+#extension,anlytics,cloud
 
 class BianRequest():
     service_operation = None
@@ -166,7 +168,7 @@ class BianServiceInfo:
         return self.control_record
 
 
-# Service Operations
+# Service Operations - action terms
 class ServiceOperations:
     INITIATE = 'INITIATE'
     CREATE = 'CREATE'
@@ -459,6 +461,9 @@ class FunctionalPatterns:
 #c. Reporting – provides information about one or more active instances
 #d. Delegation – results in service calls to other Service Domains
 
+class ControlRecordLifeCycle:
+    pass
+
 class BusinessEventCategory:
     Origination = "Origination"
     Invocation = "Invocation"
@@ -470,12 +475,12 @@ class BusinessEvent:
 
     EVENT_NAME = None
     EVENT_CATEGORY = None
-    dict = {}
+    foi = {} #first order interactions
 
     def __init__(self,event_name,event_category, dict):
         self.EVENT_NAME = event_name
         self.EVENT_CATEGORY = event_category
-        self.dict = dict #target service domain/service operation
+        self.foi = OrderedDict(sorted(dict.items(), key=lambda t: t[0])) #SEQUANCE : api for target service domain/service operation-apiobj
 
     def get_business_event_name(self):
         return self.EVENT_NAME
@@ -484,12 +489,12 @@ class BusinessEvent:
         return self.EVENT_CATEGORY
 
     def get(self, key):
-        return self.dict[key]
+        return self.foi[key]
 
     def put(self, key, value):
-        self.dict[key] = value
+        self.foi[key] = value
 
     def keys(self):
-        return self.dict.keys()
+        return self.foi.keys()
 
-#Capture service operation connections – The service operation connections are codified and captured in the BIAN Workbench tooling environment for each business event
+#Capture service operation connections – The service operation connections for each business event
