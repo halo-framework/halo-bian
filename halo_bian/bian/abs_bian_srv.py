@@ -200,7 +200,7 @@ class AbsBianMixin(AbsBaseMixin):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         service_op = action.upper()
         if service_op not in ActionTerms.ops:
-            raise IllegalServiceOperationException(action)
+            raise IllegalActionTermException(action)
         cr_reference_id = None
         behavior_qualifier = None
         bq_reference_id = None
@@ -299,8 +299,8 @@ class AbsBianMixin(AbsBaseMixin):
                     logger.info('process_service_operation : '+response.bian_request.request.method,
                                 extra=log_json(Util.get_req_context(response.bian_request.request),  {"return": "success"}))
                     return response
-                raise ServiceOperationFailException(response.bian_request.service_operation)
-        raise ServiceOperationFailException(response)
+                raise ActionTermFailException(response.bian_request.service_operation)
+        raise ActionTermFailException(response)
 
     def process_service_operation(self, action, request, vars):
         #logger.debug("in process_service_operation " + str(vars))
@@ -326,7 +326,7 @@ class AbsBianMixin(AbsBaseMixin):
         if bian_request.service_operation in FunctionalPatterns.operations[self.functional_pattern]:
             bian_response = functionName(bian_request)
             return self.process_ok(bian_response)
-        raise IllegalServiceOperationException(bian_request.service_operation)
+        raise IllegalActionTermException(bian_request.service_operation)
 
     def do_operation_bq(self,bian_request):
         if bian_request.behavior_qualifier is None:

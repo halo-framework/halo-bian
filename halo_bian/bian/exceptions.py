@@ -7,11 +7,11 @@ class BianException(HaloException):
     pass
 
 
-class IllegalServiceOperationException(BianException):
+class IllegalActionTermException(BianException):
     pass
 
 
-class ServiceOperationFailException(BianException):
+class ActionTermFailException(BianException):
     pass
 
 

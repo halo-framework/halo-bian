@@ -224,7 +224,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "IllegalBQIdException"
+                assert type(e).__name__ == "BianException"
 
 
     def test_post_request_returns_a_given_string(self):
@@ -235,7 +235,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert ret.code == status.HTTP_200_OK
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "IllegalServiceOperationException"
+                assert type(e).__name__ == "IllegalActionTermException"
 
     def test_patch_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
@@ -294,11 +294,31 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.bian_request.collection_filter[3] == "count=20"
 
     def test_action_request_returns_a_given_error(self):
-        with app.test_request_context('/?collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
+        with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
-            self.bian_action = ActionTerms.EXECUTE
+            self.t3.bian_action = ActionTerms.EXECUTE
             try:
                 ret = self.t3.process_get(request, {})
+                assert ret.bian_request.collection_filter[0] != "amount>100"
+            except Exception as e:
+                assert type(e).__name__ == "AttributeError"
+
+    def test_mask_request_returns_a_given_error(self):
+        with app.test_request_context('/?collection-filter=amount>100'):
+            self.t3 = T3()
+            self.t3.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
+                assert ret.bian_request.collection_filter[0] != "amount>100"
+            except Exception as e:
+                assert type(e).__name__ == "BadRequestError"
+
+    def test_action_with_wrong_bq_request_returns_a_given_error(self):
+        with app.test_request_context('/?collection-filter=amount>100'):
+            self.t3 = T3()
+            self.t3.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1","behavior_qualifier":"deposit"})
                 assert ret.bian_request.collection_filter[0] != "amount>100"
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
