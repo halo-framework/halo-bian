@@ -396,8 +396,9 @@ print('The base settings file has been loaded.')
 from halo_bian.bian.bian import FunctionalPatterns,Feature
 
 SERVICE_DOMAIN = "halo_current_account_service"
+ASSET_TYPE = "current_account"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
 BEHAVIOR_QUALIFIER = {"456": "Tester","123":"Deposit"}
 FILTER_SEPARATOR = "@"
-CR_REFERENCE_ID_MASK = "[0-9]{1,5}"#None
-BQ_REFERENCE_ID_MASK = "[0-9]{1,5}"#None
+CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
+BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None

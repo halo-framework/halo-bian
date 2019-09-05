@@ -30,6 +30,9 @@ class BianMethodNotImplementedException(BianException):
 class ServiceDomainNameException(BianException):
     pass
 
+class AssetTypeNameException(BianException):
+    pass
+
 class FunctionalPatternNameException(BianException):
     pass
 

@@ -15,15 +15,15 @@ logger = logging.getLogger(__name__)
 #extension,anlytics,cloud
 
 class BianRequest():
-    service_operation = None
+    action_term = None
     request = None
     cr_reference_id = None
     bq_reference_id = None
     behavior_qualifier = None
     collection_filter = None
 
-    def __init__(self, service_operation, request, cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None):
-        self.service_operation = service_operation
+    def __init__(self, action_term, request, cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None):
+        self.action_term = action_term
         self.request = request
         self.cr_reference_id = cr_reference_id
         self.behavior_qualifier = behavior_qualifier

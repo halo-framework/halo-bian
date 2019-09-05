@@ -18,11 +18,12 @@ class AbsBianMixin(AbsBaseMixin):
     __metaclass__ = ABCMeta
 
     #service data
-    service_properties = None
-    service_status = None
-    bian_service_info = None
+    #service_properties = None
+    #service_status = None
+    #bian_service_info = None
     #bian data
     service_domain = None
+    asset_type = None
     control_record = None
     functional_pattern = None
     bian_action = None
@@ -47,6 +48,10 @@ class AbsBianMixin(AbsBaseMixin):
             self.service_domain = settings.SERVICE_DOMAIN
         else:
             raise ServiceDomainNameException("missing Service Domain definition")
+        if settings.ASSET_TYPE:
+            self.asset_type = settings.ASSET_TYPE
+        else:
+            raise AssetTypeNameException("missing Asset Type definition")
         if settings.FUNCTIONAL_PATTERN:
             self.functional_pattern = settings.FUNCTIONAL_PATTERN
         else:
@@ -116,6 +121,14 @@ class AbsBianMixin(AbsBaseMixin):
                 if re.match(self.cr_reference_id_mask,bian_request.cr_reference_id):
                     return
                 raise BadRequestError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
+
+    def validate_bq_reference_id(self, bian_request):
+        logger.debug("in validate_validate_bq_reference_id ")
+        if bian_request:
+            if bian_request.bq_reference_id and self.bq_reference_id_mask:
+                if re.match(self.bq_reference_id_mask,bian_request.bq_reference_id):
+                    return
+                raise BadRequestError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
 
     def validate_filter_key_values(self):
         if self.filter_key_values:
@@ -198,8 +211,8 @@ class AbsBianMixin(AbsBaseMixin):
 
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
-        service_op = action.upper()
-        if service_op not in ActionTerms.ops:
+        action_term = action.upper()
+        if action_term not in ActionTerms.ops:
             raise IllegalActionTermException(action)
         cr_reference_id = None
         behavior_qualifier = None
@@ -208,19 +221,19 @@ class AbsBianMixin(AbsBaseMixin):
         if "cr_reference_id" in vars:
             cr_reference_id = vars["cr_reference_id"]
         if "behavior_qualifier" in vars:
-            behavior_qualifier = self.get_behavior_qualifier(service_op, vars["behavior_qualifier"])
+            behavior_qualifier = self.get_behavior_qualifier(action_term, vars["behavior_qualifier"])
             # behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
         if "collection-filter" in request.args:
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
-        return BianRequest(service_op, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
+        return BianRequest(action_term, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
         if bian_request:
             self.validate_cr_reference_id(bian_request)
-            #self.validate_bq_reference_id(bian_request)
+            self.validate_bq_reference_id(bian_request)
             self.validate_filter_key_values()
             self.validate_filter_chars()
             self.validate_collection_filter(bian_request)
@@ -299,7 +312,7 @@ class AbsBianMixin(AbsBaseMixin):
                     logger.info('process_service_operation : '+response.bian_request.request.method,
                                 extra=log_json(Util.get_req_context(response.bian_request.request),  {"return": "success"}))
                     return response
-                raise ActionTermFailException(response.bian_request.service_operation)
+                raise ActionTermFailException(response.bian_request.action_term)
         raise ActionTermFailException(response)
 
     def process_service_operation(self, action, request, vars):
@@ -322,11 +335,11 @@ class AbsBianMixin(AbsBaseMixin):
             ActionTerms.TERMINATE: self.do_terminate,
             ActionTerms.NOTIFY: self.do_notify,
             ActionTerms.RETRIEVE: self.do_retrieve
-        }[bian_request.service_operation]
-        if bian_request.service_operation in FunctionalPatterns.operations[self.functional_pattern]:
+        }[bian_request.action_term]
+        if bian_request.action_term in FunctionalPatterns.operations[self.functional_pattern]:
             bian_response = functionName(bian_request)
             return self.process_ok(bian_response)
-        raise IllegalActionTermException(bian_request.service_operation)
+        raise IllegalActionTermException(bian_request.action_term)
 
     def do_operation_bq(self,bian_request):
         if bian_request.behavior_qualifier is None:
@@ -687,3 +700,36 @@ class AbsBianMixin(AbsBaseMixin):
         logger.debug("in process_delete " + str(vars))
         action = self.get_bian_action(ActionTerms.TERMINATE)
         return self.process_service_operation(action, request, vars)
+
+#@TODO externelize all strings
+
+class AbsBianSrvMixin(AbsBaseMixin):
+    __metaclass__ = ABCMeta
+
+    #service data
+    service_properties = None
+    service_status = None
+    bian_service_info = None
+    #bian data
+    service_domain = None
+
+
+    def __init__(self):
+        super(AbsBaseMixin, self).__init__()
+        logger.debug("in __init__ ")
+        if settings.SERVICE_DOMAIN:
+            service_domain = settings.SERVICE_DOMAIN
+        else:
+            raise ServiceDomainNameException("missing Service Domain definition")
+        if settings.ASSET_TYPE:
+            asset_type = settings.ASSET_TYPE
+        else:
+            raise AssetTypeNameException("missing Asset Type definition")
+        if settings.FUNCTIONAL_PATTERN:
+           functional_pattern = settings.FUNCTIONAL_PATTERN
+        else:
+           raise FunctionalPatternNameException("missing Functional Pattern definition")
+        generic_artifact = FunctionalPatterns.patterns[self.functional_pattern][0]
+        behavior_qualifier_type = FunctionalPatterns.patterns[self.functional_pattern][1]
+        self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
+

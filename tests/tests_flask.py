@@ -109,6 +109,10 @@ class T3(AbsBianMixin):
         print("in do_retrieve_deposit ")
         return self.do_retrieve_bq(bian_request)
 
+    def do_execute_deposit(self, bian_request):
+        print("in do_retrieve_deposit ")
+        return self.do_execute_bq(bian_request)
+
     def validate_req_deposit(self, bian_request):
         print("in validate_req_deposit ")
         if bian_request:
@@ -130,7 +134,9 @@ class T3(AbsBianMixin):
     def set_api_vars_deposit(self, bian_request):
         print("in set_api_vars_deposit " + str(bian_request))
         ret = {}
-        name = bian_request.request.args['name']
+        name = None
+        if 'name' in bian_request.request.args:
+            name = bian_request.request.args['name']
         if name:
             ret['name'] = name
         if bian_request:
@@ -175,6 +181,10 @@ class T3(AbsBianMixin):
 
     def set_resp_headers_deposit(self, bian_request,headers):
         return self.set_resp_headers(bian_request,headers)
+
+from halo_flask.flask.viewsx import AbsBaseLinkX as AbsBaseLink,PerfLinkX as PerfLink
+class S1(PerfLink):
+    pass
 
 class TestUserDetailTestCase(unittest.TestCase):
     """
@@ -296,29 +306,47 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
-            self.t3.bian_action = ActionTerms.EXECUTE
+            self.t3.bian_action = ActionTerms.EVALUATE
             try:
                 ret = self.t3.process_get(request, {})
                 assert ret.bian_request.collection_filter[0] != "amount>100"
             except Exception as e:
-                assert type(e).__name__ == "AttributeError"
+                assert type(e).__name__ == "IllegalActionTermException"
 
-    def test_mask_request_returns_a_given_error(self):
+    def test_mask_cr_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
             self.t3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
-                assert ret.bian_request.collection_filter[0] != "amount>100"
+                ret = self.t3.process_get(request, {"cr_reference_id":"1a","bq_reference_id":"1"})
+                assert False
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
 
-    def test_action_with_wrong_bq_request_returns_a_given_error(self):
+    def test_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
             self.t3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1","behavior_qualifier":"deposit"})
-                assert ret.bian_request.collection_filter[0] != "amount>100"
+                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1b"})
+                assert False
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
+
+    def test_request_returns_a_response(self):
+        with app.test_request_context('/?name=peter&collection-filter=amount>100'):
+            self.t3 = T3()
+            self.t3.bian_action = ActionTerms.EXECUTE
+            ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
+            assert len(ret.bian_request.collection_filter) == 1
+            assert ret.bian_request.action_term == ActionTerms.EXECUTE
+            assert ret.bian_request.cr_reference_id == "1"
+            assert ret.bian_request.bq_reference_id == "1"
+            assert ret.bian_request.cr_reference_id == "1"
+            assert ret.bian_request.request == request
+
+    def test_sp_request_returns_a_given_list(self):
+        with app.test_request_context('/perf'):
+            self.s1 = S1()
+            ret = self.s1.process_get(request, {})
+            assert ret.code == status.HTTP_200_OK
