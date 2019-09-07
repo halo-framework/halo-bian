@@ -16,7 +16,7 @@ def create_app(config_object='settings'):
         from halo_flask.flask.viewsx import TestLinkX, PerfLinkX
         app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
-
+        app.add_url_rule("/info", view_func=PerfLinkX.as_view("info"))
     api = Api(app, catch_all_404s=True)
 
     return app

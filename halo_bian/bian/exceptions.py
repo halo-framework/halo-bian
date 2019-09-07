@@ -14,7 +14,6 @@ class IllegalActionTermException(BianException):
 class ActionTermFailException(BianException):
     pass
 
-
 class IllegalBQException(BianException):
     pass
 
@@ -36,5 +35,15 @@ class AssetTypeNameException(BianException):
 class FunctionalPatternNameException(BianException):
     pass
 
+class GenericArtifactNameException(BianException):
+    pass
+
+class BehaviorQualifierNameException(BianException):
+    pass
+
+class ControlRecordNameException(BianException):
+    pass
+class BusinessEventMissingException(BianException):
+    pass
 class BianApiException(BianException):
     pass

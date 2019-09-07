@@ -6,8 +6,6 @@ from collections import OrderedDict
 from halo_flask.response import HaloResponse
 from halo_flask.settingsx import settingsx
 
-# flask
-
 settings = settingsx()
 
 logger = logging.getLogger(__name__)
@@ -117,7 +115,7 @@ class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
     behavior_qualifier = None
     life_cycle_state = None
 
-    def __init__(self, asset_type, generic_artifact, behavior_qualifier,life_cycle_state):
+    def __init__1(self, asset_type, generic_artifact, behavior_qualifier,life_cycle_state):
         self.asset_type = asset_type
         self.generic_artifact = generic_artifact
         self.behavior_qualifier = behavior_qualifier
@@ -169,7 +167,7 @@ class BianServiceInfo:
         self.control_record = asset_type + generic_artifact
         self.behavior_qualifier_type = behavior_qualifier_type
 
-    def __init__(self, service_domain, functional_pattern, control_record_obj):
+    def __init__1(self, service_domain, functional_pattern, control_record_obj):
         self.service_domain = service_domain
         self.functional_pattern = functional_pattern
         if control_record_obj:
@@ -420,21 +418,21 @@ class FunctionalPatterns:
     # Functional Pattern ==> Generic Artifact Type ==> Behavior Qualifier
     # pattern : [Generic Artifact,Behavior Qualifier Type]
     patterns = {
-        ADMINISTER: ['Administrative Plan', 'Routine'],
+        ADMINISTER: ['AdministrativePlan', 'Routine'],
         AGREETERMS: ['Agreement', 'Term'],
         ALLOCATE: ['Allocation', 'Assignment'],
         ANALYZE: ['Analysis', 'Algorithm'],
         ASSESS: ['Assessment', 'Test'],
         DESIGN: ['Specification', 'Aspect'],
-        DEVELOP: ['Development Project', 'Deliverable'],
+        DEVELOP: ['DevelopmentProject', 'Deliverable'],
         DIRECT: ['Strategy', 'Goal'],
-        MAINTAIN: ['Maintenance Agreement', 'Task'],
-        MANAGE: ['Management Plan', 'Duty'],
-        REGISTER: ['Directory Entry', 'Property'],
+        MAINTAIN: ['MaintenanceAgreement', 'Task'],
+        MANAGE: ['ManagementPlan', 'Duty'],
+        REGISTER: ['Directory_Entry', 'Property'],
         TRACK: ['Log', 'Event'],
         MONITOR: ['Measurement', 'Signal'],
-        OPERATE: ['Operating Session', 'Function'],
-        FULFILL: ['Fulfillment Arrangement', 'Feature'],
+        OPERATE: ['OperatingSession', 'Function'],
+        FULFILL: ['FulfillmentArrangement', 'Feature'],
         TRANSACT: ['Transaction', 'Step'],
         ENROLL: ['Membership', 'Clause'],
         PROCESS: ['Procedure', 'Workstep']

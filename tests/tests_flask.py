@@ -7,7 +7,7 @@ from flask_restful import Api
 import json
 from halo_flask.exceptions import BadRequestError,ApiError
 from halo_flask.flask.utilx import status
-from halo_bian.bian.abs_bian_srv import AbsBianMixin
+from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.utilx import Util
@@ -182,8 +182,7 @@ class T3(AbsBianMixin):
     def set_resp_headers_deposit(self, bian_request,headers):
         return self.set_resp_headers(bian_request,headers)
 
-from halo_flask.flask.viewsx import AbsBaseLinkX as AbsBaseLink,PerfLinkX as PerfLink
-class S1(PerfLink):
+class S1(InfoLinkX):
     pass
 
 class TestUserDetailTestCase(unittest.TestCase):
@@ -191,8 +190,8 @@ class TestUserDetailTestCase(unittest.TestCase):
     Tests /users detail operations.
     """
 
-    # def setUp(self):
-    # self.t1 = T1()
+    def setUp(self):
+        app.config.from_pyfile('../settings.py')
 
     def test_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
@@ -346,7 +345,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.bian_request.request == request
 
     def test_sp_request_returns_a_given_list(self):
-        with app.test_request_context('/perf'):
+        with app.test_request_context('/info'):
             self.s1 = S1()
             ret = self.s1.process_get(request, {})
+            print("x="+str(ret.payload))
             assert ret.code == status.HTTP_200_OK

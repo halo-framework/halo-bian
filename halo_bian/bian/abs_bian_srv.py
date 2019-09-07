@@ -17,20 +17,18 @@ logger = logging.getLogger(__name__)
 class AbsBianMixin(AbsBaseMixin):
     __metaclass__ = ABCMeta
 
-    #service data
-    #service_properties = None
-    #service_status = None
-    #bian_service_info = None
     #bian data
     service_domain = None
     asset_type = None
-    control_record = None
     functional_pattern = None
-    bian_action = None
-    #service_operation = None
+    generic_artifact =None
     behavior_qualifier = None
+    bian_action = None
+    control_record = None
     business_event = None
-    #collection filter
+    service_operation = None
+
+    #collection filter data
     filter_key_values = None
     filter_chars = None
     filter_sign = "sign"
@@ -58,10 +56,19 @@ class AbsBianMixin(AbsBaseMixin):
             raise FunctionalPatternNameException("missing Functional Pattern definition")
         if self.functional_pattern not in FunctionalPatterns.patterns.keys():
             raise FunctionalPatternNameException("Functional Pattern name not in list")
-        self.bian_service_info = BianServiceInfo(self.service_domain, self.functional_pattern,
-                                                 self.get_control_record())
+        if settings.GENERIC_ARTIFACT:
+            self.generic_artifact = settings.GENERIC_ARTIFACT
+        else:
+            raise GenericArtifactNameException("missing GENERIC ARTIFACT definition")
         if settings.BEHAVIOR_QUALIFIER:
             self.behavior_qualifier = self.get_bq_obj()
+        else:
+            raise BehaviorQualifierNameException("missing Behavior Qualifier definition")
+        if settings.CONTROL_RECORD:
+            self.control_record = self.get_cr_obj()
+        else:
+            raise ControlRecordNameException("missing ControlRecord definition")
+
         if settings.FILTER_SEPARATOR:
             self.filter_separator = settings.FILTER_SEPARATOR
         if settings.CR_REFERENCE_ID_MASK:
@@ -147,10 +154,32 @@ class AbsBianMixin(AbsBaseMixin):
 
     def set_control_record(self, control_record):
         self.control_record = control_record
-        self.bian_service_info = BianServiceInfo(self.get_service_domain(), self.get_functional_pattern(),
-                                                 self.get_control_record())
+        #self.bian_service_info = BianServiceInfo(self.get_service_domain(), self.get_functional_pattern(),
+        #                                         self.get_control_record())
+
     def get_control_record(self):
         return self.control_record
+
+    def init_cr(self, ga_class_name):
+        import importlib
+        if settings.CONTROL_RECORD:
+            k = settings.CONTROL_RECORD.rfind(".")
+            module_name = settings.CONTROL_RECORD[:k]
+            class_name = settings.CONTROL_RECORD[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = ga_class_name
+        module = importlib.import_module(module_name)
+        class_ = getattr(module, class_name)
+        if not issubclass(class_, ControlRecord):
+            raise BianException("class error:"+class_name)
+        instance = class_(settings.BEHAVIOR_QUALIFIER)
+        return instance
+
+    def get_cr_obj(self):
+        cr_class = 'ControlRecord'
+        cr_obj = self.init_cr(cr_class)
+        return cr_obj
 
     def init_bq(self, bq_class_name):
         import importlib
@@ -240,7 +269,10 @@ class AbsBianMixin(AbsBaseMixin):
             return True
         raise BianException("no Bian Request")
 
-    def set_back_api(self,bian_request):
+    def validate_pre(self, bian_request):
+        return
+
+    def set_back_api(self,bian_request,foi=None):
         logger.debug("in set_back_api ")
         return None
 
@@ -373,7 +405,7 @@ class AbsBianMixin(AbsBaseMixin):
         except AttributeError as ex:
             raise BianMethodNotImplementedException(ex)
 
-    def do_operation(self, bian_request):
+    def do_operation1(self, bian_request):
         # 1. validate input params
         self.validate_req(bian_request)
         # 2. get api definition to access the BANK API  - url + vars dict
@@ -399,34 +431,46 @@ class AbsBianMixin(AbsBaseMixin):
         # return json response
         return ret
 
-    def do_operation1(self,bian_request):
+    def do_operation(self,bian_request):
+        dict = {}
         # 1. validate input params
         self.validate_req(bian_request)
         # 2. run pre conditions
         self.validate_pre(bian_request)
         # 3. orchestrate foi for event
-        for seq in self.business_event.keys():
-            foi = self.business_event.get(seq)
-            # 4. get api definition to access the BANK API  - url + vars dict
-            back_api = self.set_back_api(bian_request,foi)
-            # 3. array to store the headers required for the API Access
-            back_headers = self.set_api_headers(bian_request)
-            # 4. Sending the request to the BANK API with params
-            back_vars = self.set_api_vars(bian_request)
-            back_auth = self.set_api_auth(bian_request)
-            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                back_data = self.set_api_data(bian_request)
-            else:
-                back_data = None
-            back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
-            # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = self.extract_json(bian_request,back_response)
-        # 6. Build the payload target response structure which is Compliant
-        payload = self.create_resp_payload(bian_request,back_json)
+        if self.business_event and self.business_event.keys():
+            for seq in self.business_event.keys():
+                # 4. get get first order interaction
+                foi = self.business_event.get(seq)
+                # 5. get api definition to access the BANK API  - url + vars dict
+                back_api = self.set_back_api(bian_request,foi)
+                # 6. array to store the headers required for the API Access
+                back_headers = self.set_api_headers(bian_request)
+                # 7. set vars
+                back_vars = self.set_api_vars(bian_request)
+                # 8. auth
+                back_auth = self.set_api_auth(bian_request)
+                # 9. set request data
+                if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+                    back_data = self.set_api_data(bian_request)
+                else:
+                    back_data = None
+                # 10. Sending the request to the BANK API with params
+                back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
+                # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+                back_json = self.extract_json(bian_request,back_response)
+                # 12. store in dict
+                dict[seq] = back_data
+        else:
+            raise BusinessEventMissingException(self.service_operation)
+        # 13. Build the payload target response structure which is Compliant
+        payload = self.create_resp_payload(bian_request,dict)
         logger.debug("payload=" + str(payload))
         headers = self.set_resp_headers(bian_request,bian_request.request.headers)
-        # 7. build json and add to bian response
+        # 14. build json and add to bian response
         ret = BianResponse(bian_request, payload, headers)
+        # 15. post condition
+        #do_post_cond()
         # return json response
         return ret
 
@@ -670,34 +714,45 @@ class AbsBianMixin(AbsBaseMixin):
         return self.service_status
 
     def get_bian_action(self,default):
+        action = default
         if self.bian_action:
-            return self.bian_action
-        return default
+            action = self.bian_action
+        if self.service_operation:
+            if settings.BUSINESS_EVENT_MAP:
+                map = settings.BUSINESS_EVENT_MAP[self.service_operation]
+                event_category = ActionTerms.categories[action]
+                self.business_event = BusinessEvent(self.service_operation,event_category, map)
+        return action
 
     #this is the http part
 
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
+        self.service_operation = request.path
         action = self.get_bian_action(ActionTerms.RETRIEVE)
         return self.process_service_operation(action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
+        self.service_operation = request.path
         action = self.get_bian_action(ActionTerms.CREATE)
         return self.process_service_operation(action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
+        self.service_operation = request.path
         action = self.get_bian_action(ActionTerms.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
+        self.service_operation = request.path
         action = self.get_bian_action(ActionTerms.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
+        self.service_operation = request.path
         action = self.get_bian_action(ActionTerms.TERMINATE)
         return self.process_service_operation(action, request, vars)
 
@@ -710,9 +765,6 @@ class AbsBianSrvMixin(AbsBaseMixin):
     service_properties = None
     service_status = None
     bian_service_info = None
-    #bian data
-    service_domain = None
-
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -729,7 +781,39 @@ class AbsBianSrvMixin(AbsBaseMixin):
            functional_pattern = settings.FUNCTIONAL_PATTERN
         else:
            raise FunctionalPatternNameException("missing Functional Pattern definition")
-        generic_artifact = FunctionalPatterns.patterns[self.functional_pattern][0]
-        behavior_qualifier_type = FunctionalPatterns.patterns[self.functional_pattern][1]
+        if functional_pattern not in FunctionalPatterns.patterns.keys():
+            raise FunctionalPatternNameException("Functional Pattern name not in list")
+        generic_artifact = FunctionalPatterns.patterns[functional_pattern][0]
+        behavior_qualifier_type = FunctionalPatterns.patterns[functional_pattern][1]
         self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
 
+
+########################################
+import flask_restful as restful
+from halo_flask.flask.viewsx import AbsBaseLinkX
+from halo_flask.const import HTTPChoice
+
+class Resource(restful.Resource):
+    pass
+
+class InfoLinkX(Resource, AbsBianSrvMixin, AbsBaseLinkX):
+    def process_get(self, request, vars):
+        logger.debug("sd=" + str(self.bian_service_info.service_domain) + " in process_get " + str(vars))
+        payload = {"service_domain":self.bian_service_info.get_service_domain(),"asset_type":self.bian_service_info.get_asset_type()}
+        return BianResponse(request, payload, {})
+
+    def get(self):
+        ret = self.do_process(HTTPChoice.get)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
+
+    def post(self):
+        ret = self.do_process(HTTPChoice.post)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
+
+    def put(self):
+        ret = self.do_process(HTTPChoice.put)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
+
+    def delete(self):
+        ret = self.do_process(HTTPChoice.delete)
+        return Util.json_data_response(ret.payload, ret.code, ret.headers)
