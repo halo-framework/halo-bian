@@ -44,6 +44,14 @@
     "type": "service"
   },
   "Google": {
+    "url": "https://www.google.com",
+    "type": "api"
+  },
+  "Cnn": {
+    "url": "https://www.cnn.com",
+    "type": "api"
+  },
+  "Tst": {
     "url": "https://jsonplaceholder.typicode.com/todos/$ID",
     "type": "api"
   }

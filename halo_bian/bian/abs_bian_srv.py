@@ -6,8 +6,11 @@ from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.utilx import status
 from halo_flask.logs import log_json
+from halo_flask.apis import AbsBaseApi
+
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
+import importlib
 
 settings = settingsx()
 
@@ -161,7 +164,6 @@ class AbsBianMixin(AbsBaseMixin):
         return self.control_record
 
     def init_cr(self, ga_class_name):
-        import importlib
         if settings.CONTROL_RECORD:
             k = settings.CONTROL_RECORD.rfind(".")
             module_name = settings.CONTROL_RECORD[:k]
@@ -182,7 +184,6 @@ class AbsBianMixin(AbsBaseMixin):
         return cr_obj
 
     def init_bq(self, bq_class_name):
-        import importlib
         module = importlib.import_module("halo_bian.bian.bian")
         class_ = getattr(module, bq_class_name)
         instance = class_(settings.BEHAVIOR_QUALIFIER)
@@ -272,17 +273,30 @@ class AbsBianMixin(AbsBaseMixin):
     def validate_pre(self, bian_request):
         return
 
-    def set_back_api(self,bian_request,foi=None):
-        logger.debug("in set_back_api ")
+    @staticmethod
+    def set_back_api(bian_request,foi=None):
+        logger.debug("in set_back_api "+str(foi))
+        if foi:
+            k = foi.rfind(".")
+            module_name = foi[:k]
+            class_name = foi[k + 1:]
+            module = importlib.import_module(module_name)
+            class_ = getattr(module, class_name)
+            if not issubclass(class_, AbsBaseApi):
+                raise BianException("class error:" + class_name)
+            instance = class_(Util.get_req_context(bian_request.request))
+            return instance
         return None
 
-    def set_api_headers(self, bian_request):
+    @staticmethod
+    def set_api_headers(bian_request):
         logger.debug("in set_api_headers ")
         if bian_request:
             return []
         raise BianException()
 
-    def set_api_vars(self, bian_request):
+    @staticmethod
+    def set_api_vars(bian_request):
         logger.debug("in set_api_vars " + str(bian_request))
         if True:
             ret = {}
@@ -291,13 +305,16 @@ class AbsBianMixin(AbsBaseMixin):
             return ret
         raise BianException()
 
-    def set_api_auth(self, bian_request):
+    @staticmethod
+    def set_api_auth(bian_request):
         return None
 
-    def set_api_data(self, bian_request):
+    @staticmethod
+    def set_api_data(bian_request):
         return bian_request.request.data
 
-    def execute_api(self,bian_request, back_api, back_vars, back_headers,back_auth,back_data=None):
+    @staticmethod
+    def execute_api(bian_request, back_api, back_vars, back_headers,back_auth,back_data=None):
         logger.debug("in execute_api ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -308,17 +325,21 @@ class AbsBianMixin(AbsBaseMixin):
                 raise BianException(e)
         return None
 
-    def extract_json(self, bian_request, back_response):
+    @staticmethod
+    def extract_json(bian_request, back_response):
         logger.debug("in extract_json ")
         if back_response:
-            return json.loads(back_response.content)
+            try:
+                return json.loads(back_response.content)
+            except json.decoder.JSONDecodeError as e:
+                pass
         return json.loads("{}")
 
-    def create_resp_payload(self, bian_request, back_json):
-        logger.debug("in create_resp_payload " + str(back_json))
-        if back_json:
-            return back_json
-        return back_json
+    def create_resp_payload(self, bian_request, dict_back_json):
+        logger.debug("in create_resp_payload " + str(dict_back_json))
+        if dict_back_json:
+            return dict_back_json
+        return {}
 
     # raise BianException()
     def set_resp_headers(self, bian_request, headers):
@@ -443,24 +464,24 @@ class AbsBianMixin(AbsBaseMixin):
                 # 4. get get first order interaction
                 foi = self.business_event.get(seq)
                 # 5. get api definition to access the BANK API  - url + vars dict
-                back_api = self.set_back_api(bian_request,foi)
+                back_api = self.__class__.set_back_api(bian_request,foi)
                 # 6. array to store the headers required for the API Access
-                back_headers = self.set_api_headers(bian_request)
+                back_headers = self.__class__.set_api_headers(bian_request)
                 # 7. set vars
-                back_vars = self.set_api_vars(bian_request)
+                back_vars = self.__class__.set_api_vars(bian_request)
                 # 8. auth
-                back_auth = self.set_api_auth(bian_request)
+                back_auth = self.__class__.set_api_auth(bian_request)
                 # 9. set request data
                 if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                    back_data = self.set_api_data(bian_request)
+                    back_data = self.__class__.set_api_data(bian_request)
                 else:
                     back_data = None
                 # 10. Sending the request to the BANK API with params
-                back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
+                back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
                 # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-                back_json = self.extract_json(bian_request,back_response)
+                back_json = self.__class__.extract_json(bian_request,back_response)
                 # 12. store in dict
-                dict[seq] = back_data
+                dict[seq] = back_json
         else:
             raise BusinessEventMissingException(self.service_operation)
         # 13. Build the payload target response structure which is Compliant
