@@ -289,14 +289,14 @@ class AbsBianMixin(AbsBaseMixin):
         return None
 
     @staticmethod
-    def set_api_headers(bian_request):
+    def set_api_headers(bian_request,seq=None,dict=None):
         logger.debug("in set_api_headers ")
         if bian_request:
             return []
         raise BianException()
 
     @staticmethod
-    def set_api_vars(bian_request):
+    def set_api_vars(bian_request,seq=None,dict=None):
         logger.debug("in set_api_vars " + str(bian_request))
         if True:
             ret = {}
@@ -306,27 +306,32 @@ class AbsBianMixin(AbsBaseMixin):
         raise BianException()
 
     @staticmethod
-    def set_api_auth(bian_request):
+    def set_api_auth(bian_request,seq=None,dict=None):
         return None
 
     @staticmethod
-    def set_api_data(bian_request):
+    def set_api_data(bian_request,seq=None,dict=None):
         return bian_request.request.data
 
     @staticmethod
-    def execute_api(bian_request, back_api, back_vars, back_headers,back_auth,back_data=None):
+    def execute_api(bian_request, back_api, back_vars, back_headers,back_auth,back_data=None,seq=None,dict=None):
         logger.debug("in execute_api ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
             try:
                 ret = back_api.get(timeout)
+                seq_msg = ""
+                if seq:
+                    seq_msg = "seq = "+seq+"."
+                msg = "in execute_api. "+ seq_msg+" code= " + ret.status_code
+                logger.info(msg)
                 return ret
             except ApiError as e:
                 raise BianException(e)
         return None
 
     @staticmethod
-    def extract_json(bian_request, back_response):
+    def extract_json(bian_request, back_response,seq=None):
         logger.debug("in extract_json ")
         if back_response:
             try:
@@ -426,9 +431,26 @@ class AbsBianMixin(AbsBaseMixin):
         except AttributeError as ex:
             raise BianMethodNotImplementedException(ex)
 
-    def do_operation1(self, bian_request):
+    def do_operation(self,bian_request):
         # 1. validate input params
         self.validate_req(bian_request)
+        # 2. run pre conditions
+        self.validate_pre(bian_request)
+        # 3. processing engine
+        dict = self.processing_engine(bian_request)
+        # 13. Build the payload target response structure which is Compliant
+        payload = self.create_resp_payload(bian_request,dict)
+        logger.debug("payload=" + str(payload))
+        headers = self.set_resp_headers(bian_request,bian_request.request.headers)
+        # 14. build json and add to bian response
+        ret = BianResponse(bian_request, payload, headers)
+        # 15. post condition
+        self.validate_post(bian_request,ret)
+        # return json response
+        return ret
+
+    def do_operation_1(self, bian_request):#basic maturity - single request
+        logger.debug("do_operation_1")
         # 2. get api definition to access the BANK API  - url + vars dict
         back_api = self.set_back_api(bian_request)
         # 3. array to store the headers required for the API Access
@@ -443,57 +465,90 @@ class AbsBianMixin(AbsBaseMixin):
         back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
         # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
         back_json = self.extract_json(bian_request, back_response)
-        # 6. Build the payload target response structure which is IFX Compliant
-        payload = self.create_resp_payload(bian_request, back_json)
-        logger.debug("payload=" + str(payload))
-        headers = self.set_resp_headers(bian_request, bian_request.request.headers)
-        # 7. build json and add to bian response
-        ret = BianResponse(bian_request, payload, headers)
+        dict = {1:back_data}
         # return json response
-        return ret
+        return dict
 
-    def do_operation(self,bian_request):
+    def do_operation_2(self,bian_request):#medium maturity - foi
+        logger.debug("do_operation_2")
         dict = {}
-        # 1. validate input params
-        self.validate_req(bian_request)
-        # 2. run pre conditions
-        self.validate_pre(bian_request)
-        # 3. orchestrate foi for event
-        if self.business_event and self.business_event.keys():
-            for seq in self.business_event.keys():
-                # 4. get get first order interaction
-                foi = self.business_event.get(seq)
-                # 5. get api definition to access the BANK API  - url + vars dict
-                back_api = self.__class__.set_back_api(bian_request,foi)
-                # 6. array to store the headers required for the API Access
-                back_headers = self.__class__.set_api_headers(bian_request)
-                # 7. set vars
-                back_vars = self.__class__.set_api_vars(bian_request)
-                # 8. auth
-                back_auth = self.__class__.set_api_auth(bian_request)
-                # 9. set request data
-                if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                    back_data = self.__class__.set_api_data(bian_request)
+        for seq in self.business_event.keys():
+            # 4. get get first order interaction
+            foi = self.business_event.get(seq)
+            # 5. get api definition to access the BANK API  - url + vars dict
+            back_api = self.__class__.set_back_api(bian_request,foi)
+            # 6. array to store the headers required for the API Access
+            back_headers = self.__class__.set_api_headers(bian_request,seq,dict)
+            # 7. set vars
+            back_vars = self.__class__.set_api_vars(bian_request,seq,dict)
+            # 8. auth
+            back_auth = self.__class__.set_api_auth(bian_request,seq,dict)
+            # 9. set request data
+            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+                back_data = self.__class__.set_api_data(bian_request,seq,dict)
+            else:
+                back_data = None
+            # 10. Sending the request to the BANK API with params
+            back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data,seq,dict)
+            # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+            back_json = self.__class__.extract_json(bian_request,back_response,seq)
+            # 12. store in dict
+            dict[seq] = back_json
+        return dict
+
+    def do_operation_3(self, bian_request):  # high maturity - saga transactions
+        logger.debug("do_operation_3")
+        from halo_flask.saga import Saga,SagaRollBack,load_saga
+        with open("C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json") as f1:
+            schema = json.load(f1)
+        sagax = load_saga("test", self.business_event.saga, schema)
+        payloads = {}
+        for api in self.business_event.saga["States"]:
+
+            print(self.business_event.saga["States"][api]['Resource'])
+            back_api = self.__class__.set_back_api(bian_request, self.business_event.saga["States"][api]['Resource'])
+            # 6. array to store the headers required for the API Access
+            back_headers = self.__class__.set_api_headers(bian_request, seq, dict)
+            # 7. set vars
+            back_vars = self.__class__.set_api_vars(bian_request, seq, dict)
+            # 8. auth
+            back_auth = self.__class__.set_api_auth(bian_request, seq, dict)
+            # 9. set request data
+            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+                back_data = self.__class__.set_api_data(bian_request, seq, dict)
+            else:
+                back_data = None
+            # 10. Sending the request to the BANK API with params
+            back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,
+                                                       back_data, seq, dict)
+            # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+            back_json = self.__class__.extract_json(bian_request, back_response, seq)
+        payloads = {"BookHotel": {"abc": "def"}, "BookFlight": {"abc": "def"}, "BookRental": {"abc": "def"},
+                    "CancelHotel": {"abc": "def"}, "CancelFlight": {"abc": "def"}, "CancelRental": {"abc": "def"}}
+        apis = {"BookHotel": self.create_api1, "BookFlight": self.create_api2, "BookRental": self.create_api3,
+                "CancelHotel": self.create_api4, "CancelFlight": self.create_api5, "CancelRental": self.create_api6}
+        try:
+            #self.context = Util.get_lambda_context(request)
+            ret = sagax.execute(self.req_context, payloads, apis)
+            return ret
+        except SagaRollBack as e:
+            ret = HaloResponse()
+            ret.payload = {"test": "bad"}
+            ret.code = 500
+            ret.headers = []
+            return ret
+
+    def processing_engine(self,bian_request):
+        if self.business_event:
+            if self.business_event.get_business_event_type() == SAGA:
+                return self.do_operation_3(bian_request)
+            if self.business_event.get_business_event_type() == SEQ:
+                if self.business_event.keys():
+                    return self.do_operation_2(bian_request)
                 else:
-                    back_data = None
-                # 10. Sending the request to the BANK API with params
-                back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
-                # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-                back_json = self.__class__.extract_json(bian_request,back_response)
-                # 12. store in dict
-                dict[seq] = back_json
+                    raise BusinessEventMissingSeqException(self.service_operation)
         else:
-            raise BusinessEventMissingException(self.service_operation)
-        # 13. Build the payload target response structure which is Compliant
-        payload = self.create_resp_payload(bian_request,dict)
-        logger.debug("payload=" + str(payload))
-        headers = self.set_resp_headers(bian_request,bian_request.request.headers)
-        # 14. build json and add to bian response
-        ret = BianResponse(bian_request, payload, headers)
-        # 15. post condition
-        #do_post_cond()
-        # return json response
-        return ret
+            return self.do_operation_1(bian_request)
 
     def do_initiate_bq(self, bian_request):
         logger.debug("in do_initiate_bq ")
@@ -739,11 +794,22 @@ class AbsBianMixin(AbsBaseMixin):
         if self.bian_action:
             action = self.bian_action
         if self.service_operation:
-            if settings.BUSINESS_EVENT_MAP:
-                map = settings.BUSINESS_EVENT_MAP[self.service_operation]
-                event_category = ActionTerms.categories[action]
-                self.business_event = BusinessEvent(self.service_operation,event_category, map)
+            if not self.business_event:
+                if settings.BUSINESS_EVENT_MAP:
+                    event_category = ActionTerms.categories[action]
+                    service_map = settings.BUSINESS_EVENT_MAP[self.service_operation]
+                    if SEQ in service_map:
+                        dict = service_map[SEQ]
+                        self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
+                    if SAGA in service_map:
+                        saga = service_map[SAGA]
+                        self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
+        else:
+            raise BianException("no service_operation")
         return action
+
+
+
 
     #this is the http part
 

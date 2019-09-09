@@ -43,7 +43,9 @@ class BehaviorQualifierNameException(BianException):
 
 class ControlRecordNameException(BianException):
     pass
-class BusinessEventMissingException(BianException):
+
+class BusinessEventMissingSeqException(BianException):
     pass
+
 class BianApiException(BianException):
     pass

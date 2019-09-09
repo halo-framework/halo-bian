@@ -10,7 +10,11 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
+
 #extension,anlytics,cloud
+
+SEQ = "seq"
+SAGA = "saga"
 
 class BianRequest():
     action_term = None
@@ -530,18 +534,32 @@ class BusinessEvent:
 
     EVENT_NAME = None
     EVENT_CATEGORY = None
-    foi = {} #first order interactions
+    event_type = None
 
-    def __init__(self,event_name,event_category, dict):
+    def __init__(self,event_name,event_category):
         self.EVENT_NAME = event_name
         self.EVENT_CATEGORY = event_category
-        self.foi = OrderedDict(sorted(dict.items(), key=lambda t: t[0])) #SEQUANCE : api for target service domain/service operation-apiobj
 
     def get_business_event_name(self):
         return self.EVENT_NAME
 
     def get_business_category(self):
         return self.EVENT_CATEGORY
+
+    def get_business_event_type(self):
+        return self.event_type
+
+
+class FoiBusinessEvent(BusinessEvent):
+
+    foi = {} #first order interactions
+
+
+    def __init__(self,event_name,event_category, dict):
+        self.EVENT_NAME = event_name
+        self.EVENT_CATEGORY = event_category
+        self.event_type = SEQ
+        self.foi = OrderedDict(sorted(dict.items(), key=lambda t: t[0])) #SEQUANCE : api for target service domain/service operation-apiobj
 
     def get(self, key):
         return self.foi[key]
@@ -551,5 +569,18 @@ class BusinessEvent:
 
     def keys(self):
         return self.foi.keys()
+
+class SagaBusinessEvent(BusinessEvent):
+
+    saga = None
+
+    def __init__(self,event_name,event_category, saga):
+        self.EVENT_NAME = event_name
+        self.EVENT_CATEGORY = event_category
+        self.event_type = SAGA
+        self.saga = saga
+
+    def get_saga(self, key):
+        return self.saga
 
 #Capture service operation connections – The service operation connections for each business event

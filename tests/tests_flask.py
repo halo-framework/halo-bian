@@ -11,7 +11,7 @@ from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.utilx import Util
-from halo_bian.bian.bian import BusinessEvent,BianCategory,ActionTerms
+from halo_bian.bian.bian import FoiBusinessEvent,SagaBusinessEvent,BianCategory,ActionTerms
 
 import unittest
 
@@ -88,9 +88,11 @@ class T2(AbsBianMixin):
         payload['name'] = dict_back_json[1]["title"]
         return payload
 
-class MyBusinessEvent(BusinessEvent):
+class MyBusinessEvent(FoiBusinessEvent):
     pass
 
+class SaBusinessEvent(SagaBusinessEvent):
+    pass
 
 class Api(AbsBaseApi):
     name = "Google"
@@ -171,6 +173,13 @@ class T3(AbsBianMixin):
 
     def set_resp_headers_deposit(self, bian_request,headers):
         return self.set_resp_headers(bian_request,headers)
+
+class T4(AbsBianMixin):
+    filter_separator = "#"
+    filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount','user':'user','page_no':'page_no','count':'count'}}
+    filter_chars = {None: ['=','>']}
+
+
 
 class S1(InfoLinkX):
     pass
@@ -336,6 +345,16 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.bian_request.bq_reference_id == "1"
             assert ret.bian_request.cr_reference_id == "1"
             assert ret.bian_request.request == request
+
+    def test_saga_be_request_returns_a_given_error(self):
+        with app.test_request_context('/tst'):
+            self.t3 = T4()
+            self.t3.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
+                assert False
+            except Exception as e:
+                assert type(e).__name__ == "BadRequestError"
 
     def test_sp_request_returns_a_given_list(self):
         with app.test_request_context('/info'):

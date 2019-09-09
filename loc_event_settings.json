@@ -1,0 +1,10 @@
+{
+  "/": {
+    "url": "base_seq.json",
+    "type": "seq"
+  },
+  "/tst": {
+    "url": "tst_saga.json",
+    "type": "saga"
+  }
+}

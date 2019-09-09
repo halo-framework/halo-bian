@@ -401,7 +401,23 @@ FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
 GENERIC_ARTIFACT = 'Directory'
 BEHAVIOR_QUALIFIER = {"456": "Tester","123":"Deposit"}
 CONTROL_RECORD = 'halo_bian.bian.bian.ControlRecord'
-BUSINESS_EVENT_MAP = {"/":{1:"tests.tests_flask.TstApi",2:"tests.tests_flask.GoogleApi"}}
+#BUSINESS_EVENT_MAP = "be.json"#{"/":'saga1.json',"/tst":{1:"tests.tests_flask.TstApi",2:"tests.tests_flask.GoogleApi"}}
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
 BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None
+
+BUSINESS_EVENT_MAP = None
+EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir, EVENT_SETTINGS)
+with open(file_path, 'r') as fi:
+    map = json.load(fi)
+    BUSINESS_EVENT_MAP = {}
+    for key in map:
+        val = map[key]
+        print("val:"+key+" "+str(val))
+        file_path_data = os.path.join(file_dir, val['url'])
+        print(file_path_data)
+        with open(file_path_data, 'r') as fx:
+             data = json.load(fx)
+             BUSINESS_EVENT_MAP[key] = { val['type'] : data }
