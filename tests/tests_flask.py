@@ -18,7 +18,7 @@ import unittest
 fake = Faker()
 app = Flask(__name__)
 api = Api(app)
-app.config.from_object('settings')
+#app.config.from_object('settings')
 
 
 class CnnApi(AbsBaseApi):

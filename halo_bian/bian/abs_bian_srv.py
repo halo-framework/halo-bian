@@ -504,32 +504,15 @@ class AbsBianMixin(AbsBaseMixin):
         sagax = load_saga("test", self.business_event.saga, schema)
         payloads = {}
         for api in self.business_event.saga["States"]:
+            name = self.business_event.saga["States"][api]['Resource']
+            print(name)
 
-            print(self.business_event.saga["States"][api]['Resource'])
-            back_api = self.__class__.set_back_api(bian_request, self.business_event.saga["States"][api]['Resource'])
-            # 6. array to store the headers required for the API Access
-            back_headers = self.__class__.set_api_headers(bian_request, seq, dict)
-            # 7. set vars
-            back_vars = self.__class__.set_api_vars(bian_request, seq, dict)
-            # 8. auth
-            back_auth = self.__class__.set_api_auth(bian_request, seq, dict)
-            # 9. set request data
-            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                back_data = self.__class__.set_api_data(bian_request, seq, dict)
-            else:
-                back_data = None
-            # 10. Sending the request to the BANK API with params
-            back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,
-                                                       back_data, seq, dict)
-            # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = self.__class__.extract_json(bian_request, back_response, seq)
         payloads = {"BookHotel": {"abc": "def"}, "BookFlight": {"abc": "def"}, "BookRental": {"abc": "def"},
                     "CancelHotel": {"abc": "def"}, "CancelFlight": {"abc": "def"}, "CancelRental": {"abc": "def"}}
         apis = {"BookHotel": self.create_api1, "BookFlight": self.create_api2, "BookRental": self.create_api3,
                 "CancelHotel": self.create_api4, "CancelFlight": self.create_api5, "CancelRental": self.create_api6}
         try:
-            #self.context = Util.get_lambda_context(request)
-            ret = sagax.execute(self.req_context, payloads, apis)
+            ret = sagax.execute(Util.get_req_context(bian_request.request), payloads, apis)
             return ret
         except SagaRollBack as e:
             ret = HaloResponse()
