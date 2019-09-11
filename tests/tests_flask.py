@@ -30,10 +30,10 @@ class GoogleApi(AbsBaseApi):
 class TstApi(AbsBaseApi):
 	name = 'Tst'
 
-class T1(AbsBianMixin):
+class T1(AbsBianMixin):#the basic
     pass
 
-class T2(AbsBianMixin):
+class T2(AbsBianMixin):# customized
     def validate_req(self, bian_request):
         print("in validate_req ")
         if bian_request:
@@ -97,19 +97,10 @@ class SaBusinessEvent(SagaBusinessEvent):
 class Api(AbsBaseApi):
     name = "Google"
 
-class T3(AbsBianMixin):
+class T3(AbsBianMixin):# the foi
     filter_separator = "#"
     filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount','user':'user','page_no':'page_no','count':'count'}}
     filter_chars = {None: ['=','>']}
-    business_event = MyBusinessEvent("test event",BianCategory.DELEGATION, {1:Api})
-
-    def do_retrieve_deposit(self, bian_request):
-        print("in do_retrieve_deposit ")
-        return self.do_retrieve_bq(bian_request)
-
-    def do_execute_deposit(self, bian_request):
-        print("in do_retrieve_deposit ")
-        return self.do_execute_bq(bian_request)
 
     def validate_req_deposit(self, bian_request):
         print("in validate_req_deposit ")
@@ -120,16 +111,27 @@ class T3(AbsBianMixin):
                     raise BadRequestError("missing value for query var name")
         return True
 
-    def set_back_api_deposit(self,bian_request):
+    def validate_pre_deposit(self, bian_request):
+        print("in validate_req_deposit ")
+        if bian_request:
+            if "name" in bian_request.request.args:
+                name = bian_request.request.args['name']
+                if not name:
+                    raise BadRequestError("missing value for query var name")
+        return True
+
+    def set_back_api_deposit(self,bian_request,foi=None):
+        if foi:
+            return T3.set_back_api(bian_request,foi)
         print("in set_back_api_deposit ")
         return Api(Util.get_req_context(bian_request.request))
 
-    def set_api_headers_deposit(self, bian_request):
+    def set_api_headers_deposit(self, bian_request,foi,dict):
         print("in set_api_headers_deposit ")
         headers = {'Accept':'application/json'}
         return headers
 
-    def set_api_vars_deposit(self, bian_request):
+    def set_api_vars_deposit(self, bian_request,foi,dict):
         print("in set_api_vars_deposit " + str(bian_request))
         ret = {}
         name = None
@@ -142,13 +144,13 @@ class T3(AbsBianMixin):
             ret["id"] = bian_request.cr_reference_id
         return ret
 
-    def set_api_auth_deposit(self, bian_request):
+    def set_api_auth_deposit(self, bian_request,foi,dict):
         print("in set_api_auth_deposit ")
         user = ''
         pswd = ''
         return HTTPBasicAuth(user,pswd)
 
-    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data):
+    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data,foi,dict):
         print("in execute_api_deposit ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -160,15 +162,19 @@ class T3(AbsBianMixin):
                 raise BianException(e)
         return None
 
-    def create_resp_payload_deposit(self, bian_request,back_json):
-        print("in create_resp_payload_deposit " + str(back_json))
-        if back_json:
-            return self.map_from_json_deposit(back_json,{})
-        return back_json
+    def create_resp_payload_deposit(self, bian_request,dict):
+        print("in create_resp_payload_deposit " + str(dict))
+        if dict:
+            return self.map_from_json_deposit(dict,{})
+        return {}
 
-    def map_from_json_deposit(self,back_json,payload):
+    def extract_json_deposit(self,bian_request,back_json,foi):
+        print("in extract_json_deposit")
+        return {"title":"good"}
+
+    def map_from_json_deposit(self, dict, payload):
         print("in map_from_json_deposit")
-        payload['name'] = back_json["title"]
+        payload['name'] = dict['1']["title"]
         return payload
 
     def set_resp_headers_deposit(self, bian_request,headers):
@@ -273,10 +279,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 assert False
 
-    def test_bq_request_returns_a_given_string(self):
+    def test_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t3 = T3()
-            ret = self.t3.process_get(request, {"behavior_qualifier":"deposit"})
+            ret = self.t3.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
 
@@ -286,7 +292,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.t3.filter_separator = ";"
             ret = self.t3.process_get(request, {"behavior_qualifier":"deposit"})
             assert ret.code == status.HTTP_200_OK
-            assert ret.payload["name"] == 'delectus aut autem'
+            assert ret.payload["name"] == 'good'
 
     def test_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):

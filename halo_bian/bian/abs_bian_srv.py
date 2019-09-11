@@ -399,7 +399,7 @@ class AbsBianMixin(AbsBaseMixin):
             return self.process_ok(bian_response)
         raise IllegalActionTermException(bian_request.action_term)
 
-    def do_operation_bq(self,bian_request):
+    def do_operation_bq1(self,bian_request):
         if bian_request.behavior_qualifier is None:
             raise IllegalBQException("missing behavior_qualifier value")
         try:
@@ -431,6 +431,85 @@ class AbsBianMixin(AbsBaseMixin):
         except AttributeError as ex:
             raise BianMethodNotImplementedException(ex)
 
+    def do_operation_bq(self,bian_request):
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        try:
+            behavior_qualifier = bian_request.behavior_qualifier.lower()
+            # 1. validate input params
+            getattr(self, 'validate_req_%s' % behavior_qualifier)(bian_request)
+            # 2. Code to access the BANK API  to retrieve data - url + vars dict
+            getattr(self, 'validate_pre_%s' % behavior_qualifier)(bian_request)
+            # 3. processing engine
+            dict = self.processing_engine(bian_request,behavior_qualifier)
+            # 4. Build the payload target response structure which is Compliant
+            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(bian_request, dict)
+            logger.debug("payload=" + str(payload))
+            # 5. setup headers for reply
+            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request,
+                                                                                bian_request.request.headers)
+            # 6. build json and add to bian response
+            ret = BianResponse(bian_request, payload, headers)
+            # 7. post condition
+            self.validate_post(bian_request, ret)
+            # return json response
+            return ret
+        except AttributeError as ex:
+            raise BianMethodNotImplementedException(ex)
+
+    def do_operation_1_bq(self, bian_request,behavior_qualifier):#basic maturity - single request
+        logger.debug("do_operation_1_bq")
+        if behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        logger.debug("do_operation_1")
+        # 1. get api definition to access the BANK API  - url + vars dict
+        back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request)
+        # 2. array to store the headers required for the API Access
+        back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request)
+        # 3. set request params
+        back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
+        # 4. Sset request auth
+        back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
+        # 5. Sset request data
+        if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+            back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(bian_request)
+        else:
+            back_data = None
+        # 6. Sending the request to the BANK API with params
+        back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
+        # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+        back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request, back_response)
+        dict = {1:back_json}
+        # 8. return json response
+        return dict
+
+    def do_operation_2_bq(self,bian_request,behavior_qualifier):#medium maturity - foi
+        logger.debug("do_operation_2_bq")
+        dict = {}
+        for seq in self.business_event.keys():
+            # 1. get get first order interaction
+            foi = self.business_event.get(seq)
+            # 2. get api definition to access the BANK API  - url + vars dict
+            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request,foi)
+            # 3. array to store the headers required for the API Access
+            back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request,seq,dict)
+            # 4. set vars
+            back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request,seq,dict)
+            # 5. auth
+            back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request,seq,dict)
+            # 6. set request data
+            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+                back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(bian_request,seq,dict)
+            else:
+                back_data = None
+            # 7. Sending the request to the BANK API with params
+            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth,back_data,seq,dict)
+            # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response,seq)
+            # 9. store in dict
+            dict[seq] = back_json
+        return dict
+
     def do_operation(self,bian_request):
         # 1. validate input params
         self.validate_req(bian_request)
@@ -438,61 +517,65 @@ class AbsBianMixin(AbsBaseMixin):
         self.validate_pre(bian_request)
         # 3. processing engine
         dict = self.processing_engine(bian_request)
-        # 13. Build the payload target response structure which is Compliant
+        # 4. Build the payload target response structure which is Compliant
         payload = self.create_resp_payload(bian_request,dict)
         logger.debug("payload=" + str(payload))
+        # 5. setup headers for reply
         headers = self.set_resp_headers(bian_request,bian_request.request.headers)
-        # 14. build json and add to bian response
+        # 6. build json and add to bian response
         ret = BianResponse(bian_request, payload, headers)
-        # 15. post condition
+        # 7. post condition
         self.validate_post(bian_request,ret)
-        # return json response
+        # 8. return json response
         return ret
 
     def do_operation_1(self, bian_request):#basic maturity - single request
         logger.debug("do_operation_1")
-        # 2. get api definition to access the BANK API  - url + vars dict
-        back_api = self.set_back_api(bian_request)
-        # 3. array to store the headers required for the API Access
-        back_headers = self.set_api_headers(bian_request)
-        # 4. Sending the request to the BANK API with params
-        back_vars = self.set_api_vars(bian_request)
-        back_auth = self.set_api_auth(bian_request)
+        # 1. get api definition to access the BANK API  - url + vars dict
+        back_api = self.__class__.set_back_api(bian_request)
+        # 2. array to store the headers required for the API Access
+        back_headers = self.__class__.set_api_headers(bian_request)
+        # 3. set request params
+        back_vars = self.__class__.set_api_vars(bian_request)
+        # 4. Sset request auth
+        back_auth = self.__class__.set_api_auth(bian_request)
+        # 5. Sset request data
         if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-            back_data = self.set_api_data(bian_request)
+            back_data = self.__class__.set_api_data(bian_request)
         else:
             back_data = None
-        back_response = self.execute_api(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
-        # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = self.extract_json(bian_request, back_response)
-        dict = {1:back_data}
-        # return json response
+        # 6. Sending the request to the BANK API with params
+        back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
+        # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+        back_json = self.__class__.extract_json(bian_request, back_response)
+        dict = {1:back_json}
+        # 8. return json response
         return dict
 
     def do_operation_2(self,bian_request):#medium maturity - foi
         logger.debug("do_operation_2")
         dict = {}
         for seq in self.business_event.keys():
-            # 4. get get first order interaction
+            # 1. get get first order interaction
             foi = self.business_event.get(seq)
-            # 5. get api definition to access the BANK API  - url + vars dict
+            # 2. get api definition to access the BANK API  - url + vars dict
             back_api = self.__class__.set_back_api(bian_request,foi)
-            # 6. array to store the headers required for the API Access
+            # 3. array to store the headers required for the API Access
             back_headers = self.__class__.set_api_headers(bian_request,seq,dict)
-            # 7. set vars
+            # 4. set vars
             back_vars = self.__class__.set_api_vars(bian_request,seq,dict)
-            # 8. auth
+            # 5. auth
             back_auth = self.__class__.set_api_auth(bian_request,seq,dict)
-            # 9. set request data
+            # 6. set request data
             if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
                 back_data = self.__class__.set_api_data(bian_request,seq,dict)
             else:
                 back_data = None
-            # 10. Sending the request to the BANK API with params
+            # 7. Sending the request to the BANK API with params
             back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data,seq,dict)
-            # 11. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+            # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
             back_json = self.__class__.extract_json(bian_request,back_response,seq)
-            # 12. store in dict
+            # 9. store in dict
             dict[seq] = back_json
         return dict
 
@@ -521,16 +604,22 @@ class AbsBianMixin(AbsBaseMixin):
             ret.headers = []
             return ret
 
-    def processing_engine(self,bian_request):
+    def processing_engine(self,bian_request,behavior_qualifier=None):
         if self.business_event:
             if self.business_event.get_business_event_type() == SAGA:
+                if behavior_qualifier:
+                    return self.do_operation_3_bq(bian_request,behavior_qualifier)
                 return self.do_operation_3(bian_request)
             if self.business_event.get_business_event_type() == SEQ:
                 if self.business_event.keys():
+                    if behavior_qualifier:
+                        return self.do_operation_2_bq(bian_request,behavior_qualifier)
                     return self.do_operation_2(bian_request)
                 else:
                     raise BusinessEventMissingSeqException(self.service_operation)
         else:
+            if behavior_qualifier:
+                return self.do_operation_1_bq(bian_request,behavior_qualifier)
             return self.do_operation_1(bian_request)
 
     def do_initiate_bq(self, bian_request):
@@ -542,10 +631,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_initiate(self, bian_request):
         logger.debug("in do_initiate ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_initiate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_initiate_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_create_bq(self, bian_request):
@@ -557,10 +643,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_create(self, bian_request):
         logger.debug("in do_create ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_create_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_create_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_activate_bq(self, bian_request):
@@ -572,10 +655,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_activate(self, bian_request):
         logger.debug("in do_activate ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_activate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_activate_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_configure_bq(self, bian_request):
@@ -587,10 +667,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_configure(self, bian_request):
         logger.debug("in do_configure ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_configure_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_configure_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_update_bq(self, bian_request):
@@ -602,10 +679,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_update(self, bian_request):
         logger.debug("in do_update ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_update_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_update_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_register_bq(self, bian_request):
@@ -617,10 +691,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_register(self, bian_request):
         logger.debug("in do_register ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_register_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_register_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_record_bq(self, bian_request):
@@ -632,10 +703,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_record(self, bian_request):
         logger.debug("in do_record ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_record_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_record_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_execute_bq(self, bian_request):
@@ -647,10 +715,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_execute(self, bian_request):
         logger.debug("in do_execute ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_execute_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_execute_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_evaluate_bq(self, bian_request):
@@ -662,10 +727,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_evaluate(self, bian_request):
         logger.debug("in do_evaluate ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_evaluate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_evaluate_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_provide_bq(self, bian_request):
@@ -677,10 +739,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_provide(self, bian_request):
         logger.debug("in do_provide ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_provide_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_provide_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_authorize_bq(self, bian_request):
@@ -692,10 +751,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_authorize(self, bian_request):
         logger.debug("in do_authorize ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_authorize_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_authorize_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_request_bq(self, bian_request):
@@ -707,10 +763,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_request(self, bian_request):
         logger.debug("in do_request ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_request_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_request_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_terminate_bq(self, bian_request):
@@ -722,10 +775,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_terminate(self, bian_request):
         logger.debug("in do_terminate ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_terminate_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_terminate_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_notify_bq(self, bian_request):
@@ -737,10 +787,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_notify(self, bian_request):
         logger.debug("in do_notify ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_notify_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_notify_bq(bian_request)
         return self.do_operation(bian_request)
 
     def do_retrieve_bq(self, bian_request):
@@ -752,10 +799,7 @@ class AbsBianMixin(AbsBaseMixin):
     def do_retrieve(self, bian_request):
         logger.debug("in do_retrieve ")
         if bian_request.behavior_qualifier:
-            try:
-                return getattr(self, 'do_retrieve_%s' % bian_request.behavior_qualifier.lower())(bian_request)
-            except AttributeError as ex:
-                raise BianMethodNotImplementedException(ex)
+            return self.do_retrieve_bq(bian_request)
         return self.do_operation(bian_request)
 
     #get props
