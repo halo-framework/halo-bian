@@ -1,10 +1,30 @@
 {
   "/": {
-    "url": "base_seq.json",
-    "type": "seq"
+    "GET": {
+      "url": "base_seq.json",
+      "type": "seq"
+    },
+    "POST" : {
+      "url": "tst_saga.json",
+      "type": "saga"
+    },
+    "PATCH" : {
+      "url": "base_seq.json",
+      "type": "seq"
+    }
   },
   "/tst": {
-    "url": "tst_saga.json",
-    "type": "saga"
+    "GET": {
+      "url": "tst_saga.json",
+      "type": "saga"
+    },
+    "DELETE": {
+      "url": "base_seq.json",
+      "type": "seq"
+    },
+    "PUT" : {
+      "url": "base_seq.json",
+      "type": "seq"
+    }
   }
 }

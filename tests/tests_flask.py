@@ -85,7 +85,7 @@ class T2(AbsBianMixin):# customized
 
     def map_from_json(self,dict_back_json,payload):
         print("in map_from_json")
-        payload['name'] = dict_back_json[1]["title"]
+        payload['name'] = "test"#dict_back_json[1]["title"]
         return payload
 
 class MyBusinessEvent(FoiBusinessEvent):
@@ -180,12 +180,15 @@ class T3(AbsBianMixin):# the foi
     def set_resp_headers_deposit(self, bian_request,headers):
         return self.set_resp_headers(bian_request,headers)
 
-class T4(AbsBianMixin):
-    filter_separator = "#"
-    filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount','user':'user','page_no':'page_no','count':'count'}}
-    filter_chars = {None: ['=','>']}
+    def validate_post_deposit(self, bian_request,ret):
+        return True
 
-
+class T4(AbsBianMixin):# the foi
+    def set_back_api(bian_request,foi=None):
+        if foi:
+            return super(T4).set_back_api(bian_request,foi)
+        print("in set_back_api_deposit ")
+        return TstApi(Util.get_req_context(bian_request.request))
 
 class S1(InfoLinkX):
     pass
@@ -198,7 +201,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def setUp(self):
         app.config.from_pyfile('../settings.py')
 
-    def test_get_request_returns_a_given_string(self):
+    """def test_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_get(request, {})
@@ -230,45 +233,68 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQException'
 
-    def test_get_request_with_ref_bq_not_returns_a_given_string_remote(self):
-        with app.test_request_context('/?name=Peter'):
-            self.t2 = T2()
-            try:
-                ret = self.t2.process_get(request, {"cr_reference_id": "123", "bq_reference_id": "457"})
-                assert False
-            except Exception as e:
-                print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "BianException"
 
-
-    def test_post_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=Peter'):
+    def test_post_request_returns_a_given_error(self):
+        with app.test_request_context(method='POST',path='/tst'):
             self.t1 = T1()
             try:
                 ret = self.t1.process_post(request, {})
-                assert ret.code == status.HTTP_200_OK
+                assert False
+            except Exception as e:
+                print(str(e) + " " + str(type(e)))
+                assert type(e).__name__ == "BusinessEventMissingSeqException"
+
+    def test_post_request_returns_a_given_error1(self):
+        with app.test_request_context(method='POST',path='/'):
+            self.t1 = T1()
+            try:
+                ret = self.t1.process_post(request, {})
+                assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermException"
 
+    def test_post_request_returns_a_given_string(self):
+        with app.test_request_context(method='POST',path='/?name=Peter'):
+            self.t1 = T1()
+            self.t1.bian_action = ActionTerms.INITIATE
+            ret = self.t1.process_post(request, {})
+            assert ret.code == status.HTTP_200_OK
+
     def test_patch_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=Peter'):
+        with app.test_request_context(method='PATCH',path='/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_patch(request, {})
             assert ret.code == status.HTTP_200_OK
 
     def test_put_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=Peter'):
+        with app.test_request_context(method='PUT',path='/tst?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_put(request, {})
             assert ret.code == status.HTTP_200_OK
 
     def test_delete_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=Peter'):
+        with app.test_request_context(method='DELETE',path='/tst'):
             self.t1 = T1()
             ret = self.t1.process_delete(request, {})
             assert ret.code == status.HTTP_200_OK
 
+    def test_delete_request_returns_a_given_error(self):
+        with app.test_request_context(method='DELETE',path='/?name=Peter'):
+            self.t1 = T1()
+            try:
+                ret = self.t1.process_delete(request, {})
+                assert False
+            except Exception as e:
+                assert type(e).__name__ == "BusinessEventMissingSeqException"
+
+    def test_get_request_returns_a_given_stringx_for_test(self):
+        with app.test_request_context('/tst'):
+            self.t1 = T1()
+            ret = self.t1.process_get(request, {})
+            assert ret.code == status.HTTP_200_OK
+
+    """
     def test_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t2 = T2()
@@ -280,9 +306,9 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
 
     def test_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=1'):
-            self.t3 = T3()
-            ret = self.t3.process_get(request, {})
+        with app.test_request_context('/x?name=1'):
+            self.t4 = T4()
+            ret = self.t4.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
 
@@ -299,7 +325,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.t3 = T3()
             ret = self.t3.process_get(request, {})
             assert ret.bian_request.collection_filter[0] == "amount>100"
-
+   
     def test_cf_request_returns_a_given_list(self):
         with app.test_request_context('/?collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
             self.t3 = T3()
@@ -309,7 +335,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.bian_request.collection_filter[1] == "user = 100"
             assert ret.bian_request.collection_filter[2] == "page_no = 2"
             assert ret.bian_request.collection_filter[3] == "count=20"
-
+    
     def test_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
@@ -351,16 +377,6 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.bian_request.bq_reference_id == "1"
             assert ret.bian_request.cr_reference_id == "1"
             assert ret.bian_request.request == request
-
-    def test_saga_be_request_returns_a_given_error(self):
-        with app.test_request_context('/tst'):
-            self.t3 = T4()
-            self.t3.bian_action = ActionTerms.EXECUTE
-            try:
-                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
-                assert False
-            except Exception as e:
-                assert type(e).__name__ == "BadRequestError"
 
     def test_sp_request_returns_a_given_list(self):
         with app.test_request_context('/info'):

@@ -16,8 +16,11 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
+class AbsApiMixin(AbsBaseMixin):
+    __metaclass__ = ABCMeta
 
-class AbsBianMixin(AbsBaseMixin):
+
+class AbsBianMixin(AbsApiMixin):
     __metaclass__ = ABCMeta
 
     #bian data
@@ -323,7 +326,7 @@ class AbsBianMixin(AbsBaseMixin):
                 seq_msg = ""
                 if seq:
                     seq_msg = "seq = "+seq+"."
-                msg = "in execute_api. "+ seq_msg+" code= " + ret.status_code
+                msg = "in execute_api. "+ seq_msg+" code= " + str(ret.status_code)
                 logger.info(msg)
                 return ret
             except ApiError as e:
@@ -352,6 +355,9 @@ class AbsBianMixin(AbsBaseMixin):
         if headers:
             return []
         raise BianException()
+
+    def validate_post(self, bian_request,bian_response):
+        return
 
     def process_ok(self, response):
         if response:
@@ -451,7 +457,7 @@ class AbsBianMixin(AbsBaseMixin):
             # 6. build json and add to bian response
             ret = BianResponse(bian_request, payload, headers)
             # 7. post condition
-            self.validate_post(bian_request, ret)
+            getattr(self, 'validate_post_%s' % behavior_qualifier)(bian_request, ret)
             # return json response
             return ret
         except AttributeError as ex:
@@ -559,41 +565,61 @@ class AbsBianMixin(AbsBaseMixin):
             # 1. get get first order interaction
             foi = self.business_event.get(seq)
             # 2. get api definition to access the BANK API  - url + vars dict
-            back_api = self.__class__.set_back_api(bian_request,foi)
-            # 3. array to store the headers required for the API Access
-            back_headers = self.__class__.set_api_headers(bian_request,seq,dict)
-            # 4. set vars
-            back_vars = self.__class__.set_api_vars(bian_request,seq,dict)
-            # 5. auth
-            back_auth = self.__class__.set_api_auth(bian_request,seq,dict)
-            # 6. set request data
-            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                back_data = self.__class__.set_api_data(bian_request,seq,dict)
-            else:
-                back_data = None
-            # 7. Sending the request to the BANK API with params
-            back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,back_data,seq,dict)
-            # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = self.__class__.extract_json(bian_request,back_response,seq)
-            # 9. store in dict
+            back_api = __class__.set_back_api(bian_request, foi)
+            # 2. do api work
+            back_json = self.__class__.do_api_work(bian_request,back_api,seq)
+            # 3. store in dict
             dict[seq] = back_json
         return dict
+
+    @staticmethod
+    def do_api_work(bian_request,back_api,seq):
+        # 3. array to store the headers required for the API Access
+        back_headers = __class__.set_api_headers(bian_request, seq, dict)
+        # 4. set vars
+        back_vars = __class__.set_api_vars(bian_request, seq, dict)
+        # 5. auth
+        back_auth = __class__.set_api_auth(bian_request, seq, dict)
+        # 6. set request data
+        if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
+            back_data = __class__.set_api_data(bian_request, seq, dict)
+        else:
+            back_data = None
+        # 7. Sending the request to the BANK API with params
+        back_response = __class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,
+                                                   back_data, seq, dict)
+        # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
+        back_json = __class__.extract_json(bian_request, back_response, seq)
+        # return
+        return  back_json
+
+    def do_saga_work(self, api, results, payload):
+        print("do_saga_work=" + str(api) + " result=" + str(results) +"payload="+str(payload))
+        return __class__.do_api_work(payload['request'],api,payload['seq'])
+
+
 
     def do_operation_3(self, bian_request):  # high maturity - saga transactions
         logger.debug("do_operation_3")
         from halo_flask.saga import Saga,SagaRollBack,load_saga
-        with open("C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json") as f1:
+        with open("C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json") as f1:#settings.SAGA_SCHEMA_URL) as f1:
             schema = json.load(f1)
         sagax = load_saga("test", self.business_event.saga, schema)
         payloads = {}
-        for api in self.business_event.saga["States"]:
-            name = self.business_event.saga["States"][api]['Resource']
-            print(name)
+        apis = {}
+        counter = 1
+        for state in self.business_event.saga["States"]:
+            if 'Resource' in self.business_event.saga["States"][state]:
+                api_name = self.business_event.saga["States"][state]['Resource']
+                print(api_name)
+                payloads[state]  = {"request":bian_request,'seq':str(counter)}
+                apis[state] = self.do_saga_work
+                counter = counter + 1
 
-        payloads = {"BookHotel": {"abc": "def"}, "BookFlight": {"abc": "def"}, "BookRental": {"abc": "def"},
-                    "CancelHotel": {"abc": "def"}, "CancelFlight": {"abc": "def"}, "CancelRental": {"abc": "def"}}
-        apis = {"BookHotel": self.create_api1, "BookFlight": self.create_api2, "BookRental": self.create_api3,
-                "CancelHotel": self.create_api4, "CancelFlight": self.create_api5, "CancelRental": self.create_api6}
+        #payloads = {"BookHotel": {"abc": "def"}, "BookFlight": {"abc": "def"}, "BookRental": {"abc": "def"},
+        #            "CancelHotel": {"abc": "def"}, "CancelFlight": {"abc": "def"}, "CancelRental": {"abc": "def"}}
+        #apis = {"BookHotel": self.create_api1, "BookFlight": self.create_api2, "BookRental": self.create_api3,
+        #        "CancelHotel": self.create_api4, "CancelFlight": self.create_api5, "CancelRental": self.create_api6}
         try:
             ret = sagax.execute(Util.get_req_context(bian_request.request), payloads, apis)
             return ret
@@ -820,54 +846,59 @@ class AbsBianMixin(AbsBaseMixin):
         action = default
         if self.bian_action:
             action = self.bian_action
-        if self.service_operation:
-            if not self.business_event:
-                if settings.BUSINESS_EVENT_MAP:
-                    event_category = ActionTerms.categories[action]
-                    service_map = settings.BUSINESS_EVENT_MAP[self.service_operation]
-                    if SEQ in service_map:
-                        dict = service_map[SEQ]
-                        self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
-                    if SAGA in service_map:
-                        saga = service_map[SAGA]
-                        self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
-        else:
-            raise BianException("no service_operation")
         return action
 
+    def set_bian_businss_event(self,request,bian_action):
+       action = self.get_bian_action(bian_action)
+       event_category = ActionTerms.categories[action]
+       self.set_businss_event(request, event_category)
+       return action
 
+    def set_businss_event(self, request, event_category):
+       self.service_operation = request.path
+       if not self.business_event:
+            if settings.BUSINESS_EVENT_MAP:
+                if self.service_operation in settings.BUSINESS_EVENT_MAP:
+                    service_list = settings.BUSINESS_EVENT_MAP[self.service_operation]
+                    #@todo add schema to all event config files
+                    if request.method in service_list:
+                        service_map = service_list[request.method]
+                        if SEQ in service_map:
+                            dict = service_map[SEQ]
+                            self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
+                        if SAGA in service_map:
+                            saga = service_map[SAGA]
+                            self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
+                    else:
+                        raise BusinessEventMissingSeqException(request.method)
+       return self.business_event
 
 
     #this is the http part
 
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        self.service_operation = request.path
-        action = self.get_bian_action(ActionTerms.RETRIEVE)
+        action = self.set_bian_businss_event(request,ActionTerms.RETRIEVE)
         return self.process_service_operation(action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        self.service_operation = request.path
-        action = self.get_bian_action(ActionTerms.CREATE)
+        action = self.set_bian_businss_event(request,ActionTerms.CREATE)
         return self.process_service_operation(action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
-        self.service_operation = request.path
-        action = self.get_bian_action(ActionTerms.UPDATE)
+        action = self.set_bian_businss_event(request,ActionTerms.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
-        self.service_operation = request.path
-        action = self.get_bian_action(ActionTerms.UPDATE)
+        action = self.set_bian_businss_event(request,ActionTerms.UPDATE)
         return self.process_service_operation(action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        self.service_operation = request.path
-        action = self.get_bian_action(ActionTerms.TERMINATE)
+        action = self.set_bian_businss_event(request,ActionTerms.TERMINATE)
         return self.process_service_operation(action, request, vars)
 
 #@TODO externelize all strings

@@ -393,6 +393,9 @@ except Exception as e:
 """
 print('The base settings file has been loaded.')
 
+
+#extend sample
+
 from halo_bian.bian.bian import FunctionalPatterns,Feature
 
 SERVICE_DOMAIN = "halo_current_account_service"
@@ -405,6 +408,8 @@ CONTROL_RECORD = 'halo_bian.bian.bian.ControlRecord'
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
 BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None
+file_dir = os.path.dirname(__file__)
+SAGA_SCHEMA_URL=os.path.join(file_dir, "schema.json")#"C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json"
 
 BUSINESS_EVENT_MAP = None
 EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
@@ -416,8 +421,12 @@ with open(file_path, 'r') as fi:
     for key in map:
         val = map[key]
         print("val:"+key+" "+str(val))
-        file_path_data = os.path.join(file_dir, val['url'])
-        print(file_path_data)
-        with open(file_path_data, 'r') as fx:
-             data = json.load(fx)
-             BUSINESS_EVENT_MAP[key] = { val['type'] : data }
+        dict = {}
+        for action in val:
+            item = val[action]
+            file_path_data = os.path.join(file_dir, item['url'])
+            print(file_path_data)
+            with open(file_path_data, 'r') as fx:
+                 data = json.load(fx)
+                 dict[action] = { item['type'] : data }
+        BUSINESS_EVENT_MAP[key] = dict

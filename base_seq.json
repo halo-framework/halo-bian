@@ -1,4 +1,4 @@
 {
-  "1":"tests.tests_flask.TstApi",
+  "1":"tests.tests_flask.CnnApi",
   "2":"tests.tests_flask.GoogleApi"
 }
