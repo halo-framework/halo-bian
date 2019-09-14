@@ -23,8 +23,6 @@ class IllegalBQIdException(BianException):
 class SystemBQIdException(BianException):
     pass
 
-class BianMethodNotImplementedException(BianException):
-    pass
 
 class ServiceDomainNameException(BianException):
     pass
@@ -44,8 +42,6 @@ class BehaviorQualifierNameException(BianException):
 class ControlRecordNameException(BianException):
     pass
 
-class BusinessEventMissingSeqException(BianException):
-    pass
 
 class BianApiException(BianException):
     pass

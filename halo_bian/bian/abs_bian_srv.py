@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 import json
 import re
-from halo_flask.exceptions import ApiError,BadRequestError
+from halo_flask.exceptions import ApiError,BadRequestError,HaloMethodNotImplementedException
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.utilx import status
 from halo_flask.logs import log_json
 from halo_flask.apis import AbsBaseApi
+from halo_flask.flask.mixinx import AbsApiMixinX
 
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
@@ -16,11 +17,8 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-class AbsApiMixin(AbsBaseMixin):
-    __metaclass__ = ABCMeta
 
-
-class AbsBianMixin(AbsApiMixin):
+class AbsBianMixin(AbsApiMixinX):
     __metaclass__ = ABCMeta
 
     #bian data
@@ -31,7 +29,6 @@ class AbsBianMixin(AbsApiMixin):
     behavior_qualifier = None
     bian_action = None
     control_record = None
-    business_event = None
     service_operation = None
 
     #collection filter data
@@ -361,22 +358,22 @@ class AbsBianMixin(AbsApiMixin):
 
     def process_ok(self, response):
         if response:
-            if response.bian_request:
-                if response.bian_request.request:
-                    if response.bian_request.request.method == 'get':
+            if response.request:
+                if response.request.request:
+                    if response.request.request.method == 'GET':
                         response.code = status.HTTP_200_OK
-                    if response.bian_request.request.method == 'post':
+                    if response.request.request.method == 'POST':
                         response.code = status.HTTP_201_CREATED
-                    if response.bian_request.request.method == 'put':
+                    if response.request.request.method == 'PUT':
                         response.code = status.HTTP_202_ACCEPTED
-                    if response.bian_request.request.method == 'patch':
+                    if response.request.request.method == 'PATCH':
                         response.code = status.HTTP_202_ACCEPTED
-                    if response.bian_request.request.method == 'delete':
+                    if response.request.request.method == 'DELETE':
                         response.code = status.HTTP_200_OK
-                    logger.info('process_service_operation : '+response.bian_request.request.method,
-                                extra=log_json(Util.get_req_context(response.bian_request.request),  {"return": "success"}))
+                    logger.info('process_service_operation : '+response.request.request.method,
+                                extra=log_json(Util.get_req_context(response.request.request),  {"return": "success"}))
                     return response
-                raise ActionTermFailException(response.bian_request.action_term)
+                raise ActionTermFailException(response.request.action_term)
         raise ActionTermFailException(response)
 
     def process_service_operation(self, action, request, vars):
@@ -435,8 +432,8 @@ class AbsBianMixin(AbsApiMixin):
             # return json response
             return ret
         except AttributeError as ex:
-            raise BianMethodNotImplementedException(ex)
-
+            raise HaloMethodNotImplementedException(ex)
+    """
     def do_operation_bq(self,bian_request):
         if bian_request.behavior_qualifier is None:
             raise IllegalBQException("missing behavior_qualifier value")
@@ -647,7 +644,7 @@ class AbsBianMixin(AbsApiMixin):
             if behavior_qualifier:
                 return self.do_operation_1_bq(bian_request,behavior_qualifier)
             return self.do_operation_1(bian_request)
-
+    """
     def do_initiate_bq(self, bian_request):
         logger.debug("in do_initiate_bq ")
         if bian_request.behavior_qualifier is None:
@@ -854,24 +851,7 @@ class AbsBianMixin(AbsApiMixin):
        self.set_businss_event(request, event_category)
        return action
 
-    def set_businss_event(self, request, event_category):
-       self.service_operation = request.path
-       if not self.business_event:
-            if settings.BUSINESS_EVENT_MAP:
-                if self.service_operation in settings.BUSINESS_EVENT_MAP:
-                    service_list = settings.BUSINESS_EVENT_MAP[self.service_operation]
-                    #@todo add schema to all event config files
-                    if request.method in service_list:
-                        service_map = service_list[request.method]
-                        if SEQ in service_map:
-                            dict = service_map[SEQ]
-                            self.business_event = FoiBusinessEvent(self.service_operation,event_category, dict)
-                        if SAGA in service_map:
-                            saga = service_map[SAGA]
-                            self.business_event = SagaBusinessEvent(self.service_operation, event_category, saga)
-                    else:
-                        raise BusinessEventMissingSeqException(request.method)
-       return self.business_event
+
 
 
     #this is the http part

@@ -3,6 +3,7 @@ import logging
 from abc import ABCMeta
 
 from collections import OrderedDict
+from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 from halo_flask.settingsx import settingsx
 
@@ -13,12 +14,8 @@ logger = logging.getLogger(__name__)
 
 #extension,anlytics,cloud
 
-SEQ = "seq"
-SAGA = "saga"
-
-class BianRequest():
+class BianRequest(HaloRequest):
     action_term = None
-    request = None
     cr_reference_id = None
     bq_reference_id = None
     behavior_qualifier = None
@@ -34,10 +31,10 @@ class BianRequest():
 
 
 class BianResponse(HaloResponse):
-    bian_request = None
+    request = None
 
     def __init__(self, bian_request, payload=None, headers=None):
-        self.bian_request = bian_request
+        self.request = bian_request
         self.payload = payload
         self.headers = headers
 
@@ -527,60 +524,5 @@ class FunctionalPatterns:
     }
 
 
-
-
-class BusinessEvent:
-    __metaclass__ = ABCMeta
-
-    EVENT_NAME = None
-    EVENT_CATEGORY = None
-    event_type = None
-
-    def __init__(self,event_name,event_category):
-        self.EVENT_NAME = event_name
-        self.EVENT_CATEGORY = event_category
-
-    def get_business_event_name(self):
-        return self.EVENT_NAME
-
-    def get_business_category(self):
-        return self.EVENT_CATEGORY
-
-    def get_business_event_type(self):
-        return self.event_type
-
-
-class FoiBusinessEvent(BusinessEvent):
-
-    foi = {} #first order interactions
-
-
-    def __init__(self,event_name,event_category, dict):
-        self.EVENT_NAME = event_name
-        self.EVENT_CATEGORY = event_category
-        self.event_type = SEQ
-        self.foi = OrderedDict(sorted(dict.items(), key=lambda t: t[0])) #SEQUANCE : api for target service domain/service operation-apiobj
-
-    def get(self, key):
-        return self.foi[key]
-
-    def put(self, key, value):
-        self.foi[key] = value
-
-    def keys(self):
-        return self.foi.keys()
-
-class SagaBusinessEvent(BusinessEvent):
-
-    saga = None
-
-    def __init__(self,event_name,event_category, saga):
-        self.EVENT_NAME = event_name
-        self.EVENT_CATEGORY = event_category
-        self.event_type = SAGA
-        self.saga = saga
-
-    def get_saga(self, key):
-        return self.saga
 
 #Capture service operation connections – The service operation connections for each business event

@@ -408,8 +408,9 @@ CONTROL_RECORD = 'halo_bian.bian.bian.ControlRecord'
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
 BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None
-file_dir = os.path.dirname(__file__)
-SAGA_SCHEMA_URL=os.path.join(file_dir, "schema.json")#"C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json"
+import pkg_resources
+#SAGA_SCHEMA_PATH=pkg_resources.resource_filename('halo_flask', 'schema/saga_schema.json')#
+SAGA_SCHEMA_PATH=os.path.join(file_dir, 'env',"saga_schema.json")#"C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json"
 
 BUSINESS_EVENT_MAP = None
 EVENT_SETTINGS = ENV_NAME + '_event_settings.json'

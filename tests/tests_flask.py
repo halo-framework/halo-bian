@@ -11,7 +11,8 @@ from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.utilx import Util
-from halo_bian.bian.bian import FoiBusinessEvent,SagaBusinessEvent,BianCategory,ActionTerms
+from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
+from halo_bian.bian.bian import BianCategory,ActionTerms
 
 import unittest
 
@@ -201,7 +202,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def setUp(self):
         app.config.from_pyfile('../settings.py')
 
-    """def test_get_request_returns_a_given_string(self):
+    def test_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_get(request, {})
@@ -294,7 +295,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.t1.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
 
-    """
+
     def test_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.t2 = T2()
@@ -324,17 +325,17 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.t3 = T3()
             ret = self.t3.process_get(request, {})
-            assert ret.bian_request.collection_filter[0] == "amount>100"
+            assert ret.request.collection_filter[0] == "amount>100"
    
     def test_cf_request_returns_a_given_list(self):
         with app.test_request_context('/?collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
             self.t3 = T3()
             self.t3.filter_separator = ";"
             ret = self.t3.process_get(request, {})
-            assert ret.bian_request.collection_filter[0] == "amount>100"
-            assert ret.bian_request.collection_filter[1] == "user = 100"
-            assert ret.bian_request.collection_filter[2] == "page_no = 2"
-            assert ret.bian_request.collection_filter[3] == "count=20"
+            assert ret.request.collection_filter[0] == "amount>100"
+            assert ret.request.collection_filter[1] == "user = 100"
+            assert ret.request.collection_filter[2] == "page_no = 2"
+            assert ret.request.collection_filter[3] == "count=20"
     
     def test_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
@@ -342,7 +343,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.t3.bian_action = ActionTerms.EVALUATE
             try:
                 ret = self.t3.process_get(request, {})
-                assert ret.bian_request.collection_filter[0] != "amount>100"
+                assert ret.request.collection_filter[0] != "amount>100"
             except Exception as e:
                 assert type(e).__name__ == "IllegalActionTermException"
 
@@ -371,12 +372,12 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.t3 = T3()
             self.t3.bian_action = ActionTerms.EXECUTE
             ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
-            assert len(ret.bian_request.collection_filter) == 1
-            assert ret.bian_request.action_term == ActionTerms.EXECUTE
-            assert ret.bian_request.cr_reference_id == "1"
-            assert ret.bian_request.bq_reference_id == "1"
-            assert ret.bian_request.cr_reference_id == "1"
-            assert ret.bian_request.request == request
+            assert len(ret.request.collection_filter) == 1
+            assert ret.request.action_term == ActionTerms.EXECUTE
+            assert ret.request.cr_reference_id == "1"
+            assert ret.request.bq_reference_id == "1"
+            assert ret.request.cr_reference_id == "1"
+            assert ret.request.request == request
 
     def test_sp_request_returns_a_given_list(self):
         with app.test_request_context('/info'):
