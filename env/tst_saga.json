@@ -49,7 +49,7 @@
     },
     "CancelHotel": {
       "Type": "Task",
-      "Resource": "Google",
+      "Resource": "Cnn",
       "Catch": [
         {
           "ErrorEquals": [
@@ -64,7 +64,7 @@
     },
     "CancelFlight": {
       "Type": "Task",
-      "Resource": "Google",
+      "Resource": "Cnn",
       "Catch": [
         {
           "ErrorEquals": [
@@ -79,7 +79,7 @@
     },
     "CancelRental": {
       "Type": "Task",
-      "Resource": "Google",
+      "Resource": "Cnn",
       "Catch": [
         {
           "ErrorEquals": [

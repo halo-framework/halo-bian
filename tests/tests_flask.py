@@ -222,7 +222,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
-                assert type(e).__name__ == 'BianMethodNotImplementedException'
+                assert type(e).__name__ == 'HaloMethodNotImplementedException'
 
     def test_get_request_with_bad_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
@@ -260,19 +260,28 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.t1 = T1()
             self.t1.bian_action = ActionTerms.INITIATE
             ret = self.t1.process_post(request, {})
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == status.HTTP_201_CREATED
 
     def test_patch_request_returns_a_given_string(self):
         with app.test_request_context(method='PATCH',path='/?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_patch(request, {})
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT',path='/tst?name=Peter'):
             self.t1 = T1()
             ret = self.t1.process_put(request, {})
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == status.HTTP_202_ACCEPTED
+
+    def test_put_request_rlbk_returns_a_given_string(self):
+        with app.test_request_context(method='PUT',path='/'):
+            self.t1 = T1()
+            try:
+                ret = self.t1.process_put(request, {})
+                assert False
+            except Exception as e:
+                assert type(e).__name__ == "SagaError"
 
     def test_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE',path='/tst'):

@@ -11,7 +11,8 @@ print("start base")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 env = Env()
-env.read_env()
+THE_ENV=os.path.join(BASE_DIR,'env','.env')
+env.read_env(path=THE_ENV)
 
 ENV = env.str('FLASK_ENV', default='production')
 DEBUG = ENV == 'development'
@@ -339,13 +340,13 @@ API_CONFIG = None
 API_SETTINGS = ENV_NAME + '_api_settings.json'
 
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, API_SETTINGS)
+file_path = os.path.join(file_dir,'env', API_SETTINGS)
 with open(file_path, 'r') as fi:
     API_CONFIG = json.load(fi)
     print("api_config:" + str(API_CONFIG))
 
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, 'loc_settings.json')
+file_path = os.path.join(file_dir,'env', 'loc_settings.json')
 with open(file_path, 'r') as fi:
     LOC_TABLE = json.load(fi)
     print("loc_settings:" + str(LOC_TABLE))
@@ -415,7 +416,7 @@ SAGA_SCHEMA_PATH=os.path.join(file_dir, 'env',"saga_schema.json")#"C:\\dev\\proj
 BUSINESS_EVENT_MAP = None
 EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir, EVENT_SETTINGS)
+file_path = os.path.join(file_dir,'env', EVENT_SETTINGS)
 with open(file_path, 'r') as fi:
     map = json.load(fi)
     BUSINESS_EVENT_MAP = {}
@@ -425,7 +426,7 @@ with open(file_path, 'r') as fi:
         dict = {}
         for action in val:
             item = val[action]
-            file_path_data = os.path.join(file_dir, item['url'])
+            file_path_data = os.path.join(file_dir,'env', item['url'])
             print(file_path_data)
             with open(file_path_data, 'r') as fx:
                  data = json.load(fx)

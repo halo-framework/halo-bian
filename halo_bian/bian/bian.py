@@ -2,7 +2,7 @@
 import logging
 from abc import ABCMeta
 
-from collections import OrderedDict
+from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 from halo_flask.settingsx import settingsx
@@ -39,7 +39,7 @@ class BianResponse(HaloResponse):
         self.headers = headers
 
 
-class ServiceProperties:
+class ServiceProperties(AbsBaseClass):
     status = "online"
     props = []
 
@@ -50,7 +50,7 @@ class ServiceProperties:
         return self.props
 
 
-class AssetType:
+class AssetType(AbsBaseClass):
     __metaclass__ = ABCMeta
     ASSET_TYPE = None
 
@@ -58,7 +58,7 @@ class AssetType:
         return self.ASSET_TYPE
 
 
-class GenericArtifact:
+class GenericArtifact(AbsBaseClass):
     __metaclass__ = ABCMeta
     GENERIC_ARTIFACT_TYPE = None
 
@@ -66,7 +66,7 @@ class GenericArtifact:
         return self.GENERIC_ARTIFACT_TYPE
 
 
-class BehaviorQualifier:
+class BehaviorQualifier(AbsBaseClass):
     __metaclass__ = ABCMeta
     BEHAVIOR_QUALIFIER_TYPE = None
     dict = {}
@@ -92,13 +92,13 @@ class BehaviorQualifier:
 #c. Reporting – provides information about one or more active instances
 #d. Delegation – results in service calls to other Service Domains
 
-class BianCategory:
+class BianCategory(AbsBaseClass):
     ORIGINATION = "Origination"
     INVOCATION = "Invocation"
     REPORTING = "Reporting"
     DELEGATION = "Delegation"
 
-class LifeCycleState:
+class LifeCycleState(AbsBaseClass):
     __metaclass__ = ABCMeta
     #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
     Unassigned = "Unassigned"
@@ -144,7 +144,7 @@ class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
         self.life_cycle_state
 
 
-class BianServiceInfo:
+class BianServiceInfo(AbsBaseClass):
     # A Service Domain is a combination of a Functional Pattern and an Asset Type
 
     # The BIAN service domain name
@@ -197,7 +197,7 @@ class BianServiceInfo:
 
 
 # Service Operations - action terms
-class ActionTerms:
+class ActionTerms(AbsBaseClass):
     INITIATE = 'INITIATE'
     CREATE = 'CREATE'
     ACTIVATE = 'ACTIVATE'
@@ -396,7 +396,7 @@ class Transaction(GenericArtifact):
 
 
 # Functional Patterns
-class FunctionalPatterns:
+class FunctionalPatterns(AbsBaseClass):
     ADMINISTER = 'Administer'
     AGREETERMS = 'Agree Terms'
     ALLOCATE = 'Allocate'
