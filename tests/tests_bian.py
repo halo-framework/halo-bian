@@ -200,7 +200,8 @@ class TestUserDetailTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        app.config.from_pyfile('../settings.py')
+        #app.config.from_pyfile('../settings.py')
+        app.config.from_object('settings')
 
     def test_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):

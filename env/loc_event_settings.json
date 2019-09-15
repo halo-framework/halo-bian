@@ -11,6 +11,10 @@
     "PATCH" : {
       "url": "base_seq.json",
       "type": "seq"
+    },
+    "PUT" : {
+      "url": "saga_rlbk.json",
+      "type": "saga"
     }
   },
   "/tst": {
