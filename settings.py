@@ -340,7 +340,7 @@ API_CONFIG = None
 API_SETTINGS = ENV_NAME + '_api_settings.json'
 
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir,'env', API_SETTINGS)
+file_path = os.path.join(file_dir,'env','api', API_SETTINGS)
 with open(file_path, 'r') as fi:
     API_CONFIG = json.load(fi)
     print("api_config:" + str(API_CONFIG))
@@ -416,7 +416,7 @@ SAGA_SCHEMA_PATH=os.path.join(file_dir, 'env',"saga_schema.json")#"C:\\dev\\proj
 BUSINESS_EVENT_MAP = None
 EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
 file_dir = os.path.dirname(__file__)
-file_path = os.path.join(file_dir,'env', EVENT_SETTINGS)
+file_path = os.path.join(file_dir,'env','config', EVENT_SETTINGS)
 with open(file_path, 'r') as fi:
     map = json.load(fi)
     BUSINESS_EVENT_MAP = {}
@@ -426,7 +426,7 @@ with open(file_path, 'r') as fi:
         dict = {}
         for action in val:
             item = val[action]
-            file_path_data = os.path.join(file_dir,'env', item['url'])
+            file_path_data = os.path.join(file_dir,'env','config', item['url'])
             print(file_path_data)
             with open(file_path_data, 'r') as fx:
                  data = json.load(fx)
