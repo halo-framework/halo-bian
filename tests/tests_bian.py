@@ -244,7 +244,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "BusinessEventMissingSeqException"
+                assert type(e).__name__ == "IllegalActionTermException"
 
     def test_post_request_returns_a_given_error1(self):
         with app.test_request_context(method='POST',path='/'):
@@ -297,7 +297,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 ret = self.t1.process_delete(request, {})
                 assert False
             except Exception as e:
-                assert type(e).__name__ == "BusinessEventMissingSeqException"
+                assert type(e).__name__ == "NoApiClassException"
 
     def test_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):

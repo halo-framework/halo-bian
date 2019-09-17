@@ -411,7 +411,7 @@ CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
 BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None
 import pkg_resources
 #SAGA_SCHEMA_PATH=pkg_resources.resource_filename('halo_flask', 'schema/saga_schema.json')#
-SAGA_SCHEMA_PATH=os.path.join(file_dir, 'env',"saga_schema.json")#"C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json"
+SAGA_SCHEMA_PATH=os.path.join(file_dir, 'env','config',"saga_schema.json")#"C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json"
 
 BUSINESS_EVENT_MAP = None
 EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
