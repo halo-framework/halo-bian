@@ -8,6 +8,7 @@ from halo_flask.flask.utilx import status
 from halo_flask.logs import log_json
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.mixinx import AbsApiMixinX
+from halo_flask.flask.filter import RequestFilter
 
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
@@ -270,6 +271,19 @@ class AbsBianMixin(AbsApiMixinX):
             return True
         raise BianException("no Bian Request")
 
+    def get_request_filter(self):  #
+        logger.debug("get_request_filter")
+        # @todo fix filter config
+        class BianRequestFilter(RequestFilter):
+            def __init__(self,config, ref):
+                super(BianRequestFilter, self).__init__(config)
+                self.ref = ref
+            def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
+                event.put("functional_pattern",self.ref.functional_pattern)
+                print("event-functional_pattern:"+event.get("functional_pattern"))
+                return event
+        return BianRequestFilter(None,self)
+
     def process_ok(self, response):
         if response:
             if response.request:
@@ -316,249 +330,6 @@ class AbsBianMixin(AbsApiMixinX):
             return self.process_ok(bian_response)
         raise IllegalActionTermException(bian_request.action_term)
 
-    def do_operation_bq1(self,bian_request):
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
-        try:
-            behavior_qualifier = bian_request.behavior_qualifier.lower()
-            # 1. validate input params
-            getattr(self, 'validate_req_%s' % behavior_qualifier)(bian_request)
-            # 2. Code to access the BANK API  to retrieve data - url + vars dict
-            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request)
-            # 3. array to store the headers required for the API Access
-            back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request)
-            # 4. Sending the request to the BANK API with params
-            back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
-            back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
-            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(bian_request)
-            else:
-                back_data = None
-            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth,back_data)
-            # 5. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response)
-            # 6. Build the payload target response structure which is IFX Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(bian_request,back_json)
-            logger.debug("payload=" + str(payload))
-            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request,bian_request.request.headers)
-            # 7. build json and add to bian response
-            ret = BianResponse(bian_request, payload, headers)
-            # return json response
-            return ret
-        except AttributeError as ex:
-            raise HaloMethodNotImplementedException(ex)
-    """
-    def do_operation_bq(self,bian_request):
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
-        try:
-            behavior_qualifier = bian_request.behavior_qualifier.lower()
-            # 1. validate input params
-            getattr(self, 'validate_req_%s' % behavior_qualifier)(bian_request)
-            # 2. Code to access the BANK API  to retrieve data - url + vars dict
-            getattr(self, 'validate_pre_%s' % behavior_qualifier)(bian_request)
-            # 3. processing engine
-            dict = self.processing_engine(bian_request,behavior_qualifier)
-            # 4. Build the payload target response structure which is Compliant
-            payload = getattr(self, 'create_resp_payload_%s' % behavior_qualifier)(bian_request, dict)
-            logger.debug("payload=" + str(payload))
-            # 5. setup headers for reply
-            headers = getattr(self, 'set_resp_headers_%s' % behavior_qualifier)(bian_request,
-                                                                                bian_request.request.headers)
-            # 6. build json and add to bian response
-            ret = BianResponse(bian_request, payload, headers)
-            # 7. post condition
-            getattr(self, 'validate_post_%s' % behavior_qualifier)(bian_request, ret)
-            # return json response
-            return ret
-        except AttributeError as ex:
-            raise BianMethodNotImplementedException(ex)
-
-    def do_operation_1_bq(self, bian_request,behavior_qualifier):#basic maturity - single request
-        logger.debug("do_operation_1_bq")
-        if behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
-        logger.debug("do_operation_1")
-        # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request)
-        # 2. array to store the headers required for the API Access
-        back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request)
-        # 3. set request params
-        back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request)
-        # 4. Sset request auth
-        back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request)
-        # 5. Sset request data
-        if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-            back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(bian_request)
-        else:
-            back_data = None
-        # 6. Sending the request to the BANK API with params
-        back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
-        # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request, back_response)
-        dict = {1:back_json}
-        # 8. return json response
-        return dict
-
-    def do_operation_2_bq(self,bian_request,behavior_qualifier):#medium maturity - foi
-        logger.debug("do_operation_2_bq")
-        dict = {}
-        for seq in self.business_event.keys():
-            # 1. get get first order interaction
-            foi = self.business_event.get(seq)
-            # 2. get api definition to access the BANK API  - url + vars dict
-            back_api = getattr(self, 'set_back_api_%s' % behavior_qualifier)(bian_request,foi)
-            # 3. array to store the headers required for the API Access
-            back_headers = getattr(self, 'set_api_headers_%s' % behavior_qualifier)(bian_request,seq,dict)
-            # 4. set vars
-            back_vars = getattr(self, 'set_api_vars_%s' % behavior_qualifier)(bian_request,seq,dict)
-            # 5. auth
-            back_auth = getattr(self, 'set_api_auth_%s' % behavior_qualifier)(bian_request,seq,dict)
-            # 6. set request data
-            if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-                back_data = getattr(self, 'set_api_data_%s' % behavior_qualifier)(bian_request,seq,dict)
-            else:
-                back_data = None
-            # 7. Sending the request to the BANK API with params
-            back_response = getattr(self, 'execute_api_%s' % behavior_qualifier)(bian_request, back_api, back_vars, back_headers, back_auth,back_data,seq,dict)
-            # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-            back_json = getattr(self, 'extract_json_%s' % behavior_qualifier)(bian_request,back_response,seq)
-            # 9. store in dict
-            dict[seq] = back_json
-        return dict
-
-    def do_operation(self,bian_request):
-        # 1. validate input params
-        self.validate_req(bian_request)
-        # 2. run pre conditions
-        self.validate_pre(bian_request)
-        # 3. processing engine
-        dict = self.processing_engine(bian_request)
-        # 4. Build the payload target response structure which is Compliant
-        payload = self.create_resp_payload(bian_request,dict)
-        logger.debug("payload=" + str(payload))
-        # 5. setup headers for reply
-        headers = self.set_resp_headers(bian_request,bian_request.request.headers)
-        # 6. build json and add to bian response
-        ret = BianResponse(bian_request, payload, headers)
-        # 7. post condition
-        self.validate_post(bian_request,ret)
-        # 8. return json response
-        return ret
-
-    def do_operation_1(self, bian_request):#basic maturity - single request
-        logger.debug("do_operation_1")
-        # 1. get api definition to access the BANK API  - url + vars dict
-        back_api = self.__class__.set_back_api(bian_request)
-        # 2. array to store the headers required for the API Access
-        back_headers = self.__class__.set_api_headers(bian_request)
-        # 3. set request params
-        back_vars = self.__class__.set_api_vars(bian_request)
-        # 4. Sset request auth
-        back_auth = self.__class__.set_api_auth(bian_request)
-        # 5. Sset request data
-        if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-            back_data = self.__class__.set_api_data(bian_request)
-        else:
-            back_data = None
-        # 6. Sending the request to the BANK API with params
-        back_response = self.__class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth, back_data)
-        # 7. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = self.__class__.extract_json(bian_request, back_response)
-        dict = {1:back_json}
-        # 8. return json response
-        return dict
-
-    def do_operation_2(self,bian_request):#medium maturity - foi
-        logger.debug("do_operation_2")
-        dict = {}
-        for seq in self.business_event.keys():
-            # 1. get get first order interaction
-            foi = self.business_event.get(seq)
-            # 2. get api definition to access the BANK API  - url + vars dict
-            back_api = __class__.set_back_api(bian_request, foi)
-            # 2. do api work
-            back_json = self.__class__.do_api_work(bian_request,back_api,seq)
-            # 3. store in dict
-            dict[seq] = back_json
-        return dict
-
-    @staticmethod
-    def do_api_work(bian_request,back_api,seq):
-        # 3. array to store the headers required for the API Access
-        back_headers = __class__.set_api_headers(bian_request, seq, dict)
-        # 4. set vars
-        back_vars = __class__.set_api_vars(bian_request, seq, dict)
-        # 5. auth
-        back_auth = __class__.set_api_auth(bian_request, seq, dict)
-        # 6. set request data
-        if bian_request.request.method == 'POST' or bian_request.request.method == 'PUT':
-            back_data = __class__.set_api_data(bian_request, seq, dict)
-        else:
-            back_data = None
-        # 7. Sending the request to the BANK API with params
-        back_response = __class__.execute_api(bian_request, back_api, back_vars, back_headers, back_auth,
-                                                   back_data, seq, dict)
-        # 8. extract from Response stored in an object built as per the BANK API Response body JSON Structure
-        back_json = __class__.extract_json(bian_request, back_response, seq)
-        # return
-        return  back_json
-
-    def do_saga_work(self, api, results, payload):
-        print("do_saga_work=" + str(api) + " result=" + str(results) +"payload="+str(payload))
-        return __class__.do_api_work(payload['request'],api,payload['seq'])
-
-
-
-    def do_operation_3(self, bian_request):  # high maturity - saga transactions
-        logger.debug("do_operation_3")
-        from halo_flask.saga import Saga,SagaRollBack,load_saga
-        with open("C:\\dev\\projects\\halo\\halo_flask\\halo_flask\\tests\\schema.json") as f1:#settings.SAGA_SCHEMA_URL) as f1:
-            schema = json.load(f1)
-        sagax = load_saga("test", self.business_event.saga, schema)
-        payloads = {}
-        apis = {}
-        counter = 1
-        for state in self.business_event.saga["States"]:
-            if 'Resource' in self.business_event.saga["States"][state]:
-                api_name = self.business_event.saga["States"][state]['Resource']
-                print(api_name)
-                payloads[state]  = {"request":bian_request,'seq':str(counter)}
-                apis[state] = self.do_saga_work
-                counter = counter + 1
-
-        #payloads = {"BookHotel": {"abc": "def"}, "BookFlight": {"abc": "def"}, "BookRental": {"abc": "def"},
-        #            "CancelHotel": {"abc": "def"}, "CancelFlight": {"abc": "def"}, "CancelRental": {"abc": "def"}}
-        #apis = {"BookHotel": self.create_api1, "BookFlight": self.create_api2, "BookRental": self.create_api3,
-        #        "CancelHotel": self.create_api4, "CancelFlight": self.create_api5, "CancelRental": self.create_api6}
-        try:
-            ret = sagax.execute(Util.get_req_context(bian_request.request), payloads, apis)
-            return ret
-        except SagaRollBack as e:
-            ret = HaloResponse()
-            ret.payload = {"test": "bad"}
-            ret.code = 500
-            ret.headers = []
-            return ret
-
-    def processing_engine(self,bian_request,behavior_qualifier=None):
-        if self.business_event:
-            if self.business_event.get_business_event_type() == SAGA:
-                if behavior_qualifier:
-                    return self.do_operation_3_bq(bian_request,behavior_qualifier)
-                return self.do_operation_3(bian_request)
-            if self.business_event.get_business_event_type() == SEQ:
-                if self.business_event.keys():
-                    if behavior_qualifier:
-                        return self.do_operation_2_bq(bian_request,behavior_qualifier)
-                    return self.do_operation_2(bian_request)
-                else:
-                    raise BusinessEventMissingSeqException(self.service_operation)
-        else:
-            if behavior_qualifier:
-                return self.do_operation_1_bq(bian_request,behavior_qualifier)
-            return self.do_operation_1(bian_request)
-    """
     def do_initiate_bq(self, bian_request):
         logger.debug("in do_initiate_bq ")
         if bian_request.behavior_qualifier is None:
