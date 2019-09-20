@@ -1,4 +1,10 @@
 {
-  "1":"tests.tests_bian.CnnApi",
-  "2":"tests.tests_bian.GoogleApi"
+  "1": {
+    "name":"halo_flask.apis.CnnApi",
+    "op":"GET"
+  },
+  "2":{
+    "name":"halo_flask.apis.GoogleApi",
+    "op":"GET"
+  }
 }
