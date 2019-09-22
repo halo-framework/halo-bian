@@ -531,40 +531,46 @@ class AbsBianMixin(AbsApiMixinX):
         return action
 
     def set_bian_businss_event(self,request,bian_action):
-       action = self.get_bian_action(bian_action)
-       event_category = ActionTerms.categories[action]
+       event_category = ActionTerms.categories[bian_action]
        self.set_businss_event(request, event_category)
-       return action
-
-
 
 
     #this is the http part
 
     def process_get(self, request, vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        action = self.set_bian_businss_event(request,ActionTerms.RETRIEVE)
-        return self.process_service_operation(action, request, vars)
+        bian_action = self.get_bian_action(ActionTerms.RETRIEVE)
+        bian_request = self.bian_validate_req(bian_action, request, vars)
+        self.set_bian_businss_event(bian_request, bian_action)
+        return self.process_service_operation(bian_action, request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        action = self.set_bian_businss_event(request,ActionTerms.CREATE)
-        return self.process_service_operation(action, request, vars)
+        bian_action = self.get_bian_action(ActionTerms.CREATE)
+        bian_request = self.bian_validate_req(bian_action, request, vars)
+        self.set_bian_businss_event(bian_request, bian_action)
+        return self.process_service_operation(bian_action, request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
-        action = self.set_bian_businss_event(request,ActionTerms.UPDATE)
-        return self.process_service_operation(action, request, vars)
+        bian_action = self.get_bian_action(ActionTerms.UPDATE)
+        bian_request = self.bian_validate_req(bian_action, request, vars)
+        self.set_bian_businss_event(bian_request, bian_action)
+        return self.process_service_operation(bian_action, request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
-        action = self.set_bian_businss_event(request,ActionTerms.UPDATE)
-        return self.process_service_operation(action, request, vars)
+        bian_action = self.get_bian_action(ActionTerms.UPDATE)
+        bian_request = self.bian_validate_req(bian_action, request, vars)
+        self.set_bian_businss_event(bian_request, bian_action)
+        return self.process_service_operation(bian_action, request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        action = self.set_bian_businss_event(request,ActionTerms.TERMINATE)
-        return self.process_service_operation(action, request, vars)
+        bian_action = self.get_bian_action(ActionTerms.TERMINATE)
+        bian_request = self.bian_validate_req(bian_action, request, vars)
+        self.set_bian_businss_event(bian_request, bian_action)
+        return self.process_service_operation(bian_action, request, vars)
 
 #@TODO externelize all strings
 

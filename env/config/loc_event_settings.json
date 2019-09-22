@@ -1,5 +1,21 @@
 {
-  "T2": {
+  "A1": {
+    "base": {
+      "PUT": {
+        "url": "base_seq.json",
+        "type": "seq"
+      },
+      "POST": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      },
+      "PATCH": {
+        "url": "tst_saga.json",
+        "type": "saga"
+      }
+    }
+  },
+  "A2": {
     "base": {
       "GET": {
         "url": "base_seq.json",
@@ -14,18 +30,22 @@
         "type": "saga"
       },
       "PATCH": {
-        "url": "base_seq.json",
-        "type": "seq"
+        "url": "saga_rlbk_brk.json",
+        "type": "saga"
       }
     },
     "deposit": {
       "GET": {
         "url": "base_seq.json",
         "type": "seq"
+      },
+      "POST": {
+        "url": "tst_saga.json",
+        "type": "saga"
       }
     }
   },
-  "T3":{
+  "A3":{
     "base": {
       "GET": {
         "url": "tst_saga.json",

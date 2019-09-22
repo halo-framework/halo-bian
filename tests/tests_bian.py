@@ -9,7 +9,7 @@ from halo_flask.exceptions import BadRequestError,ApiError
 from halo_flask.flask.utilx import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX
 from halo_bian.bian.exceptions import BianException
-from halo_flask.apis import AbsBaseApi
+from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
 from halo_bian.bian.bian import BianCategory,ActionTerms
@@ -19,22 +19,18 @@ import unittest
 fake = Faker()
 app = Flask(__name__)
 api = Api(app)
-#app.config.from_object('settings')
 
 
-class CnnApi(AbsBaseApi):
-	name = 'Cnn'
+class A1(AbsBianMixin):#the basic
+    def set_back_api(self, halo_request, foi=None):
+        if not foi:#not in seq
+            if halo_request.request.method == HTTPChoice.get.value:
+                return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.get.value)
+            if halo_request.request.method == HTTPChoice.delete.value:
+                return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.delete.value)
+        return super(A1,self).set_back_api(halo_request,foi)
 
-class GoogleApi(AbsBaseApi):
-	name = 'Google'
-
-class TstApi(AbsBaseApi):
-	name = 'Tst'
-
-class T1(AbsBianMixin):#the basic
-    pass
-
-class T2(AbsBianMixin):# customized
+class A2(A1):# customized
     def validate_req(self, bian_request):
         print("in validate_req ")
         if bian_request:
@@ -44,12 +40,12 @@ class T2(AbsBianMixin):# customized
                     raise BadRequestError("missing value for query var name")
         return True
 
-    def set_api_headers(bian_request):
+    def set_api_headers(self,bian_request, seq=None, dict=None):
         print("in set_api_headers ")
         headers = {'Accept':'application/json'}
         return headers
 
-    def set_api_vars(bian_request):
+    def set_api_vars(self,bian_request, seq=None, dict=None):
         print("in set_api_vars " + str(bian_request))
         ret = {}
         name = bian_request.request.args['name']
@@ -60,13 +56,13 @@ class T2(AbsBianMixin):# customized
             ret["id"] = bian_request.cr_reference_id
         return ret
 
-    def set_api_auth(bian_request):
+    def set_api_auth(self,bian_request, seq=None, dict=None):
         print("in set_api_auth ")
         user = ''
         pswd = ''
         return HTTPBasicAuth(user,pswd)
 
-    def execute_api(bian_request, back_api, back_vars, back_headers,back_auth,back_data):
+    def execute_api(self,bian_request, back_api, back_vars, back_headers,back_auth,back_data, seq=None, dict=None):
         print("in execute_api ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -95,13 +91,19 @@ class MyBusinessEvent(FoiBusinessEvent):
 class SaBusinessEvent(SagaBusinessEvent):
     pass
 
-class Api(AbsBaseApi):
-    name = "Google"
 
-class T3(AbsBianMixin):# the foi
+class A3(AbsBianMixin):# the foi
     filter_separator = "#"
     filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount','user':'user','page_no':'page_no','count':'count'}}
     filter_chars = {None: ['=','>']}
+
+    def set_back_api(self,bian_request,foi=None):
+        if foi:
+            return super(A3,self).set_back_api(bian_request,foi)
+        print("in set_back_api ")
+        api = TstApi(Util.get_req_context(bian_request.request))
+        api.set_api_url("ID","1")
+        return api
 
     def validate_req_deposit(self, bian_request):
         print("in validate_req_deposit ")
@@ -123,16 +125,16 @@ class T3(AbsBianMixin):# the foi
 
     def set_back_api_deposit(self,bian_request,foi=None):
         if foi:
-            return T3.set_back_api(bian_request,foi)
+            return self.set_back_api(bian_request,foi)
         print("in set_back_api_deposit ")
-        return Api(Util.get_req_context(bian_request.request))
+        return TstApi(Util.get_req_context(bian_request.request))
 
-    def set_api_headers_deposit(self, bian_request,foi,dict):
+    def set_api_headers_deposit(self, bian_request,foi=None,dict=None):
         print("in set_api_headers_deposit ")
         headers = {'Accept':'application/json'}
         return headers
 
-    def set_api_vars_deposit(self, bian_request,foi,dict):
+    def set_api_vars_deposit(self, bian_request,foi=None,dict=None):
         print("in set_api_vars_deposit " + str(bian_request))
         ret = {}
         name = None
@@ -145,13 +147,13 @@ class T3(AbsBianMixin):# the foi
             ret["id"] = bian_request.cr_reference_id
         return ret
 
-    def set_api_auth_deposit(self, bian_request,foi,dict):
+    def set_api_auth_deposit(self, bian_request,foi=None,dict=None):
         print("in set_api_auth_deposit ")
         user = ''
         pswd = ''
         return HTTPBasicAuth(user,pswd)
 
-    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data,foi,dict):
+    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data,foi=None,dict=None):
         print("in execute_api_deposit ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -169,13 +171,13 @@ class T3(AbsBianMixin):# the foi
             return self.map_from_json_deposit(dict,{})
         return {}
 
-    def extract_json_deposit(self,bian_request,back_json,foi):
+    def extract_json_deposit(self,bian_request,back_json,foi=None):
         print("in extract_json_deposit")
         return {"title":"good"}
 
     def map_from_json_deposit(self, dict, payload):
         print("in map_from_json_deposit")
-        payload['name'] = dict['1']["title"]
+        payload['name'] = dict[1]["title"]
         return payload
 
     def set_resp_headers_deposit(self, bian_request,headers):
@@ -184,12 +186,19 @@ class T3(AbsBianMixin):# the foi
     def validate_post_deposit(self, bian_request,ret):
         return True
 
-class T4(AbsBianMixin):# the foi
-    def set_back_api(bian_request,foi=None):
+class A4(AbsBianMixin):# the foi
+    def set_back_api(self,bian_request,foi=None):
+        print("in set_back_api ")
         if foi:
-            return super(T4).set_back_api(bian_request,foi)
-        print("in set_back_api_deposit ")
-        return TstApi(Util.get_req_context(bian_request.request))
+            return super(A4,self).set_back_api(bian_request,foi)
+        api = TstApi(Util.get_req_context(bian_request.request))
+        api.set_api_url("ID", "1")
+        return api
+
+    def create_resp_payload(self,halo_request, dict):
+        print("in create_resp_payload")
+        json = dict[1]
+        return {"name":json["title"]}
 
 class S1(InfoLinkX):
     pass
@@ -203,145 +212,126 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
 
-    def test_get_request_returns_a_given_string(self):
+    def test_1_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            self.t1 = T1()
-            ret = self.t1.process_get(request, {})
+            self.a1 = A1()
+            ret = self.a1.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
 
-    def test_get_request_with_ref_returns_a_given_string(self):
+    def test_2_get_request_with_ref_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            self.t1 = T1()
-            ret = self.t1.process_get(request, {"cr_reference_id": "123"})
+            self.a1 = A1()
+            ret = self.a1.process_get(request, {"cr_reference_id": "123"})
             assert ret.code == status.HTTP_200_OK
 
-    def test_get_request_with_ref_bq_returns_a_given_string(self):
+    def test_3_get_request_with_ref_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            self.t1 = T1()
+            self.a1 = A1()
             try:
-                ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "Deposit"})
+                ret = self.a1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "Deposit"})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'HaloMethodNotImplementedException'
 
-    def test_get_request_with_bad_bq_returns_a_given_string(self):
+    def test_4_get_request_with_bad_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            self.t1 = T1()
+            self.a1 = A1()
             try:
-                ret = self.t1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "456"})
+                ret = self.a1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "456"})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQException'
 
 
-    def test_post_request_returns_a_given_error(self):
+    def test_5_post_request_returns_a_given_error(self):
         with app.test_request_context(method='POST',path='/tst'):
-            self.t1 = T1()
+            self.a1 = A1()
             try:
-                ret = self.t1.process_post(request, {})
+                ret = self.a1.process_post(request, {})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermException"
 
-    def test_post_request_returns_a_given_error1(self):
+    def test_6_post_request_returns_a_given_error1(self):
         with app.test_request_context(method='POST',path='/'):
-            self.t1 = T1()
+            self.a1 = A1()
             try:
-                ret = self.t1.process_post(request, {})
+                ret = self.a1.process_post(request, {})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermException"
 
-    def test_post_request_returns_a_given_string(self):
+    def test_7_post_request_returns_a_given_string(self):
         with app.test_request_context(method='POST',path='/?name=Peter'):
-            self.t1 = T1()
-            self.t1.bian_action = ActionTerms.INITIATE
-            ret = self.t1.process_post(request, {})
+            self.a1 = A1()
+            self.a1.bian_action = ActionTerms.INITIATE
+            ret = self.a1.process_post(request, {})
             assert ret.code == status.HTTP_201_CREATED
 
-    def test_patch_request_returns_a_given_string(self):
+    def test_8_patch_request_returns_a_given_string(self):
         with app.test_request_context(method='PATCH',path='/?name=Peter'):
-            self.t1 = T1()
-            ret = self.t1.process_patch(request, {})
+            self.a1 = A1()
+            ret = self.a1.process_patch(request, {})
             assert ret.code == status.HTTP_202_ACCEPTED
 
-    def test_put_request_returns_a_given_string(self):
+    def test_90_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT',path='/tst?name=Peter'):
-            self.t1 = T1()
-            ret = self.t1.process_put(request, {})
+            self.a1 = A1()
+            ret = self.a1.process_put(request, {})
             assert ret.code == status.HTTP_202_ACCEPTED
 
-    def test_put_request_rlbk_returns_a_given_string(self):
-        with app.test_request_context(method='PUT',path='/'):
-            self.t1 = T1()
-            try:
-                ret = self.t1.process_put(request, {})
-                assert False
-            except Exception as e:
-                assert type(e).__name__ == "SagaError"
-
-    def test_delete_request_returns_a_given_string(self):
+    def test_92_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE',path='/tst'):
-            self.t1 = T1()
-            ret = self.t1.process_delete(request, {})
+            self.a1 = A1()
+            ret = self.a1.process_delete(request, {})
             assert ret.code == status.HTTP_200_OK
 
-    def test_delete_request_returns_a_given_error(self):
-        with app.test_request_context(method='DELETE',path='/?name=Peter'):
-            self.t1 = T1()
-            try:
-                ret = self.t1.process_delete(request, {})
-                assert False
-            except Exception as e:
-                assert type(e).__name__ == "NoApiClassException"
-
-    def test_get_request_returns_a_given_stringx_for_test(self):
+    def test_94_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):
-            self.t1 = T1()
-            ret = self.t1.process_get(request, {})
+            self.a1 = A1()
+            ret = self.a1.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
 
 
     def test_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
-            self.t2 = T2()
-            try:
-                ret = self.t2.process_get(request, {"cr_reference_id":"1"})
-                assert ret.code == status.HTTP_200_OK
-                #assert ret.payload["name"] == 'delectus aut autem'
-            except Exception as e:
-                assert False
+            self.a2 = A2()
+            ret = self.a2.process_get(request, {"cr_reference_id":"1"})
+            assert ret.code == status.HTTP_200_OK
+            assert ret.payload["name"] == 'test'
+
 
     def test_request_returns_a_given_string(self):
         with app.test_request_context('/x?name=1'):
-            self.t4 = T4()
-            ret = self.t4.process_get(request, {})
+            self.a4 = A4()
+            ret = self.a4.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
 
     def test_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
-            self.t3 = T3()
-            self.t3.filter_separator = ";"
-            ret = self.t3.process_get(request, {"behavior_qualifier":"deposit"})
+            self.a3 = A3()
+            self.a3.filter_separator = ";"
+            ret = self.a3.process_get(request, {"behavior_qualifier":"deposit"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'good'
 
     def test_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            self.t3 = T3()
-            ret = self.t3.process_get(request, {})
+            self.a3 = A3()
+            ret = self.a3.process_get(request, {})
             assert ret.request.collection_filter[0] == "amount>100"
    
     def test_cf_request_returns_a_given_list(self):
-        with app.test_request_context('/?collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
-            self.t3 = T3()
-            self.t3.filter_separator = ";"
-            ret = self.t3.process_get(request, {})
+        with app.test_request_context(method='POST',path='/?name=john&collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
+            self.a3 = A3()
+            self.a3.bian_action = ActionTerms.EXECUTE
+            self.a3.filter_separator = ";"
+            ret = self.a3.process_post(request, {})
             assert ret.request.collection_filter[0] == "amount>100"
             assert ret.request.collection_filter[1] == "user = 100"
             assert ret.request.collection_filter[2] == "page_no = 2"
@@ -349,39 +339,39 @@ class TestUserDetailTestCase(unittest.TestCase):
     
     def test_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            self.t3 = T3()
-            self.t3.bian_action = ActionTerms.EVALUATE
+            self.a3 = A3()
+            self.a3.bian_action = ActionTerms.EVALUATE
             try:
-                ret = self.t3.process_get(request, {})
+                ret = self.a3.process_get(request, {})
                 assert ret.request.collection_filter[0] != "amount>100"
             except Exception as e:
                 assert type(e).__name__ == "IllegalActionTermException"
 
     def test_mask_cr_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            self.t3 = T3()
-            self.t3.bian_action = ActionTerms.EXECUTE
+            self.a3 = A3()
+            self.a3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.t3.process_get(request, {"cr_reference_id":"1a","bq_reference_id":"1"})
+                ret = self.a3.process_get(request, {"cr_reference_id":"1a","bq_reference_id":"1"})
                 assert False
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
 
     def test_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            self.t3 = T3()
-            self.t3.bian_action = ActionTerms.EXECUTE
+            self.a3 = A3()
+            self.a3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1b"})
+                ret = self.a3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1b"})
                 assert False
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
 
     def test_request_returns_a_response(self):
         with app.test_request_context('/?name=peter&collection-filter=amount>100'):
-            self.t3 = T3()
-            self.t3.bian_action = ActionTerms.EXECUTE
-            ret = self.t3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
+            self.a3 = A3()
+            self.a3.bian_action = ActionTerms.EXECUTE
+            ret = self.a3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
             assert len(ret.request.collection_filter) == 1
             assert ret.request.action_term == ActionTerms.EXECUTE
             assert ret.request.cr_reference_id == "1"
