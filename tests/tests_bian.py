@@ -105,7 +105,7 @@ class A3(AbsBianMixin):# the foi
         api.set_api_url("ID","1")
         return api
 
-    def validate_req_deposit(self, bian_request):
+    def validate_req_depositsandwithdrawals(self, bian_request):
         print("in validate_req_deposit ")
         if bian_request:
             if "name" in bian_request.request.args:
@@ -114,7 +114,7 @@ class A3(AbsBianMixin):# the foi
                     raise BadRequestError("missing value for query var name")
         return True
 
-    def validate_pre_deposit(self, bian_request):
+    def validate_pre_depositsandwithdrawals(self, bian_request):
         print("in validate_req_deposit ")
         if bian_request:
             if "name" in bian_request.request.args:
@@ -123,18 +123,18 @@ class A3(AbsBianMixin):# the foi
                     raise BadRequestError("missing value for query var name")
         return True
 
-    def set_back_api_deposit(self,bian_request,foi=None):
+    def set_back_api_depositsandwithdrawals(self,bian_request,foi=None):
         if foi:
             return self.set_back_api(bian_request,foi)
         print("in set_back_api_deposit ")
         return TstApi(Util.get_req_context(bian_request.request))
 
-    def set_api_headers_deposit(self, bian_request,foi=None,dict=None):
+    def set_api_headers_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
         print("in set_api_headers_deposit ")
         headers = {'Accept':'application/json'}
         return headers
 
-    def set_api_vars_deposit(self, bian_request,foi=None,dict=None):
+    def set_api_vars_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
         print("in set_api_vars_deposit " + str(bian_request))
         ret = {}
         name = None
@@ -147,13 +147,13 @@ class A3(AbsBianMixin):# the foi
             ret["id"] = bian_request.cr_reference_id
         return ret
 
-    def set_api_auth_deposit(self, bian_request,foi=None,dict=None):
+    def set_api_auth_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
         print("in set_api_auth_deposit ")
         user = ''
         pswd = ''
         return HTTPBasicAuth(user,pswd)
 
-    def execute_api_deposit(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data,foi=None,dict=None):
+    def execute_api_depositsandwithdrawals(self, bian_request, back_api, back_vars, back_headers,back_auth,back_data,foi=None,dict=None):
         print("in execute_api_deposit ")
         if back_api:
             timeout = Util.get_timeout(bian_request.request)
@@ -165,25 +165,25 @@ class A3(AbsBianMixin):# the foi
                 raise BianException(e)
         return None
 
-    def create_resp_payload_deposit(self, bian_request,dict):
+    def create_resp_payload_depositsandwithdrawals(self, bian_request,dict):
         print("in create_resp_payload_deposit " + str(dict))
         if dict:
-            return self.map_from_json_deposit(dict,{})
+            return self.map_from_json_depositsandwithdrawals(dict,{})
         return {}
 
-    def extract_json_deposit(self,bian_request,back_json,foi=None):
+    def extract_json_depositsandwithdrawals(self,bian_request,back_json,foi=None):
         print("in extract_json_deposit")
         return {"title":"good"}
 
-    def map_from_json_deposit(self, dict, payload):
+    def map_from_json_depositsandwithdrawals(self, dict, payload):
         print("in map_from_json_deposit")
         payload['name'] = dict[1]["title"]
         return payload
 
-    def set_resp_headers_deposit(self, bian_request,headers):
+    def set_resp_headers_depositsandwithdrawals(self, bian_request,headers):
         return self.set_resp_headers(bian_request,headers)
 
-    def validate_post_deposit(self, bian_request,ret):
+    def validate_post_depositsandwithdrawals(self, bian_request,ret):
         return True
 
 class A4(AbsBianMixin):# the foi
@@ -228,7 +228,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=Peter'):
             self.a1 = A1()
             try:
-                ret = self.a1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "Deposit"})
+                ret = self.a1.process_get(request, {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
@@ -316,7 +316,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=1'):
             self.a3 = A3()
             self.a3.filter_separator = ";"
-            ret = self.a3.process_get(request, {"behavior_qualifier":"deposit"})
+            ret = self.a3.process_get(request, {"behavior_qualifier":"DepositsandWithdrawals"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'good'
 

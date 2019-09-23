@@ -164,25 +164,45 @@ class AbsBianMixin(AbsApiMixinX):
     def get_control_record(self):
         return self.control_record
 
-    def init_cr(self, ga_class_name):
+    def init_cr(self, cr_class_name,init_var=None):
         if settings.CONTROL_RECORD:
             k = settings.CONTROL_RECORD.rfind(".")
             module_name = settings.CONTROL_RECORD[:k]
             class_name = settings.CONTROL_RECORD[k+1:]
         else:
             module_name = "halo_bian.bian.bian"
-            class_name = ga_class_name
+            class_name = cr_class_name
         module = importlib.import_module(module_name)
         class_ = getattr(module, class_name)
         if not issubclass(class_, ControlRecord):
-            raise BianException("class error:"+class_name)
-        instance = class_(settings.BEHAVIOR_QUALIFIER)
+            raise BianException("CONTROL RECORD class error:"+class_name)
+        instance = class_(init_var)
         return instance
 
-    def get_cr_obj(self):
+    def get_cr_obj(self,init_var=None):
         cr_class = 'ControlRecord'
-        cr_obj = self.init_cr(cr_class)
+        cr_obj = self.init_cr(cr_class,init_var)
         return cr_obj
+
+    def init_ga(self, ga_class_name,init_var=None):
+        if settings.GENERIC_ARTIFACT:
+            k = settings.GENERIC_ARTIFACT.rfind(".")
+            module_name = settings.GENERIC_ARTIFACT[:k]
+            class_name = settings.GENERIC_ARTIFACT[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = ga_class_name
+        module = importlib.import_module(module_name)
+        class_ = getattr(module, class_name)
+        if not issubclass(class_, GenericArtifact):
+            raise BianException("GENERIC ARTIFACT class error:"+class_name)
+        instance = class_(init_var)
+        return instance
+
+    def get_ga_obj(self,init_var=None):
+        ga_class = 'GenericArtifact'
+        ga_obj = self.init_cr(ga_class,init_var)
+        return ga_obj
 
     def init_bq(self, bq_class_name):
         module = importlib.import_module("halo_bian.bian.bian")

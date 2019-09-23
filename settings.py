@@ -396,15 +396,23 @@ except Exception as e:
 
 #extend sample
 
-from halo_bian.bian.bian import FunctionalPatterns,Feature
+from halo_bian.bian.bian import FunctionalPatterns
 
 SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
-GENERIC_ARTIFACT = 'Directory'
-BEHAVIOR_QUALIFIER = {"456": "Tester","123":"Deposit"}
-CONTROL_RECORD = 'halo_bian.bian.bian.ControlRecord'
-#BUSINESS_EVENT_MAP = "be.json"#{"/":'saga1.json',"/tst":{1:"tests.tests_flask.TstApi",2:"tests.tests_flask.GoogleApi"}}
+GENERIC_ARTIFACT = 'halo_bian.bian.bian.FulfillmentArrangement'#extended classes of FulfillmentArrangement
+BEHAVIOR_QUALIFIER = {
+  "Interest":"Interest",
+  "ServiceFees":"ServiceFees",
+  "AccountLien":"AccountLien",
+  "AccountSweep":"AccountSweep",
+  "DepositsandWithdrawals":"DepositsandWithdrawals",
+  "Payments":"Payments",
+  "IssuedDevice":"IssuedDevice"
+}
+CONTROL_RECORD = 'halo_bian.bian.bian.ControlRecord'#extended classes of ControlRecord
+
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
 BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None
