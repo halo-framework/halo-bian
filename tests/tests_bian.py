@@ -284,20 +284,20 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.a1.process_put(request, {})
             assert ret.code == status.HTTP_202_ACCEPTED
 
-    def test_92_delete_request_returns_a_given_string(self):
+    def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE',path='/tst'):
             self.a1 = A1()
             ret = self.a1.process_delete(request, {})
             assert ret.code == status.HTTP_200_OK
 
-    def test_94_get_request_returns_a_given_stringx_for_test(self):
+    def test_92_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):
             self.a1 = A1()
             ret = self.a1.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
 
 
-    def test_full_request_returns_a_given_string(self):
+    def test_93_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.a2 = A2()
             ret = self.a2.process_get(request, {"cr_reference_id":"1"})
@@ -305,14 +305,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.payload["name"] == 'test'
 
 
-    def test_request_returns_a_given_string(self):
+    def test_94_request_returns_a_given_string(self):
         with app.test_request_context('/x?name=1'):
             self.a4 = A4()
             ret = self.a4.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'delectus aut autem'
 
-    def test_bq_request_returns_a_given_string(self):
+    def test_95_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             self.a3 = A3()
             self.a3.filter_separator = ";"
@@ -320,13 +320,13 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'good'
 
-    def test_cf_request_returns_a_given_string(self):
+    def test_96_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.a3 = A3()
             ret = self.a3.process_get(request, {})
             assert ret.request.collection_filter[0] == "amount>100"
    
-    def test_cf_request_returns_a_given_list(self):
+    def test_97_cf_request_returns_a_given_list(self):
         with app.test_request_context(method='POST',path='/?name=john&collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
@@ -337,7 +337,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.request.collection_filter[2] == "page_no = 2"
             assert ret.request.collection_filter[3] == "count=20"
     
-    def test_action_request_returns_a_given_error(self):
+    def test_98_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EVALUATE
@@ -347,7 +347,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 assert type(e).__name__ == "IllegalActionTermException"
 
-    def test_mask_cr_request_returns_a_given_error(self):
+    def test_990_mask_cr_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
@@ -357,7 +357,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
 
-    def test_mask_bq_request_returns_a_given_error(self):
+    def test_991_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
@@ -367,7 +367,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 assert type(e).__name__ == "BadRequestError"
 
-    def test_request_returns_a_response(self):
+    def test_992_request_returns_a_response(self):
         with app.test_request_context('/?name=peter&collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
@@ -379,7 +379,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.request.cr_reference_id == "1"
             assert ret.request.request == request
 
-    def test_sp_request_returns_a_given_list(self):
+    def test_993_request_returns_a_response(self):
+        with app.test_request_context('/?name=peter&collection-filter=amount>100'):
+            self.a3 = A3()
+            self.a3.bian_action = ActionTerms.EXECUTE
+            ret = self.a3.process_put(request, {"cr_reference_id":"1","bq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_994_sp_request_returns_a_given_list(self):
         with app.test_request_context('/info'):
             self.s1 = S1()
             ret = self.s1.process_get(request, {})
