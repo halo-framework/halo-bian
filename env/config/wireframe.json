@@ -1,0 +1,9 @@
+{
+  "corespondance": {
+    "action":"Execute",
+    "name":"send_msg",
+    "op":"GET",
+    "type":"api",
+    "conn":"sync"
+  }
+}

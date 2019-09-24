@@ -395,48 +395,59 @@ class Transaction(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Transaction"
 
 
+class Advice(GenericArtifact):
+    GENERIC_ARTIFACT_TYPE = "Advice"
+
+
 # Functional Patterns
 class FunctionalPatterns(AbsBaseClass):
+    #create
     ADMINISTER = 'Administer'
-    AGREETERMS = 'Agree Terms'
-    ALLOCATE = 'Allocate'
-    ANALYZE = 'Analyze'
-    ASSESS = 'Assess'
+    DIRECT = 'Direct'
+    MANAGE = 'Manage'
     DESIGN = 'Design'
     DEVELOP = 'Develop'
-    DIRECT = 'Direct'
-    MAINTAIN = 'Maintain'
-    MANAGE = 'Manage'
-    REGISTER = 'Register'
-    TRACK = 'Track'
-    MONITOR = 'Monitor'
+    #initiate
+    PROCESS = 'Process'
     OPERATE = 'Operate'
+    MAINTAIN = 'Maintain'
     FULFILL = 'Fulfill'
     TRANSACT = 'Transact'
+    ADVISE = 'Advise',
+    TRACK = 'Track'
+    MONITOR = 'Monitor'
+    #register
     ENROLL = 'Enroll'
-    PROCESS = 'Process'
+    CATALOG = 'Catalog'
+    #evaluate
+    AGREETERMS = 'Agree Terms'
+    ANALYZE = 'Analyze'
+    ASSESS = 'Assess'
+    #provide
+    ALLOCATE = 'Allocate'
 
     # Functional Pattern ==> Generic Artifact Type ==> Behavior Qualifier
     # pattern : [Generic Artifact,Behavior Qualifier Type]
     patterns = {
-        ADMINISTER: ['AdministrativePlan', 'Routine'],
-        AGREETERMS: ['Agreement', 'Term'],
-        ALLOCATE: ['Allocation', 'Assignment'],
-        ANALYZE: ['Analysis', 'Algorithm'],
-        ASSESS: ['Assessment', 'Test'],
-        DESIGN: ['Specification', 'Aspect'],
-        DEVELOP: ['DevelopmentProject', 'Deliverable'],
-        DIRECT: ['Strategy', 'Goal'],
-        MAINTAIN: ['MaintenanceAgreement', 'Task'],
-        MANAGE: ['ManagementPlan', 'Duty'],
-        REGISTER: ['Directory_Entry', 'Property'],
-        TRACK: ['Log', 'Event'],
-        MONITOR: ['Measurement', 'Signal'],
-        OPERATE: ['OperatingSession', 'Function'],
-        FULFILL: ['FulfillmentArrangement', 'Feature'],
+        ADMINISTER: ['AdministrativePlan', 'Routine'],#
+        AGREETERMS: ['Agreement', 'Term'],#
+        ALLOCATE: ['Allocation', 'Criteria'],#
+        ANALYZE: ['Analysis', 'Algorithm'],#
+        ASSESS: ['Assessment', 'Test'],#
+        DESIGN: ['Specification', 'Aspect'],#
+        DEVELOP: ['DevelopmentProject', 'Deliverable'],#
+        DIRECT: ['Strategy', 'Goal'],#
+        MAINTAIN: ['MaintenanceAgreement', 'Task'],#
+        MANAGE: ['ManagementPlan', 'Duty'],#
+        CATALOG: ['DirectoryEntry', 'Property'],#
+        TRACK: ['Log', 'Event'],#
+        MONITOR: ['State', 'Measure'],#
+        OPERATE: ['OperatingSession', 'Function'],#
+        FULFILL: ['FulfillmentArrangement', 'Feature'],#
         TRANSACT: ['Transaction', 'Step'],
-        ENROLL: ['Membership', 'Clause'],
-        PROCESS: ['Procedure', 'Workstep']
+        ENROLL: ['Membership', 'Clause'],#
+        PROCESS: ['Procedure', 'Workstep'],#
+        ADVISE: ['Advice', 'Topic'],#
     }
 
     # action terms allowed for functional pattern
@@ -472,7 +483,7 @@ class FunctionalPatterns(AbsBaseClass):
         MANAGE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.RECORD,
                  ActionTerms.REQUEST, ActionTerms.TERMINATE,
                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        REGISTER: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
+        CATALOG: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
                    ActionTerms.REGISTER,
                    ActionTerms.RECORD, ActionTerms.REQUEST,
                    ActionTerms.NOTIFY, ActionTerms.RETRIEVE],

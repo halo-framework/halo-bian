@@ -12,7 +12,7 @@
     "conn":"sync"
   },
   "3": {
-    "name":"Corespondance.Outbound",
+    "name":"bian.corespondance.Outbound",
     "op":"PUT",
     "type":"sd",
     "conn":"sync"

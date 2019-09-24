@@ -1,16 +1,16 @@
 {
-  "CurrentAccount": {
+  "currentaccount": {
     "sd_id": 1,
     "details": {
       "desc": "this is the desc",
-      "POST": {
-        "url": "tst_saga.json",
-        "type": "saga"
-      },
-      "PATCH": {
-        "url": "tst_saga.json",
-        "type": "saga"
-      }
+      "url":""
+    }
+  },
+  "corespondance": {
+    "sd_id": 2,
+    "details": {
+      "desc": "this is the desc",
+      "url":""
     }
   }
 }
