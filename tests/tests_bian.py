@@ -20,6 +20,8 @@ fake = Faker()
 app = Flask(__name__)
 api = Api(app)
 
+class OutboundApi(AbsBaseApi):
+    name = 'Outbound'
 
 class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):

@@ -530,6 +530,40 @@ class AbsBianMixin(AbsApiMixinX):
             return self.do_retrieve_bq(bian_request)
         return self.do_operation(bian_request)
 
+    def set_back_api(self, halo_request, foi=None):
+        logger.debug("in set_back_api " + str(foi))
+        if foi:
+            foi_name = foi["name"]
+            if not foi_name.startswith('bian.'):
+                return super(AbsBianMixin,self).set_back_api(halo_request, foi)
+            foi_op = foi["op"]
+            sd_class_name,sd_module_name,sd_base_url = self.get_api_from_sd(foi_name)
+            module = importlib.import_module(sd_module_name)
+            class_ = getattr(module, sd_class_name)
+            if not issubclass(class_, AbsBaseApi):
+                from halo_flask.exceptions import ApiClassErrorException
+                raise ApiClassErrorException(sd_class_name)
+            instance = class_(Util.get_req_context(halo_request.request))
+            instance.op = foi_op
+            instance.set_api_base(sd_base_url)
+            return instance
+        from halo_flask.exceptions import NoApiClassException
+        raise NoApiClassException("api class not defined")
+
+    def get_api_from_sd(self, foi_name):
+        k = foi_name.rfind(".")
+        module_name = foi_name[:k]
+        class_name = foi_name[k + 1:]
+        sd_name = module_name.replace("bian.","")
+        sd = settings.SERVICE_DOMAINS[sd_name]
+        sd_url = sd["details"]["url"]
+        sd_api_name = sd["api"][class_name]
+        k = sd_api_name.rfind(".")
+        sd_module_name = sd_api_name[:k]
+        sd_class_name = sd_api_name[k + 1:]
+        return sd_class_name,sd_module_name,sd_url
+
+
     #get props
 
     def get_service_domain(self):

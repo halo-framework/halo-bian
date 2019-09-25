@@ -397,7 +397,8 @@ except Exception as e:
 #extend sample
 
 from halo_bian.bian.bian import FunctionalPatterns
-
+BIAN_VER = "8"
+BIAN_API_VER = "2.0"
 SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
@@ -445,5 +446,12 @@ with open(file_path, 'r') as fi:
                      dict[action] = { item['type'] : data }
             dictx[bq] = dict
         BUSINESS_EVENT_MAP[clazz] = dictx
+
+SERVICE_DOMAINS = None
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir,'env','config', 'bian_sds.json')
+with open(file_path, 'r') as fb:
+    SERVICE_DOMAINS = json.load(fb)
+
 
 print('The base settings file has been loaded. bian')

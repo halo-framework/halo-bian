@@ -54,5 +54,9 @@
   "Tst": {
     "url": "https://jsonplaceholder.typicode.com/todos/$ID",
     "type": "api"
+  },
+  "Outbound": {
+    "url": "https://www.cnn.com",
+    "type": "api"
   }
 }

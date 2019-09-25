@@ -56,6 +56,12 @@ So to summarize the above:
 
 **Functional Pattern** is correlated with a set of **Action Term** = **Service Domain Operations**
 
+Key Benefits of using BIAN API solutions:
+
+-  Support for Emerging Industry Approaches – Two key technology approaches are considered: API development and the adoption of a Micro-service architecture
+-  Support for Industry Standards – The BIAN Service Domains and service operations present an Industry standard definition for the componentization and service enablement of Banking
+-  Support for Incremental Adoption/Migration – BIAN aligned solutions can be implemented and adopted incrementally enabling a prioritized migration from constraining legacy architectures
+
 ## Architecture
 
 The Flask BIAN library implements a BIAN service domain wrapper that acts as an API and data translator while hiding much of the BIAN model complexity from the developer.

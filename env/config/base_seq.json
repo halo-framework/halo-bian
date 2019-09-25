@@ -2,19 +2,16 @@
   "1": {
     "name":"halo_flask.apis.CnnApi",
     "op":"GET",
-    "type":"api",
     "conn":"sync"
   },
   "2":{
     "name":"halo_flask.apis.GoogleApi",
     "op":"GET",
-    "type":"api",
     "conn":"sync"
   },
   "3": {
     "name":"bian.corespondance.Outbound",
     "op":"PUT",
-    "type":"sd",
     "conn":"sync"
   }
 }

@@ -2,15 +2,23 @@
   "currentaccount": {
     "sd_id": 1,
     "details": {
+      "role":"this is ...",
       "desc": "this is the desc",
-      "url":""
+      "url":"abc"
+    },
+    "api":{
+      "Outbound":"tests.tests_bian.OutboundApi"
     }
   },
   "corespondance": {
     "sd_id": 2,
     "details": {
+      "role":"this is ...",
       "desc": "this is the desc",
-      "url":""
+      "url":"abc"
+    },
+    "api":{
+      "Outbound":"tests.tests_bian.OutboundApi"
     }
   }
 }

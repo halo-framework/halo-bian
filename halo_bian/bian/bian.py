@@ -99,14 +99,40 @@ class BianCategory(AbsBaseClass):
     DELEGATION = "Delegation"
 
 class LifeCycleState(AbsBaseClass):
+    state = None
+    actions = []
+    states = None
+
+    def __init__(self, state,states,actions=[]):
+        self.state = state
+        self.actions = actions
+        self.states = states
+
+    def allows(self,action_term):
+        if action_term in self.actions:
+            return True
+        return False
+
+class LifeCycleStates(AbsBaseClass):
     __metaclass__ = ABCMeta
+
+    states = []
+
+    def __init__(self, states):
+        self.states = states
+
+
+class DirectLifeCycleStates(LifeCycleStates):
     #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
-    Unassigned = "Unassigned"
-    Assigned_strategy_pending = "Assigned-strategy-pending"
-    Strategy_in_force = "Strategy-in-force"
-    Strateg_under_review = "Strategy-under-review"
-    Strategy_suspended = "Strategy-suspended"
-    Strategy_concluded = "Strategy-concluded"
+
+    def __init__(self, state_name):
+        self.Unassigned = LifeCycleState("Unassigned", self)
+        self.Assigned_strategy_pending = LifeCycleState("Assigned-strategy-pending",self)
+        self.Strategy_in_force = LifeCycleState("Strategy-in-force",self)
+        self.Strategy_under_review = LifeCycleState("Strategy-under-review",self)
+        self.Strategy_suspended = LifeCycleState("Strategy-suspended",self)
+        self.Strategy_concluded = LifeCycleState("Strategy-concluded",self)
+        super(DirectLifeCycleStates,self).__init__([self.Unassigned,self.Assigned_strategy_pending,self.Strategy_in_force,self.Strategy_under_review,self.Strategy_suspended,self.Strategy_concluded])
 
 
 class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
@@ -142,6 +168,11 @@ class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
 
     def get_life_cycle_state(self):
         self.life_cycle_state
+
+    def validate_action(self,action_term):
+        if self.life_cycle_state.allows(action_term):
+            return True
+        return False
 
 
 class BianServiceInfo(AbsBaseClass):
@@ -249,7 +280,7 @@ class ActionTerms(AbsBaseClass):
         RETRIEVE: BianCategory.REPORTING}
 
 
-# BehaviorQualifiers
+# BehaviorQualifiers v2
 class Aspect(BehaviorQualifier):
     BEHAVIOR_QUALIFIER_TYPE = "Aspect"
 
@@ -322,7 +353,11 @@ class Workstep(BehaviorQualifier):
     BEHAVIOR_QUALIFIER_TYPE = "Workstep"
 
 
-# Generic Artifacts
+class Advise(BehaviorQualifier):
+    BEHAVIOR_QUALIFIER_TYPE = "Advise"
+
+
+# Generic Artifacts v2
 class AdministrativePlan(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "AdministrativePlan"
 
@@ -399,7 +434,7 @@ class Advice(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Advice"
 
 
-# Functional Patterns
+# Functional Patterns v2
 class FunctionalPatterns(AbsBaseClass):
     #create
     ADMINISTER = 'Administer'
@@ -509,10 +544,12 @@ class FunctionalPatterns(AbsBaseClass):
         PROCESS: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
                   ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.EXECUTE,
                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        ADVISE:[]
     }
 
     # Functional Pattern main Service Domain states
     # pattern : [life cycle states]
+    #@todo finish life cycle mapping
     states = {
         ADMINISTER: [],
         AGREETERMS: [],
@@ -521,10 +558,10 @@ class FunctionalPatterns(AbsBaseClass):
         ASSESS: [],
         DESIGN: [],
         DEVELOP: [],
-        DIRECT: [LifeCycleState.Unassigned, LifeCycleState.Assigned_strategy_pending,LifeCycleState.Strateg_under_review,LifeCycleState.Strategy_concluded,LifeCycleState.Strategy_in_force,LifeCycleState.Strategy_suspended],
+        DIRECT: DirectLifeCycleStates,
         MAINTAIN: [],
         MANAGE: [],
-        REGISTER: [],
+        CATALOG: [],
         TRACK: [],
         MONITOR: [],
         OPERATE: [],
@@ -532,6 +569,7 @@ class FunctionalPatterns(AbsBaseClass):
         TRANSACT: [],
         ENROLL: [],
         PROCESS: [],
+        ADVISE: []
     }
 
 
