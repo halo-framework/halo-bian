@@ -56,7 +56,7 @@
     "type": "api"
   },
   "Outbound": {
-    "url": "https://www.cnn.com",
+    "url": "https://base_url/$ID",
     "type": "api"
   }
 }

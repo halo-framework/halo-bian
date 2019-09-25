@@ -265,10 +265,14 @@ class AbsBianMixin(AbsApiMixinX):
         action_term = action.upper()
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermException(action)
+        sd_reference_id = None
         cr_reference_id = None
         behavior_qualifier = None
         bq_reference_id = None
         collection_filter = None
+        query_params = None
+        if "sd_reference_id" in vars:
+            sd_reference_id = vars["sd_reference_id"]
         if "cr_reference_id" in vars:
             cr_reference_id = vars["cr_reference_id"]
         if "behavior_qualifier" in vars:
@@ -278,7 +282,9 @@ class AbsBianMixin(AbsApiMixinX):
             bq_reference_id = vars["bq_reference_id"]
         if "collection-filter" in request.args:
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
-        return BianRequest(action_term, request, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter)
+        if "queryparams" in vars:
+            query_params = self.get_collection_filter(request.args["query_params"])
+        return BianRequest(action_term, request, sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -563,6 +569,21 @@ class AbsBianMixin(AbsApiMixinX):
         sd_class_name = sd_api_name[k + 1:]
         return sd_class_name,sd_module_name,sd_url
 
+    def set_api_vars(self, bian_request, seq=None, dict=None):
+        logger.debug("in set_api_vars " + str(bian_request))
+        ret = {}
+        ret["sd_reference_id"] = bian_request.sd_reference_id
+        ret["behavior_qualifier"] = bian_request.behavior_qualifier
+        ret["cr_reference_id"] = bian_request.cr_reference_id
+        ret["bq_reference_id"] = bian_request.bq_reference_id
+        ret["collection_filter"] = bian_request.collection_filter
+        ret["query_params"] = bian_request.query_params
+        ret = self.set_added_api_vars(bian_request,ret, seq, dict)
+        return ret
+
+    def set_added_api_vars(self, bian_request,vars, seq=None, dict=None):
+        logger.debug("in set_api_vars " + str(bian_request))
+        return vars
 
     #get props
 

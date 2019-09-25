@@ -15,7 +15,7 @@
     "details": {
       "role":"this is ...",
       "desc": "this is the desc",
-      "url":"abc"
+      "url":"jsonplaceholder.typicode.com/todos"
     },
     "api":{
       "Outbound":"tests.tests_bian.OutboundApi"

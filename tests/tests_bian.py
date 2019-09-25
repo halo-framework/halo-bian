@@ -32,6 +32,34 @@ class A1(AbsBianMixin):#the basic
                 return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
 
+    def set_added_api_vars(self, bian_request,vars, seq=None, dict=None):
+        logger.debug("in set_api_vars " + str(bian_request))
+        if seq == '3':
+            if "name" in bian_request.request.args:
+                name = bian_request.request.args['name']
+                if name not in vars:
+                    vars['name'] = name
+        return vars
+
+
+    def execute_api(self,halo_request, back_api, back_vars, back_headers, back_auth, back_data=None, seq=None, dict=None):
+        logger.debug("in execute_api "+back_api.name)
+        if back_api:
+            timeout = Util.get_timeout(halo_request.request)
+            try:
+                seq_msg = ""
+                if seq:
+                    seq_msg = "seq = " + seq + "."
+                if seq == '3':
+                    back_api.set_api_url('ID', back_vars['name'])
+                ret = back_api.run(timeout, headers=back_headers,auth=back_auth, data=back_data)
+                msg = "in execute_api. " + seq_msg + " code= " + str(ret.status_code)
+                logger.info(msg)
+                return ret
+            except ApiError as e:
+                raise BianException(e)
+        return None
+
 class A2(A1):# customized
     def validate_req(self, bian_request):
         print("in validate_req ")
@@ -281,7 +309,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_90_put_request_returns_a_given_string(self):
-        with app.test_request_context(method='PUT',path='/tst?name=Peter'):
+        with app.test_request_context(method='PUT',path='/tst?name=1'):
             self.a1 = A1()
             ret = self.a1.process_put(request, {})
             assert ret.code == status.HTTP_202_ACCEPTED

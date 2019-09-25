@@ -16,18 +16,22 @@ logger = logging.getLogger(__name__)
 
 class BianRequest(HaloRequest):
     action_term = None
+    sd_reference_id = None
     cr_reference_id = None
     bq_reference_id = None
     behavior_qualifier = None
     collection_filter = None
+    query_params = None
 
-    def __init__(self, action_term, request, cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None):
+    def __init__(self, action_term, request, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None):
         self.action_term = action_term
         self.request = request
+        self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
         self.behavior_qualifier = behavior_qualifier
         self.bq_reference_id = bq_reference_id
         self.collection_filter = collection_filter
+        self.query_params = query_params
 
 
 class BianResponse(HaloResponse):
@@ -227,7 +231,7 @@ class BianServiceInfo(AbsBaseClass):
         return self.control_record
 
 
-# Service Operations - action terms
+# Service Operations - action terms v2
 class ActionTerms(AbsBaseClass):
     INITIATE = 'INITIATE'
     CREATE = 'CREATE'
@@ -235,15 +239,22 @@ class ActionTerms(AbsBaseClass):
     CONFIGURE = 'CONFIGURE'
     UPDATE = 'UPDATE'
     REGISTER = 'REGISTER'
-    RECORD = 'RECORD'
+    #RECORD = 'RECORD'
     EXECUTE = 'EXECUTE'
     EVALUATE = 'EVALUATE'
     PROVIDE = 'PROVIDE'
-    AUTHORIZE = 'AUTHORIZE'
+    #AUTHORIZE = 'AUTHORIZE'
     REQUEST = 'REQUEST'
-    TERMINATE = 'TERMINATE'
+    #TERMINATE = 'TERMINATE'
     NOTIFY = 'NOTIFY'
-    RETRIEVE = 'RETRIEVE'
+    RETRIEVE = 'RETRIEVE',
+    #new
+    CAPTURE = 'CAPTURE',
+    CONTROL = 'CONTROL',
+    EXCHANGE = 'EXCHANGE',
+    GRANT = 'GRANT',
+    FEEDBACK = 'FEEDBACK'
+
     ops = [
         INITIATE,
         CREATE,
@@ -251,34 +262,50 @@ class ActionTerms(AbsBaseClass):
         CONFIGURE,
         UPDATE,
         REGISTER,
-        RECORD,
+        #RECORD,
         EXECUTE,
         EVALUATE,
         PROVIDE,
-        AUTHORIZE,
+        #AUTHORIZE,
         REQUEST,
-        TERMINATE,
+        #TERMINATE,
         NOTIFY,
-        RETRIEVE]
+        RETRIEVE,
+        CAPTURE,
+        CONTROL,
+        EXCHANGE,
+        GRANT,
+        FEEDBACK
+    ]
     categories = {
-        INITIATE: BianCategory.ORIGINATION,
-        CREATE: BianCategory.ORIGINATION,
-        ACTIVATE: BianCategory.ORIGINATION,
-        CONFIGURE: BianCategory.ORIGINATION,
 
-        UPDATE: BianCategory.INVOCATION,
-        REGISTER: BianCategory.INVOCATION,
-        RECORD: BianCategory.INVOCATION,
+        CREATE: BianCategory.ORIGINATION,
+        EVALUATE: BianCategory.ORIGINATION,
+        INITIATE: BianCategory.ORIGINATION,
+        PROVIDE: BianCategory.ORIGINATION,
+        REGISTER: BianCategory.ORIGINATION,
+
+        CAPTURE: BianCategory.INVOCATION,
+        CONTROL: BianCategory.INVOCATION,
+        EXCHANGE: BianCategory.INVOCATION,
         EXECUTE: BianCategory.INVOCATION,
-        EVALUATE: BianCategory.INVOCATION,
-        PROVIDE: BianCategory.INVOCATION,
-        AUTHORIZE: BianCategory.INVOCATION,
+        GRANT: BianCategory.INVOCATION,
         REQUEST: BianCategory.INVOCATION,
-        TERMINATE: BianCategory.INVOCATION,
+        UPDATE: BianCategory.INVOCATION,
 
         NOTIFY: BianCategory.REPORTING,
-        RETRIEVE: BianCategory.REPORTING}
+        RETRIEVE: BianCategory.REPORTING,
 
+        ACTIVATE: BianCategory.SETUP,
+        CONFIGURE: BianCategory.SETUP,
+        FEEDBACK: BianCategory.SETUP
+
+    }
+
+
+        #RECORD: BianCategory.INVOCATION,
+        #AUTHORIZE: BianCategory.INVOCATION,
+        #TERMINATE: BianCategory.INVOCATION,
 
 # BehaviorQualifiers v2
 class Aspect(BehaviorQualifier):
@@ -488,9 +515,10 @@ class FunctionalPatterns(AbsBaseClass):
     # action terms allowed for functional pattern
     # pattern : [action terms]
     operations = {
-        ADMINISTER: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
-                     ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.TERMINATE,
-                     ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        ADMINISTER: [ActionTerms.EXCHANGE, ActionTerms.CAPTURE, ActionTerms.CONTROL,ActionTerms.GRANT,
+                 ActionTerms.CREATE, ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
         AGREETERMS: [ActionTerms.INITIATE, ActionTerms.EVALUATE, ActionTerms.UPDATE,
                      ActionTerms.REQUEST, ActionTerms.TERMINATE,
                      ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
@@ -503,53 +531,59 @@ class FunctionalPatterns(AbsBaseClass):
         ASSESS: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.EVALUATE,
                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.AUTHORIZE,
                  ActionTerms.RETRIEVE],
-        DESIGN: [ActionTerms.CREATE, ActionTerms.UPDATE,
-                 ActionTerms.RECORD, ActionTerms.REQUEST,
-                 ActionTerms.RETRIEVE],
-        DEVELOP: [ActionTerms.CREATE,
-                  ActionTerms.RECORD, ActionTerms.REQUEST,
-                  ActionTerms.RETRIEVE],
-        DIRECT: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.RECORD,
-                 ActionTerms.AUTHORIZE, ActionTerms.REQUEST,
-                 ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        MAINTAIN: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
-                   ActionTerms.RECORD, ActionTerms.REQUEST,
-                   ActionTerms.RETRIEVE],
-        MANAGE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.RECORD,
-                 ActionTerms.REQUEST, ActionTerms.TERMINATE,
-                 ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        CATALOG: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
-                   ActionTerms.REGISTER,
-                   ActionTerms.RECORD, ActionTerms.REQUEST,
-                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        TRACK: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
-                ActionTerms.RECORD, ActionTerms.TERMINATE,
-                ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        MONITOR: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
-                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.TERMINATE,
-                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        OPERATE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
-                  ActionTerms.RECORD, ActionTerms.EXECUTE, ActionTerms.REQUEST,
-                  ActionTerms.TERMINATE,
-                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        FULFILL: [ActionTerms.INITIATE, ActionTerms.EXECUTE, ActionTerms.UPDATE,
-                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.TERMINATE,
-                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        TRANSACT: [ActionTerms.INITIATE, ActionTerms.UPDATE,
-                   ActionTerms.EXECUTE, ActionTerms.REQUEST,
-                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
+        DESIGN: [ActionTerms.EXCHANGE, ActionTerms.CAPTURE, ActionTerms.CONTROL,
+                 ActionTerms.CREATE, ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
+        DEVELOP: [ActionTerms.EXCHANGE, ActionTerms.CAPTURE, ActionTerms.CONTROL,
+                 ActionTerms.CREATE, ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
+        DIRECT: [ActionTerms.EXCHANGE, ActionTerms.CAPTURE, ActionTerms.GRANT,
+                 ActionTerms.CREATE, ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.REQUEST],#
+        MAINTAIN: [ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
+        MANAGE: [ActionTerms.EXCHANGE, ActionTerms.CAPTURE, ActionTerms.CONTROL,ActionTerms.GRANT,
+                 ActionTerms.CREATE, ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
+        CATALOG: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.REGISTER,ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
+        TRACK: [ActionTerms.CAPTURE,ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE],#
+        MONITOR: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.CAPTURE,ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
+        OPERATE: [ActionTerms.EXCHANGE, ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
+        FULFILL: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
+        TRANSACT: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
         ENROLL: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
                  ActionTerms.REQUEST,
                  ActionTerms.RETRIEVE],
-        PROCESS: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
-                  ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.EXECUTE,
-                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        ADVISE:[]
+        PROCESS: [ActionTerms.EXCHANGE, ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,
+                 ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
+        ADVISE: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
     }
 
     # Functional Pattern main Service Domain states
     # pattern : [life cycle states]
-    #@todo finish life cycle mapping
+    #@todo finish life cycle mapping and check if state should be checked in pre and post validate for each operation
     states = {
         ADMINISTER: [],
         AGREETERMS: [],
