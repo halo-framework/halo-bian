@@ -403,6 +403,7 @@ SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
 GENERIC_ARTIFACT = 'halo_bian.bian.bian.FulfillmentArrangement'#extended classes of FulfillmentArrangement
+BEHAVIOR_QUALIFIER_TYPE = 'tests_bian.CAFeature'
 BEHAVIOR_QUALIFIER = {
   "Interest":"Interest",
   "ServiceFees":"ServiceFees",
@@ -412,7 +413,7 @@ BEHAVIOR_QUALIFIER = {
   "Payments":"Payments",
   "IssuedDevice":"IssuedDevice"
 }
-CONTROL_RECORD = 'halo_bian.bian.bian.ControlRecord'#extended classes of ControlRecord
+CONTROL_RECORD = 'tests_bian.CAControlRecord'#extended classes of ControlRecord
 
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None

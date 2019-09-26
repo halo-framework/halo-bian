@@ -12,7 +12,7 @@ from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
-from halo_bian.bian.bian import BianCategory,ActionTerms
+from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact
 
 import unittest
 
@@ -22,6 +22,15 @@ api = Api(app)
 
 class OutboundApi(AbsBaseApi):
     name = 'Outbound'
+
+class CAFeature(Feature):
+    pass
+
+class BankingProduct(GenericArtifact):
+    pass
+
+class CAControlRecord(BankingProduct):
+    pass
 
 class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):

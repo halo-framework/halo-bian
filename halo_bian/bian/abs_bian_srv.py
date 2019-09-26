@@ -164,7 +164,7 @@ class AbsBianMixin(AbsApiMixinX):
     def get_control_record(self):
         return self.control_record
 
-    def init_cr(self, cr_class_name,init_var=None):
+    def init_cr(self, cr_class_name,init_vars=None):
         if settings.CONTROL_RECORD:
             k = settings.CONTROL_RECORD.rfind(".")
             module_name = settings.CONTROL_RECORD[:k]
@@ -174,9 +174,9 @@ class AbsBianMixin(AbsApiMixinX):
             class_name = cr_class_name
         module = importlib.import_module(module_name)
         class_ = getattr(module, class_name)
-        if not issubclass(class_, ControlRecord):
+        if not issubclass(class_, GenericArtifact):
             raise BianException("CONTROL RECORD class error:"+class_name)
-        instance = class_(init_var)
+        instance = class_()#init_vars)
         return instance
 
     def get_cr_obj(self,init_var=None):
@@ -205,9 +205,18 @@ class AbsBianMixin(AbsApiMixinX):
         return ga_obj
 
     def init_bq(self, bq_class_name):
-        module = importlib.import_module("halo_bian.bian.bian")
-        class_ = getattr(module, bq_class_name)
+        if settings.BEHAVIOR_QUALIFIER_TYPE:
+            k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
+            module_name = settings.BEHAVIOR_QUALIFIER_TYPE[:k]
+            class_name = settings.BEHAVIOR_QUALIFIER_TYPE[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = bq_class_name
+        module = importlib.import_module(module_name)
+        class_ = getattr(module, class_name)
         instance = class_(settings.BEHAVIOR_QUALIFIER)
+        if not issubclass(class_, BehaviorQualifierType):
+            raise BianException("BEHAVIOR QUALIFIER TYPE class error:"+settings.BEHAVIOR_QUALIFIER)
         return instance
 
     def get_bq_obj(self):

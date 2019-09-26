@@ -65,12 +65,13 @@ class AssetType(AbsBaseClass):
 class GenericArtifact(AbsBaseClass):
     __metaclass__ = ABCMeta
     GENERIC_ARTIFACT_TYPE = None
+    behavior_qualifier_type = None
 
     def get_generic_artifact_type(self):
         return self.GENERIC_ARTIFACT_TYPE
 
 
-class BehaviorQualifier(AbsBaseClass):
+class BehaviorQualifierType(AbsBaseClass):
     __metaclass__ = ABCMeta
     BEHAVIOR_QUALIFIER_TYPE = None
     dict = {}
@@ -140,17 +141,15 @@ class DirectLifeCycleStates(LifeCycleStates):
         super(DirectLifeCycleStates,self).__init__([self.Unassigned,self.Assigned_strategy_pending,self.Strategy_in_force,self.Strategy_under_review,self.Strategy_suspended,self.Strategy_concluded])
 
 
-class ControlRecord(AssetType, GenericArtifact, BehaviorQualifier):
+class ControlRecord(GenericArtifact):
     __metaclass__ = ABCMeta
     asset_type = None
-    generic_artifact = None
-    behavior_qualifier = None
     life_cycle_state = None
 
-    def __init__1(self, asset_type, generic_artifact, behavior_qualifier,life_cycle_state):
+    def __init__1(self, asset_type, generic_artifact, behavior_qualifier_type,life_cycle_state):
         self.asset_type = asset_type
-        self.generic_artifact = generic_artifact
-        self.behavior_qualifier = behavior_qualifier
+        #self.generic_artifact = generic_artifact
+        self.behavior_qualifier_type = behavior_qualifier_type
         self.life_cycle_state = life_cycle_state
 
     def get_asset_type(self):
@@ -309,79 +308,79 @@ class ActionTerms(AbsBaseClass):
         #TERMINATE: BianCategory.INVOCATION,
 
 # BehaviorQualifiers v2
-class Aspect(BehaviorQualifier):
+class Aspect(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Aspect"
 
 
-class Algorithm(BehaviorQualifier):
+class Algorithm(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Algorithm"
 
 
-class Assignment(BehaviorQualifier):
+class Assignment(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Assignment"
 
 
-class Clause(BehaviorQualifier):
+class Clause(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Clause"
 
 
-class Deliverable(BehaviorQualifier):
+class Deliverable(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Deliverable"
 
 
-class Duty(BehaviorQualifier):
+class Duty(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Duty"
 
 
-class Event(BehaviorQualifier):
+class Event(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Event"
 
 
-class Feature(BehaviorQualifier):
+class Feature(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Feature"
 
 
-class Function(BehaviorQualifier):
+class Function(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Function"
 
 
-class Goal(BehaviorQualifier):
+class Goal(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Goal"
 
 
-class Property(BehaviorQualifier):
+class Property(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Property"
 
 
-class Routine(BehaviorQualifier):
+class Routine(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Routine"
 
 
-class Signal(BehaviorQualifier):
+class Signal(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Signal"
 
 
-class Step(BehaviorQualifier):
+class Step(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Step"
 
 
-class Task(BehaviorQualifier):
+class Task(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Task"
 
 
-class Term(BehaviorQualifier):
+class Term(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Term"
 
 
-class Test(BehaviorQualifier):
+class Test(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Test"
 
 
-class Workstep(BehaviorQualifier):
+class Workstep(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Workstep"
 
 
-class Advise(BehaviorQualifier):
+class Advise(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Advise"
 
 
