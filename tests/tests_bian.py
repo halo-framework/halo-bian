@@ -422,3 +422,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.s1.process_get(request, {})
             print("x="+str(ret.payload))
             assert ret.code == status.HTTP_200_OK
+
+    def test_995_control_record_returns_a_given_list(self):
+        with app.test_request_context('/info'):
+            self.a1 = A1()
+            ret = self.a1.process_get(request, {})
+            print("x="+str(ret.payload))
+            assert ret.code == status.HTTP_200_OK

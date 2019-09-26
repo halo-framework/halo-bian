@@ -708,7 +708,7 @@ class AbsBianMixin(AbsApiMixinX):
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
-        bian_action = self.get_bian_action(ActionTerms.TERMINATE)
+        bian_action = self.get_bian_action(ActionTerms.CONTROL)
         bian_request = self.bian_validate_req(bian_action, request, vars)
         self.set_bian_businss_event(bian_request, bian_action)
         return self.process_service_operation(bian_action, request, vars)
