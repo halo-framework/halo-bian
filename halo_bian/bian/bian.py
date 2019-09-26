@@ -101,6 +101,7 @@ class BianCategory(AbsBaseClass):
     INVOCATION = "Invocation"
     REPORTING = "Reporting"
     DELEGATION = "Delegation"
+    SETUP = "Setup"
 
 class LifeCycleState(AbsBaseClass):
     state = None
@@ -519,18 +520,18 @@ class FunctionalPatterns(AbsBaseClass):
                  ActionTerms.CREATE, ActionTerms.NOTIFY,
                  ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
                  ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
-        AGREETERMS: [ActionTerms.INITIATE, ActionTerms.EVALUATE, ActionTerms.UPDATE,
-                     ActionTerms.REQUEST, ActionTerms.TERMINATE,
-                     ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        ALLOCATE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
-                   ActionTerms.RECORD, ActionTerms.PROVIDE,
-                   ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        ANALYZE: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE,
-                  ActionTerms.RECORD, ActionTerms.REQUEST,
-                  ActionTerms.NOTIFY, ActionTerms.RETRIEVE],
-        ASSESS: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.EVALUATE,
-                 ActionTerms.RECORD, ActionTerms.REQUEST, ActionTerms.AUTHORIZE,
-                 ActionTerms.RETRIEVE],
+        AGREETERMS: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.GRANT,ActionTerms.EVALUATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
+        ALLOCATE: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.CAPTURE,ActionTerms.PROVIDE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE],#
+        ANALYZE: [ActionTerms.EVALUATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.EXECUTE,ActionTerms.REQUEST],#
+        ASSESS: [ActionTerms.EXCHANGE, ActionTerms.GRANT,ActionTerms.EVALUATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.EXECUTE,ActionTerms.REQUEST],#
         DESIGN: [ActionTerms.EXCHANGE, ActionTerms.CAPTURE, ActionTerms.CONTROL,
                  ActionTerms.CREATE, ActionTerms.NOTIFY,
                  ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
@@ -569,9 +570,9 @@ class FunctionalPatterns(AbsBaseClass):
         TRANSACT: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.INITIATE,
                  ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
                  ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST,ActionTerms.EXECUTE],#
-        ENROLL: [ActionTerms.ACTIVATE, ActionTerms.CONFIGURE, ActionTerms.UPDATE,
-                 ActionTerms.REQUEST,
-                 ActionTerms.RETRIEVE],
+        ENROLL: [ActionTerms.EXCHANGE,ActionTerms.CONTROL, ActionTerms.GRANT,ActionTerms.REGISTER,ActionTerms.INITIATE,
+                 ActionTerms.NOTIFY,ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,
+                 ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.UPDATE,ActionTerms.REQUEST],#
         PROCESS: [ActionTerms.EXCHANGE, ActionTerms.CONTROL, ActionTerms.INITIATE,
                  ActionTerms.NOTIFY,
                  ActionTerms.RETRIEVE, ActionTerms.FEEDBACK,

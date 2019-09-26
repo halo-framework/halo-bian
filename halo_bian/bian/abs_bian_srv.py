@@ -262,7 +262,7 @@ class AbsBianMixin(AbsApiMixinX):
 
     def bian_validate_req(self, action, request, vars):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
-        action_term = action.upper()
+        action_term = action#.upper()
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermException(action)
         sd_reference_id = None
@@ -341,15 +341,21 @@ class AbsBianMixin(AbsApiMixinX):
             ActionTerms.CONFIGURE: self.do_configure,
             ActionTerms.UPDATE: self.do_update,
             ActionTerms.REGISTER: self.do_register,
-            ActionTerms.RECORD: self.do_record,
+            #ActionTerms.RECORD: self.do_record,
             ActionTerms.EXECUTE: self.do_execute,
             ActionTerms.EVALUATE: self.do_evaluate,
             ActionTerms.PROVIDE: self.do_provide,
-            ActionTerms.AUTHORIZE: self.do_authorize,
+            #ActionTerms.AUTHORIZE: self.do_authorize,
             ActionTerms.REQUEST: self.do_request,
-            ActionTerms.TERMINATE: self.do_terminate,
+            #ActionTerms.TERMINATE: self.do_terminate,
             ActionTerms.NOTIFY: self.do_notify,
-            ActionTerms.RETRIEVE: self.do_retrieve
+            ActionTerms.RETRIEVE: self.do_retrieve,
+            #new
+            ActionTerms.CAPTURE: self.do_capture,
+            ActionTerms.CONTROL: self.do_control,
+            ActionTerms.EXCHANGE: self.do_exchange,
+            ActionTerms.GRANT: self.do_grant,
+            ActionTerms.FEEDBACK: self.do_feedback
         }[bian_request.action_term]
         if bian_request.action_term in FunctionalPatterns.operations[self.functional_pattern]:
             bian_response = functionName(bian_request)
@@ -532,6 +538,66 @@ class AbsBianMixin(AbsApiMixinX):
 
     def do_retrieve(self, bian_request):
         logger.debug("in do_retrieve ")
+        if bian_request.behavior_qualifier:
+            return self.do_retrieve_bq(bian_request)
+        return self.do_operation(bian_request)
+
+    def do_capture_bq(self, bian_request):
+        logger.debug("in do_capture_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
+    def do_capture(self, bian_request):
+        logger.debug("in do_capture ")
+        if bian_request.behavior_qualifier:
+            return self.do_retrieve_bq(bian_request)
+        return self.do_operation(bian_request)
+
+    def do_control_bq(self, bian_request):
+        logger.debug("in do_capture_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
+    def do_control(self, bian_request):
+        logger.debug("in do_capture ")
+        if bian_request.behavior_qualifier:
+            return self.do_retrieve_bq(bian_request)
+        return self.do_operation(bian_request)
+
+    def do_exchange_bq(self, bian_request):
+        logger.debug("in do_capture_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
+    def do_exchange(self, bian_request):
+        logger.debug("in do_capture ")
+        if bian_request.behavior_qualifier:
+            return self.do_retrieve_bq(bian_request)
+        return self.do_operation(bian_request)
+
+    def do_grant_bq(self, bian_request):
+        logger.debug("in do_capture_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
+    def do_grant(self, bian_request):
+        logger.debug("in do_capture ")
+        if bian_request.behavior_qualifier:
+            return self.do_retrieve_bq(bian_request)
+        return self.do_operation(bian_request)
+
+    def do_feedback_bq(self, bian_request):
+        logger.debug("in do_capture_bq ")
+        if bian_request.behavior_qualifier is None:
+            raise IllegalBQException("missing behavior_qualifier value")
+        return self.do_operation_bq(bian_request)
+
+    def do_feedback(self, bian_request):
+        logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
             return self.do_retrieve_bq(bian_request)
         return self.do_operation(bian_request)
