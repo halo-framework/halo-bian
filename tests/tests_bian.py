@@ -433,7 +433,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_200_OK
 
     def test_995_control_record_returns_a_given_list(self):
-        with app.test_request_context('/?name=1&queryparams=amount>100;x=y'):
+        with app.test_request_context('/?name=1&queryparams=amount>100@x=y'):
             self.a3 = A3()
             ret = self.a3.process_get(request, {"sd_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals"})
             print("x=" + str(ret.payload))
@@ -443,5 +443,5 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.request.sd_reference_id == "1"
             assert len(ret.request.query_params) == 2
             assert ret.request.query_params[0] == 'amount>100'
-            assert ret.request.query_params[0] == 'x=y'
+            assert ret.request.query_params[1] == 'x=y'
 
