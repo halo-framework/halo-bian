@@ -26,8 +26,8 @@ class AbsBianMixin(AbsApiMixinX):
     service_domain = None
     asset_type = None
     functional_pattern = None
-    generic_artifact =None
-    behavior_qualifier = None
+    generic_artifact = None
+    behavior_qualifier_type = None
     bian_action = None
     control_record = None
     service_operation = None
@@ -65,11 +65,11 @@ class AbsBianMixin(AbsApiMixinX):
         else:
             raise GenericArtifactNameException("missing GENERIC ARTIFACT definition")
         if settings.BEHAVIOR_QUALIFIER:
-            self.behavior_qualifier = self.get_bq_obj()
+            self.behavior_qualifier_type = self.get_bq_obj()
         else:
             raise BehaviorQualifierNameException("missing Behavior Qualifier definition")
         if settings.CONTROL_RECORD:
-            self.control_record = self.get_cr_obj()
+            self.control_record = self.get_cr_obj(self.behavior_qualifier_type)
         else:
             raise ControlRecordNameException("missing ControlRecord definition")
 
@@ -164,7 +164,7 @@ class AbsBianMixin(AbsApiMixinX):
     def get_control_record(self):
         return self.control_record
 
-    def init_cr(self, cr_class_name,init_vars=None):
+    def init_cr(self, cr_class_name,behavior_qualifier_type=None,init_vars=None):
         if settings.CONTROL_RECORD:
             k = settings.CONTROL_RECORD.rfind(".")
             module_name = settings.CONTROL_RECORD[:k]
@@ -176,12 +176,12 @@ class AbsBianMixin(AbsApiMixinX):
         class_ = getattr(module, class_name)
         if not issubclass(class_, GenericArtifact):
             raise BianException("CONTROL RECORD class error:"+class_name)
-        instance = class_()#init_vars)
+        instance = class_(behavior_qualifier_type)#init_vars)
         return instance
 
-    def get_cr_obj(self,init_var=None):
+    def get_cr_obj(self,behavior_qualifier_type=None,init_var=None):
         cr_class = 'ControlRecord'
-        cr_obj = self.init_cr(cr_class,init_var)
+        cr_obj = self.init_cr(cr_class,behavior_qualifier_type,init_var)
         return cr_obj
 
     def init_ga(self, ga_class_name,init_var=None):
@@ -224,13 +224,13 @@ class AbsBianMixin(AbsApiMixinX):
         bq_obj = self.init_bq(bq_class)
         return bq_obj
 
-    def get_behavior_qualifier(self, op, bq):
-        bq_obj = self.behavior_qualifier
-        for bq_id in bq_obj.keys():
-            bq_str = bq_obj.get(bq_id)
-            if bq_str.lower() == bq.lower():
-                return bq_str.strip().replace("-","_").replace(" ","_")
-        raise IllegalBQException(bq)
+    def get_behavior_qualifier(self, op, bq_name):
+        bqt_obj = self.behavior_qualifier_type
+        for bq_id in bqt_obj.keys():
+            bq_obj = bqt_obj.get(bq_id)
+            if bq_obj.name == bq_name.strip().replace("-","_").replace(" ","_"):
+                return bq_name
+        raise IllegalBQException(bq_name)
 
     def get_behavior_qualifier_by_id(self, op, bq_id):
         bq_obj = self.behavior_qualifier
@@ -269,9 +269,20 @@ class AbsBianMixin(AbsApiMixinX):
                 return self.filter_chars[None]
         return []
 
-    def bian_validate_req(self, action, request, vars):
+    def get_query_params(self, query_params):
+        ret = None
+        arr = []
+        if query_params is not None:
+            if self.filter_separator and self.filter_separator in query_params:
+                arr = [x.strip() for x in query_params.split(self.filter_separator)]
+            else:
+                arr.append(query_params)
+            ret = arr
+        return ret
+
+    def bian_validate_req(self, action: ActionTerms, request, vars) -> BianRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
-        action_term = action#.upper()
+        action_term = action
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermException(action)
         sd_reference_id = None
@@ -291,8 +302,8 @@ class AbsBianMixin(AbsApiMixinX):
             bq_reference_id = vars["bq_reference_id"]
         if "collection-filter" in request.args:
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
-        if "queryparams" in vars:
-            query_params = self.get_collection_filter(request.args["query_params"])
+        if "queryparams" in request.args:
+            query_params = self.get_query_params(request.args["queryparams"])
         return BianRequest(action_term, request, sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params)
 
     def validate_req(self, bian_request):

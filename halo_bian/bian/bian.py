@@ -67,8 +67,17 @@ class GenericArtifact(AbsBaseClass):
     GENERIC_ARTIFACT_TYPE = None
     behavior_qualifier_type = None
 
+    def __init__(self, behavior_qualifier_type=None):
+        self.behavior_qualifier_type = behavior_qualifier_type
+
     def get_generic_artifact_type(self):
         return self.GENERIC_ARTIFACT_TYPE
+
+class BehaviorQualifier(AbsBaseClass):
+    behavior_qualifier = None
+
+    def __init__(self, name):
+        self.name = name
 
 
 class BehaviorQualifierType(AbsBaseClass):
@@ -77,7 +86,8 @@ class BehaviorQualifierType(AbsBaseClass):
     dict = {}
 
     def __init__(self, dict):
-        self.dict = dict
+        for key in dict:
+            self.dict[key] = BehaviorQualifier(dict[key].strip().replace("-","_").replace(" ","_"))
 
     def get_behavior_qualifier_type(self):
         return self.BEHAVIOR_QUALIFIER_TYPE
