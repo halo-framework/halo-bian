@@ -10,4 +10,5 @@ requests==2.20.1
 environs
 python-json-logger
 PyJWT==1.6.3
-halo-flask==0.15.37
+halo-flask==0.15.39
+jsonbender==0.9.3
