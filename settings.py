@@ -36,7 +36,7 @@ APP_NAME = 'sdapp'
 
 # @TODO load config data from env var if possible and if not from env file
 SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
-AWS_REGION = 'us-east-1'  # env.str('AWS_REGION')
+#AWS_REGION = 'us-east-1'  # env.str('AWS_REGION')
 DB_URL = env.str('DYNAMODB_URL')
 SECRET_JWT_KEY = env.str('SECRET_JWT_KEY')
 STAGE_URL = env.bool('STAGE_URL', default=True)

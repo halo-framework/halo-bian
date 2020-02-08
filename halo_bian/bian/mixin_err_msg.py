@@ -5,7 +5,6 @@ import uuid
 import datetime
 import json
 # aws
-from botocore.exceptions import ClientError
 # common
 from halo_flask.const import HTTPChoice
 from halo_flask.exceptions import HaloException
