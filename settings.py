@@ -399,6 +399,7 @@ except Exception as e:
 from halo_bian.bian.bian import FunctionalPatterns
 BIAN_VER = "8"
 BIAN_API_VER = "2.0"
+BIAN_CONTEXT_LIST = []
 SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
@@ -412,6 +413,32 @@ BEHAVIOR_QUALIFIER = {
   "DepositsandWithdrawals":"DepositsandWithdrawals",
   "Payments":"Payments",
   "IssuedDevice":"IssuedDevice"
+}
+SUB_QUALIFIER = {
+  "DepositsandWithdrawals":{
+      "Deposits":{
+          "name":"Deposits",
+           "subs":{
+                "Depositsy":{
+                    "name":"Depositsy",
+                    "subs":{
+                    }
+                },
+                "Depositsz":{
+                    "name":"Depositsz",
+                    "subs":{
+                    }
+                }
+            }
+        },
+      "Withdrawals":{"name":"Withdrawals","subs":{}},
+      "Payments":{"name":"Payments","subs":{}}
+  },
+  "IssuedDevice":{
+      "Depositsx":{"name":"Depositsx","subs":{}},
+      "Withdrawalsx":{"name":"Withdrawalsx","subs":{}},
+      "Paymentsx":{"name":"Paymentsx","subs":{}}
+  }
 }
 CONTROL_RECORD = 'tests_bian.CAControlRecord'#extended classes of ControlRecord
 

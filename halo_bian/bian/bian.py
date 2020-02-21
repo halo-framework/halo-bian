@@ -22,8 +22,10 @@ class BianRequest(HaloRequest):
     behavior_qualifier = None
     collection_filter = None
     query_params = None
+    sub_qualifiers = None
+    context = None
 
-    def __init__(self, action_term, request, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None):
+    def __init__(self, action_term, request,context, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None,sub_qualifiers=None):
         self.action_term = action_term
         self.request = request
         self.sd_reference_id = sd_reference_id
@@ -32,6 +34,8 @@ class BianRequest(HaloRequest):
         self.bq_reference_id = bq_reference_id
         self.collection_filter = collection_filter
         self.query_params = query_params
+        self.sub_qualifiers = sub_qualifiers
+        self.context = context
 
 
 class BianResponse(HaloResponse):
@@ -74,10 +78,29 @@ class GenericArtifact(AbsBaseClass):
         return self.GENERIC_ARTIFACT_TYPE
 
 class BehaviorQualifier(AbsBaseClass):
-    behavior_qualifier = None
+    #behavior_qualifier = None
+    sub_qualifiers = None
+    qualifiers_depth = 1
 
-    def __init__(self, name):
+    def __init__(self, name,sub_qualifiers=None):
         self.name = name
+        if sub_qualifiers:
+            self.sub_qualifiers = sub_qualifiers
+            self.qualifiers_depth = self.get_qualifiers_depth(sub_qualifiers,self.qualifiers_depth)
+            logger.debug("in BehaviorQualifier " + str(name) + " qualifiers_depth=" + str(self.qualifiers_depth))
+
+    def get_qualifiers_depth(self,sub_qualifiers,the_depth):
+        depth = the_depth + 1
+        if sub_qualifiers:
+            for key in sub_qualifiers:
+                map = sub_qualifiers[key]
+                subs = map["subs"]
+                if subs:
+                    d = self.get_qualifiers_depth(subs,depth)
+                    if d > depth:
+                        depth = d
+        return depth
+
 
 
 class BehaviorQualifierType(AbsBaseClass):
@@ -85,9 +108,13 @@ class BehaviorQualifierType(AbsBaseClass):
     BEHAVIOR_QUALIFIER_TYPE = None
     dict = {}
 
-    def __init__(self, dict):
+    def __init__(self, dict, sub_qualifiers=None):
         for key in dict:
-            self.dict[key] = BehaviorQualifier(dict[key].strip().replace("-","_").replace(" ","_"))
+            map = None
+            if sub_qualifiers:
+                if key in sub_qualifiers:
+                    map = sub_qualifiers[key]
+            self.dict[key] = BehaviorQualifier(dict[key].strip().replace("-", "_").replace(" ", "_"),map)
 
     def get_behavior_qualifier_type(self):
         return self.BEHAVIOR_QUALIFIER_TYPE
@@ -619,3 +646,52 @@ class FunctionalPatterns(AbsBaseClass):
 
 
 #Capture service operation connections – The service operation connections for each business event
+
+# Finance Context - Multi 10
+#@todo finish context items
+class BianContext(AbsBaseClass):
+    COMPANY = "Company"
+    OPERATIONAL_ENTITY = "Operational Entity"
+    BRAND = "Brand"
+    CHANNEL = "Channel"
+    ENVIRONMENT = "Environment"
+    COUNTRY = "Country"
+    TIME_ZONE = "Time Zone"
+    LANGUAGE = "Language"
+    BRANCH = "Branch"
+    DPARTY = "Dev Party"
+    CONSUMER = "Consumer"
+
+    items = {
+        COMPANY:"x-bian-company",
+        OPERATIONAL_ENTITY: "x-bian-op-entity",
+        BRAND: "x-bian-brand",
+        CHANNEL: "x-bian-channel",
+        ENVIRONMENT: "x-bian-env",
+        COUNTRY: "x-bian-country",
+        TIME_ZONE: "x-bian-tz",
+        LANGUAGE: "x-bian-language",
+        BRANCH: "x-bian-branch",
+        DPARTY: "x-bian-devparty",
+        CONSUMER: "x-bian-consumer"
+    }
+
+    dict = {}
+
+    def __init__(self, request):
+        for key in self.items:
+            flag = self.items[key]
+            if flag in request.headers:
+                self.dict[key] = request.headers[flag]
+
+    def get(self, key):
+        return self.dict[key]
+
+    def put(self, key, value):
+        self.dict[key] = value
+
+    def keys(self):
+        return self.dict.keys()
+
+    def size(self):
+        return len(self.dict)

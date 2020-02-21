@@ -214,7 +214,7 @@ class AbsBianMixin(AbsApiMixinX):
             class_name = bq_class_name
         module = importlib.import_module(module_name)
         class_ = getattr(module, class_name)
-        instance = class_(settings.BEHAVIOR_QUALIFIER)
+        instance = class_(settings.BEHAVIOR_QUALIFIER,settings.SUB_QUALIFIER)
         if not issubclass(class_, BehaviorQualifierType):
             raise BianException("BEHAVIOR QUALIFIER TYPE class error:"+settings.BEHAVIOR_QUALIFIER)
         return instance
@@ -239,6 +239,27 @@ class AbsBianMixin(AbsApiMixinX):
             if bq_str:
                 return bq_str.strip().replace("-","_").replace(" ","_")
         raise IllegalBQIdException(bq_id)
+
+    def get_sub_qualifiers(self,request, bq, vars):
+        sub = "s"
+        sub_qualifiers = {}
+        count = 0
+        bqri = "bq_reference_id"
+        bqt_obj = self.behavior_qualifier_type
+        bq_obj = bqt_obj.get(bq)
+        while (count < bq_obj.qualifiers_depth):
+            bqri = sub + bqri
+            if bqri in vars:
+                sbq_reference_id = vars[bqri]
+                i = request.path.find(sbq_reference_id)
+            if bq_obj.sub_qualifiers:
+                for key in bq_obj.sub_qualifiers:
+
+                    sub_qualifier_name = "xxx"
+
+                sub_qualifiers[sub_qualifier_name] = sbq_reference_id
+            count = count + 1
+        return sub_qualifiers
 
     def get_collection_filter(self, collection_filter):
         ret = None
@@ -289,6 +310,7 @@ class AbsBianMixin(AbsApiMixinX):
         cr_reference_id = None
         behavior_qualifier = None
         bq_reference_id = None
+        sub_qualifiers = None
         collection_filter = None
         query_params = None
         if "sd_reference_id" in vars:
@@ -297,14 +319,19 @@ class AbsBianMixin(AbsApiMixinX):
             cr_reference_id = vars["cr_reference_id"]
         if "behavior_qualifier" in vars:
             behavior_qualifier = self.get_behavior_qualifier(action_term, vars["behavior_qualifier"])
-            # behavior_qualifier = self.get_behavior_qualifier_by_id(service_op, vars["bq_reference_id"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
+        if "sbq_reference_id" in vars:
+            sub_qualifiers = self.get_sub_qualifiers(request,behavior_qualifier, vars)
         if "collection-filter" in request.args:
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
         if "queryparams" in request.args:
             query_params = self.get_query_params(request.args["queryparams"])
-        return BianRequest(action_term, request, sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params)
+        context = BianContext(request)
+        for i in settings.BIAN_CONTEXT_LIST:
+            if i not in context.keys():
+                raise MissingBianContextException(i)
+        return BianRequest(action_term, request, context,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")

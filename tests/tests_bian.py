@@ -12,7 +12,7 @@ from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
-from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact
+from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext
 
 import unittest
 
@@ -166,7 +166,7 @@ class A3(AbsBianMixin):# the foi
         if foi:
             return self.set_back_api(bian_request,foi)
         print("in set_back_api_deposit ")
-        return TstApi(Util.get_req_context(bian_request.request))
+        TstApi(Util.get_req_context(bian_request.request))
 
     def set_api_headers_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
         print("in set_api_headers_deposit ")
@@ -238,6 +238,13 @@ class A4(AbsBianMixin):# the foi
         print("in create_resp_payload")
         json = dict[1]
         return {"name":json["title"]}
+
+class A5(A3):
+    def set_back_api_depositsandwithdrawals(self, bian_request, foi=None):
+        if foi:
+            return self.set_back_api(bian_request, foi)
+        print("in set_back_api_deposit ")
+        return GoogleApi(Util.get_req_context(bian_request.request))
 
 class S1(InfoLinkX):
     pass
@@ -444,4 +451,30 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert len(ret.request.query_params) == 2
             assert ret.request.query_params[0] == 'amount>100'
             assert ret.request.query_params[1] == 'x=y'
+
+    def test_996_request_sub_returns_a_response(self):
+        with app.test_request_context('/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_997_request_sub_returns_a_response(self):
+        with app.test_request_context('/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty1': 'Your value'}):
+            app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sub_bq_reference_id":"1"})
+            except Exception as e:
+                assert type(e).__name__ == "MissingBianContextException"
+
+    def test_998_request_sub_returns_a_response(self):
+        with app.test_request_context('/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
+            assert ret.code == 200
 
