@@ -32,6 +32,9 @@ class BankingProduct(GenericArtifact):
 class CAControlRecord(BankingProduct):
     pass
 
+class CAContext(BianContext):
+    pass
+
 class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):
         if not foi:#not in seq
@@ -457,7 +460,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
+            ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"1"})
             assert ret.code == 200
 
     def test_997_request_sub_returns_a_response(self):
@@ -466,15 +469,44 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sub_bq_reference_id":"1"})
+                ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"1"})
             except Exception as e:
                 assert type(e).__name__ == "MissingBianContextException"
 
     def test_998_request_sub_returns_a_response(self):
-        with app.test_request_context('/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
             assert ret.code == 200
 
+    def test_999_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["BIAN_CONTEXT_CLASS"] = None
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"3"})
+            assert ret.code == 200
+
+    def test_9991_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"3"})
+            assert ret.code == 200
+
+    def test_9992_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["BIAN_CONTEXT_CLASS"] = None
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_9993_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            self.a5 = A5()
+            self.a5.bian_action = ActionTerms.EXECUTE
+            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
+            assert ret.code == 200

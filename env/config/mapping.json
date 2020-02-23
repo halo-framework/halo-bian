@@ -1,0 +1,5 @@
+{
+  "/tst": "employees[*].id",
+  "/tst1": "",
+  "/consumer-loan/*/consumer-loan-fulfillment-arrangement/*/servicefees/*/": ""
+}

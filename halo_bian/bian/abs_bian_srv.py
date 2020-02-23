@@ -204,6 +204,21 @@ class AbsBianMixin(AbsApiMixinX):
         ga_obj = self.init_cr(ga_class,init_var)
         return ga_obj
 
+    def init_ctx(self, request):
+        if settings.BIAN_CONTEXT_CLASS:
+            k = settings.BIAN_CONTEXT_CLASS.rfind(".")
+            module_name = settings.BIAN_CONTEXT_CLASS[:k]
+            class_name = settings.BIAN_CONTEXT_CLASS[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = "BianContext"
+        module = importlib.import_module(module_name)
+        class_ = getattr(module, class_name)
+        instance = class_(request)
+        if not issubclass(class_, BianContext):
+            raise BianException("BIAN CONTEXT CLASS error:"+settings.BIAN_CONTEXT_CLASS)
+        return instance
+
     def init_bq(self, bq_class_name):
         if settings.BEHAVIOR_QUALIFIER_TYPE:
             k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
@@ -247,6 +262,7 @@ class AbsBianMixin(AbsApiMixinX):
         bqri = "bq_reference_id"
         bqt_obj = self.behavior_qualifier_type
         bq_obj = bqt_obj.get(bq)
+        tokens = self.get_path_tokens(request)
         while (count < bq_obj.qualifiers_depth):
             bqri = sub + bqri
             if bqri in vars:
@@ -254,12 +270,39 @@ class AbsBianMixin(AbsApiMixinX):
                 i = request.path.find(sbq_reference_id)
             if bq_obj.sub_qualifiers:
                 for key in bq_obj.sub_qualifiers:
-
-                    sub_qualifier_name = "xxx"
-
-                sub_qualifiers[sub_qualifier_name] = sbq_reference_id
+                    if key == token:
+                        sub_qualifier_name = key
+                        sub_qualifiers[sub_qualifier_name] = sbq_reference_id
             count = count + 1
         return sub_qualifiers
+
+    def get_path_tokens(self,request):
+        """
+
+        :param request:
+        :return:
+        """
+        tokens = request.path.split("/")
+        return tokens
+
+    """
+
+    request.method:              GET
+    request.url:                 http://127.0.0.1:5000/alert/dingding/test?x=y
+    request.base_url:            http://127.0.0.1:5000/alert/dingding/test
+    request.url_charset:         utf-8
+    request.url_root:            http://127.0.0.1:5000/
+    str(request.url_rule):       /alert/dingding/test
+    request.host_url:            http://127.0.0.1:5000/
+    request.host:                127.0.0.1:5000
+    request.script_root:
+    request.path:                /alert/dingding/test
+    request.full_path:           /alert/dingding/test?x=y
+
+    request.args:                ImmutableMultiDict([('x', 'y')])
+    request.args.get('x'):       y
+
+    """
 
     def get_collection_filter(self, collection_filter):
         ret = None
@@ -308,6 +351,7 @@ class AbsBianMixin(AbsApiMixinX):
             raise IllegalActionTermException(action)
         sd_reference_id = None
         cr_reference_id = None
+        behavior_qualifier_type = None
         behavior_qualifier = None
         bq_reference_id = None
         sub_qualifiers = None
@@ -327,7 +371,7 @@ class AbsBianMixin(AbsApiMixinX):
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
         if "queryparams" in request.args:
             query_params = self.get_query_params(request.args["queryparams"])
-        context = BianContext(request)
+        context = self.init_ctx(request)
         for i in settings.BIAN_CONTEXT_LIST:
             if i not in context.keys():
                 raise MissingBianContextException(i)

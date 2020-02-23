@@ -400,6 +400,7 @@ from halo_bian.bian.bian import FunctionalPatterns
 BIAN_VER = "8"
 BIAN_API_VER = "2.0"
 BIAN_CONTEXT_LIST = []
+BIAN_CONTEXT_CLASS = 'tests_bian.CAContext'
 SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
@@ -474,6 +475,18 @@ with open(file_path, 'r') as fi:
                      dict[action] = { item['type'] : data }
             dictx[bq] = dict
         BUSINESS_EVENT_MAP[clazz] = dictx
+
+
+MAPPING = None
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir, 'env','config','mapping.json')
+try:
+    with open(file_path, 'r') as fi:
+        MAPPING = json.load(fi)
+        print("mapping:" + str(MAPPING))
+except FileNotFoundError as e:
+    pass
+
 
 SERVICE_DOMAINS = None
 file_dir = os.path.dirname(__file__)
