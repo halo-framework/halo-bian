@@ -258,6 +258,28 @@ class A6(A5):
         return
     def set_back_api_depositsandwithdrawals_deposits(self,bian_request):
         return
+    def set_api_headers_depositsandwithdrawals_deposits(self,bian_request):
+        return
+    def set_api_vars_depositsandwithdrawals_deposits(self,bian_request):
+        return
+    def set_api_auth_depositsandwithdrawals_deposits(self,bian_request):
+        return
+    def execute_api_depositsandwithdrawals_deposits(self,bian_request, back_api, back_vars,
+                                                                             back_headers, back_auth, back_data):
+        return
+    def extract_json_depositsandwithdrawals_deposits(self,bian_request, back_response):
+        return
+    def create_resp_payload_depositsandwithdrawals_deposits(self,bian_request, dict):
+        return
+    def set_resp_headers_depositsandwithdrawals_deposits(self,bian_request,headers):
+        return
+    def validate_post_depositsandwithdrawals_deposits(self,halo_request, halo_response):
+        return
+
+
+
+
+
 
 class S1(InfoLinkX):
     pass
@@ -522,6 +544,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
             ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"4"})
+            assert ret.code == 200
+
+    def test_99931_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["BIAN_CONTEXT_CLASS"] = None
+            self.a6 = A6()
+            self.a6.bian_action = ActionTerms.EXECUTE
+            ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
             assert ret.code == 200
 
     def test_9994_request_sub_returns_a_response(self):
