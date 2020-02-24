@@ -19,7 +19,7 @@ class BianRequest(HaloRequest):
     sd_reference_id = None
     cr_reference_id = None
     bq_reference_id = None
-    bian_behavior_qualifier = None
+    behavior_qualifier = None
     collection_filter = None
     query_params = None
     sub_qualifiers = None
@@ -30,7 +30,7 @@ class BianRequest(HaloRequest):
         self.request = request
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
-        self.bian_behavior_qualifier = behavior_qualifier
+        self.behavior_qualifier = behavior_qualifier
         self.bq_reference_id = bq_reference_id
         self.collection_filter = collection_filter
         self.query_params = query_params
@@ -38,8 +38,8 @@ class BianRequest(HaloRequest):
         self.context = context
 
     def get_bq_func_name(self):
-        if self.bian_behavior_qualifier:
-            name =self.bian_behavior_qualifier.lower()
+        if self.behavior_qualifier:
+            name =self.behavior_qualifier.lower()
             if self.sub_qualifiers:
                 for item in self.sub_qualifiers.keys():
                     name = name + "_" + item.lower()
