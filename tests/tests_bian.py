@@ -251,6 +251,13 @@ class A5(A3):
         print("in set_back_api_deposit ")
         return GoogleApi(Util.get_req_context(bian_request.request))
 
+class A6(A5):
+    def validate_req_depositsandwithdrawals_deposits(self,bian_request):
+        return
+    def validate_pre_depositsandwithdrawals_deposits(self,bian_request):
+        return
+    def set_back_api_depositsandwithdrawals_deposits(self,bian_request):
+        return
 
 class S1(InfoLinkX):
     pass
@@ -512,9 +519,9 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9993_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/4/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_CLASS"] = None
-            self.a5 = A5()
-            self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"4"})
+            self.a6 = A6()
+            self.a6.bian_action = ActionTerms.EXECUTE
+            ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"4"})
             assert ret.code == 200
 
     def test_9994_request_sub_returns_a_response(self):

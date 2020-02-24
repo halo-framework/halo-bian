@@ -36,10 +36,11 @@ class BianRequest(HaloRequest):
         self.query_params = query_params
         self.sub_qualifiers = sub_qualifiers
         self.context = context
+        self.sub_func = self.get_bq_func_name()
 
     def get_bq_func_name(self):
         if self.behavior_qualifier:
-            name =self.behavior_qualifier.lower()
+            name = self.behavior_qualifier.lower()
             if self.sub_qualifiers:
                 for item in self.sub_qualifiers.keys():
                     name = name + "_" + item.lower()
