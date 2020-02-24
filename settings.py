@@ -439,6 +439,11 @@ SUB_QUALIFIER = {
       "Depositsx":{"name":"Depositsx","subs":{}},
       "Withdrawalsx":{"name":"Withdrawalsx","subs":{}},
       "Paymentsx":{"name":"Paymentsx","subs":{}}
+  },
+  "ServiceFees":{
+      "Depositsk":{"name":"Depositsk","subs":{}},
+      "Withdrawalsk":{"name":"Withdrawalsk","subs":{}},
+      "Paymentsk":{"name":"Paymentsk","subs":{}}
   }
 }
 CONTROL_RECORD = 'tests_bian.CAControlRecord'#extended classes of ControlRecord

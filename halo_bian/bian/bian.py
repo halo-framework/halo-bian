@@ -19,7 +19,7 @@ class BianRequest(HaloRequest):
     sd_reference_id = None
     cr_reference_id = None
     bq_reference_id = None
-    behavior_qualifier = None
+    bian_behavior_qualifier = None
     collection_filter = None
     query_params = None
     sub_qualifiers = None
@@ -30,12 +30,21 @@ class BianRequest(HaloRequest):
         self.request = request
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
-        self.behavior_qualifier = behavior_qualifier
+        self.bian_behavior_qualifier = behavior_qualifier
         self.bq_reference_id = bq_reference_id
         self.collection_filter = collection_filter
         self.query_params = query_params
         self.sub_qualifiers = sub_qualifiers
         self.context = context
+
+    def get_bq_func_name(self):
+        if self.bian_behavior_qualifier:
+            name =self.bian_behavior_qualifier.lower()
+            if self.sub_qualifiers:
+                for item in self.sub_qualifiers.keys():
+                    name = name + "_" + item.lower()
+            return name
+        return None
 
 
 class BianResponse(HaloResponse):
@@ -177,7 +186,7 @@ class DirectLifeCycleStates(LifeCycleStates):
         self.Strategy_concluded = LifeCycleState("Strategy-concluded",self)
         super(DirectLifeCycleStates,self).__init__([self.Unassigned,self.Assigned_strategy_pending,self.Strategy_in_force,self.Strategy_under_review,self.Strategy_suspended,self.Strategy_concluded])
 
-
+#@todo check control record good - behavior_qualifier_type
 class ControlRecord(GenericArtifact):
     __metaclass__ = ABCMeta
     asset_type = None
@@ -196,7 +205,7 @@ class ControlRecord(GenericArtifact):
         return self.generic_artifact.get_generic_artifact_type()
 
     def get_behavior_qualifier_type(self):
-        self.behavior_qualifier.get_behavior_qualifier_type()
+        self.behavior_qualifier_type.get_behavior_qualifier_type()
 
     def get_asset_type_obj(self):
         return self.asset_type
@@ -205,7 +214,7 @@ class ControlRecord(GenericArtifact):
         return self.generic_artifact
 
     def get_behavior_qualifier(self):
-        self.behavior_qualifier
+        self.behavior_qualifier_type
 
     def get_life_cycle_state(self):
         self.life_cycle_state

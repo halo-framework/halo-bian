@@ -255,25 +255,43 @@ class AbsBianMixin(AbsApiMixinX):
                 return bq_str.strip().replace("-","_").replace(" ","_")
         raise IllegalBQIdException(bq_id)
 
+    def get_behavior_qualifier_from_path(self, op, request,bq_ref_id):
+        tokens = self.get_path_tokens(request)
+        if bq_ref_id in tokens:
+            bqt_obj = self.behavior_qualifier_type
+            idx = 0
+            for item in tokens:
+                if item == bq_ref_id:
+                    if idx > 0:
+                        bq_name = tokens[idx-1]
+                        for bq_id in bqt_obj.keys():
+                            bq_obj = bqt_obj.get(bq_id)
+                            if bq_obj.name.lower() == bq_name.lower().strip().replace("-","_").replace(" ","_"):
+                                return bq_name
+                idx = idx + 1
+        raise IllegalBQException(bq_ref_id)
+
     def get_sub_qualifiers(self,request, bq, vars):
         sub = "s"
         sub_qualifiers = {}
-        count = 0
         bqri = "bq_reference_id"
         bqt_obj = self.behavior_qualifier_type
-        bq_obj = bqt_obj.get(bq)
-        tokens = self.get_path_tokens(request)
-        while (count < bq_obj.qualifiers_depth):
-            bqri = sub + bqri
-            if bqri in vars:
-                sbq_reference_id = vars[bqri]
-                i = request.path.find(sbq_reference_id)
-            if bq_obj.sub_qualifiers:
-                for key in bq_obj.sub_qualifiers:
-                    if key == token:
-                        sub_qualifier_name = key
-                        sub_qualifiers[sub_qualifier_name] = sbq_reference_id
-            count = count + 1
+        for item in bqt_obj.keys():
+            bq_obj = bqt_obj.get(item)
+            if bq.lower() == bq_obj.name.lower():
+                tokens = self.get_path_tokens(request)
+                for token in tokens:
+                    for key in bq_obj.sub_qualifiers:
+                        if key.lower() == token.lower():
+                            count = 0
+                            while (count < bq_obj.qualifiers_depth):
+                                bqri = sub + bqri
+                                if bq_obj.sub_qualifiers:
+                                    sub_qualifier_name = key
+                                    if bqri in vars:
+                                        sbq_reference_id = vars[bqri]
+                                        sub_qualifiers[sub_qualifier_name] = sbq_reference_id
+                                count = count + 1
         return sub_qualifiers
 
     def get_path_tokens(self,request):
@@ -365,6 +383,7 @@ class AbsBianMixin(AbsApiMixinX):
             behavior_qualifier = self.get_behavior_qualifier(action_term, vars["behavior_qualifier"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
+            behavior_qualifier = self.get_behavior_qualifier_from_path(action_term,request,bq_reference_id)
         if "sbq_reference_id" in vars:
             sub_qualifiers = self.get_sub_qualifiers(request,behavior_qualifier, vars)
         if "collection-filter" in request.args:
@@ -421,10 +440,9 @@ class AbsBianMixin(AbsApiMixinX):
                 raise ActionTermFailException(response.request.action_term)
         raise ActionTermFailException(response)
 
-    def process_service_operation(self, action, request, vars):
+    def process_service_operation(self, action, bian_request, vars):
         #logger.debug("in process_service_operation " + str(vars))
-        logger.info('process_service_operation : ', extra=log_json(Util.get_req_context(request),vars,{"action":action}))
-        bian_request = self.bian_validate_req(action, request, vars)
+        logger.info('process_service_operation : ', extra=log_json(Util.get_req_context(bian_request.request),vars,{"action":action}))
         functionName = {
             ActionTerms.INITIATE: self.do_initiate,
             ActionTerms.CREATE: self.do_create,
@@ -774,35 +792,35 @@ class AbsBianMixin(AbsApiMixinX):
         bian_action = self.get_bian_action(ActionTerms.RETRIEVE)
         bian_request = self.bian_validate_req(bian_action, request, vars)
         self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, request, vars)
+        return self.process_service_operation(bian_action, bian_request, vars)
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
         bian_action = self.get_bian_action(ActionTerms.CREATE)
         bian_request = self.bian_validate_req(bian_action, request, vars)
         self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, request, vars)
+        return self.process_service_operation(bian_action, bian_request, vars)
 
     def process_put(self, request, vars):
         logger.debug("in process_put " + str(vars))
         bian_action = self.get_bian_action(ActionTerms.UPDATE)
         bian_request = self.bian_validate_req(bian_action, request, vars)
         self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, request, vars)
+        return self.process_service_operation(bian_action, bian_request, vars)
 
     def process_patch(self, request, vars):
         logger.debug("in process_patch " + str(vars))
         bian_action = self.get_bian_action(ActionTerms.UPDATE)
         bian_request = self.bian_validate_req(bian_action, request, vars)
         self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, request, vars)
+        return self.process_service_operation(bian_action, bian_request, vars)
 
     def process_delete(self, request, vars):
         logger.debug("in process_delete " + str(vars))
         bian_action = self.get_bian_action(ActionTerms.CONTROL)
         bian_request = self.bian_validate_req(bian_action, request, vars)
         self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, request, vars)
+        return self.process_service_operation(bian_action, bian_request, vars)
 
 #@TODO externelize all strings
 
