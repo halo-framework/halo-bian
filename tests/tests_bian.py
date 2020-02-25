@@ -277,10 +277,6 @@ class A6(A5):
         return
 
 
-
-
-
-
 class S1(InfoLinkX):
     pass
 
@@ -429,27 +425,27 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert type(e).__name__ == "IllegalActionTermException"
 
     def test_990_mask_cr_request_returns_a_given_error(self):
-        with app.test_request_context('/?collection-filter=amount>100'):
+        with app.test_request_context('/consumer-loan/1a/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a3.process_get(request, {"cr_reference_id":"1a","bq_reference_id":"1"})
+                ret = self.a3.process_get(request, {"cr_reference_id":"2","bq_reference_id":"3a"})
                 assert False
             except Exception as e:
-                assert type(e).__name__ == "BadRequestError"
+                assert type(e).__name__ == "IllegalBQException"
 
     def test_991_mask_bq_request_returns_a_given_error(self):
-        with app.test_request_context('/?collection-filter=amount>100'):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/1b/?collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1b"})
+                ret = self.a3.process_get(request, {"cr_reference_id":"","bq_reference_id":""})
                 assert False
             except Exception as e:
-                assert type(e).__name__ == "BadRequestError"
+                assert type(e).__name__ == "IllegalBQException"
 
     def test_992_request_returns_a_response(self):
-        with app.test_request_context('/?name=peter&collection-filter=amount>100'):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             ret = self.a3.process_get(request, {"cr_reference_id":"1","bq_reference_id":"1"})
@@ -461,7 +457,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.request.request == request
 
     def test_993_request_returns_a_response(self):
-        with app.test_request_context('/?name=peter&collection-filter=amount>100'):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             ret = self.a3.process_put(request, {"cr_reference_id":"1","bq_reference_id":"1"})
@@ -475,7 +471,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_200_OK
 
     def test_995_control_record_returns_a_given_list(self):
-        with app.test_request_context('/?name=1&queryparams=amount>100@x=y'):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement//?name=1&queryparams=amount>100@x=y'):
             self.a3 = A3()
             ret = self.a3.process_get(request, {"sd_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals"})
             print("x=" + str(ret.payload))
@@ -488,7 +484,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.request.query_params[1] == 'x=y'
 
     def test_996_request_sub_returns_a_response(self):
-        with app.test_request_context('/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
@@ -496,7 +492,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == 200
 
     def test_997_request_sub_returns_a_response(self):
-        with app.test_request_context('/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty1': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty1': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
@@ -506,15 +502,15 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert type(e).__name__ == "MissingBianContextException"
 
     def test_998_request_sub_returns_a_response(self):
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
+            ret = self.a5.process_put(request, {"cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"4"})
             assert ret.code == 200
 
     def test_999_request_sub_returns_a_response(self):
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_CLASS"] = None
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
@@ -522,7 +518,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == 200
 
     def test_9991_request_sub_returns_a_response(self):
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"3"})
@@ -555,8 +551,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == 200
 
     def test_9994_request_sub_returns_a_response(self):
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process_put(request, {"cr_reference_id":"1","behavior_qualifier":"DepositsandWithdrawals","bq_reference_id":"1","sub_qualifier":"Deposits","sbq_reference_id":"1"})
-            assert ret.code == 200
+            try:
+                ret = self.a5.process_put(request, {"cr_reference_id":"1","bq_reference_id":"1","sbq_reference_id":"1"})
+            except Exception as e:
+                assert type(e).__name__ == "IllegalBQException"
