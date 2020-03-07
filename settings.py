@@ -34,9 +34,7 @@ ENV_TYPE = LOC
 FUNC_NAME = 'sdapi'
 APP_NAME = 'sdapp'
 
-# @TODO load config data from env var if possible and if not from env file
 SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
-#AWS_REGION = 'us-east-1'  # env.str('AWS_REGION')
 DB_URL = env.str('DYNAMODB_URL')
 SECRET_JWT_KEY = env.str('SECRET_JWT_KEY')
 STAGE_URL = env.bool('STAGE_URL', default=True)
@@ -399,13 +397,13 @@ except Exception as e:
 from halo_bian.bian.bian import FunctionalPatterns
 BIAN_VER = "8"
 BIAN_API_VER = "2.0"
-BIAN_CONTEXT_LIST = []
-BIAN_CONTEXT_CLASS = 'tests_bian.CAContext'
+HALO_CONTEXT_LIST = []
+HALO_CONTEXT_CLASS = 'tests.tests_bian.CAContext'
 SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
 GENERIC_ARTIFACT = 'halo_bian.bian.bian.FulfillmentArrangement'#extended classes of FulfillmentArrangement
-BEHAVIOR_QUALIFIER_TYPE = 'tests_bian.CAFeature'
+BEHAVIOR_QUALIFIER_TYPE = 'tests.tests_bian.CAFeature'
 BEHAVIOR_QUALIFIER = {
   "Interest":"Interest",
   "ServiceFees":"ServiceFees",
@@ -446,7 +444,7 @@ SUB_QUALIFIER = {
       "Paymentsk":{"name":"Paymentsk","subs":{}}
   }
 }
-CONTROL_RECORD = 'tests_bian.CAControlRecord'#extended classes of ControlRecord
+CONTROL_RECORD = 'tests.tests_bian.CAControlRecord'#extended classes of ControlRecord
 
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None

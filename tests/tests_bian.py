@@ -12,6 +12,7 @@ from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
+from halo_flask.request import HaloContext
 from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext
 
 import unittest
@@ -511,10 +512,10 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_999_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
-            app.config["BIAN_CONTEXT_CLASS"] = None
+            app.config["HALO_CONTEXT_CLASS"] = None
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"3"})
+            ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3"})
             assert ret.code == 200
 
     def test_9991_request_sub_returns_a_response(self):
@@ -532,11 +533,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"3"})
             except Exception as e:
-                assert type(e).__name__ == "MissingBianContextException"
+                assert type(e).__name__ == "HaloMethodNotImplementedException"
 
     def test_9993_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/4/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
-            app.config["BIAN_CONTEXT_CLASS"] = None
+            app.config["HALO_CONTEXT_CLASS"] = None
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
             ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"4"})
@@ -544,7 +545,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_99931_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
-            app.config["BIAN_CONTEXT_CLASS"] = None
+            app.config["HALO_CONTEXT_CLASS"] = None
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
             ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})

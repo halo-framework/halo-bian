@@ -11,7 +11,9 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
-
+#@todo add json config file option replacing hard coded bian config
+#@todo add full life cycle managment + state machine
+#@todo
 #extension,anlytics,cloud
 
 class BianRequest(HaloRequest):
@@ -23,11 +25,11 @@ class BianRequest(HaloRequest):
     collection_filter = None
     query_params = None
     sub_qualifiers = None
-    context = None
 
-    def __init__(self, action_term, request,context, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None,sub_qualifiers=None):
+
+    def __init__(self, action_term, request, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None,sub_qualifiers=None):
+        super(BianRequest,self).__init__(request,self.get_bq_func_name(behavior_qualifier,sub_qualifiers))
         self.action_term = action_term
-        self.request = request
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
         self.behavior_qualifier = behavior_qualifier
@@ -35,14 +37,12 @@ class BianRequest(HaloRequest):
         self.collection_filter = collection_filter
         self.query_params = query_params
         self.sub_qualifiers = sub_qualifiers
-        self.context = context
-        self.sub_func = self.get_bq_func_name()
 
-    def get_bq_func_name(self):
-        if self.behavior_qualifier:
-            name = self.behavior_qualifier.lower()
-            if self.sub_qualifiers:
-                for item in self.sub_qualifiers.keys():
+    def get_bq_func_name(self,behavior_qualifier,sub_qualifiers):
+        if behavior_qualifier:
+            name = behavior_qualifier.lower()
+            if sub_qualifiers:
+                for item in sub_qualifiers.keys():
                     name = name + "_" + item.lower()
             return name
         return None
@@ -656,10 +656,9 @@ class FunctionalPatterns(AbsBaseClass):
 
 
 #Capture service operation connections – The service operation connections for each business event
-
 # Finance Context - Multi 10
-#@todo finish context items
-class BianContext(AbsBaseClass):
+from halo_flask.request import HaloContext
+class BianContext(HaloContext):
     COMPANY = "Company"
     OPERATIONAL_ENTITY = "Operational Entity"
     BRAND = "Brand"
@@ -672,36 +671,14 @@ class BianContext(AbsBaseClass):
     DPARTY = "Dev Party"
     CONSUMER = "Consumer"
 
-    items = {
-        COMPANY:"x-bian-company",
-        OPERATIONAL_ENTITY: "x-bian-op-entity",
-        BRAND: "x-bian-brand",
-        CHANNEL: "x-bian-channel",
-        ENVIRONMENT: "x-bian-env",
-        COUNTRY: "x-bian-country",
-        TIME_ZONE: "x-bian-tz",
-        LANGUAGE: "x-bian-language",
-        BRANCH: "x-bian-branch",
-        DPARTY: "x-bian-devparty",
-        CONSUMER: "x-bian-consumer"
-    }
-
-    dict = {}
-
-    def __init__(self, request):
-        for key in self.items:
-            flag = self.items[key]
-            if flag in request.headers:
-                self.dict[key] = request.headers[flag]
-
-    def get(self, key):
-        return self.dict[key]
-
-    def put(self, key, value):
-        self.dict[key] = value
-
-    def keys(self):
-        return self.dict.keys()
-
-    def size(self):
-        return len(self.dict)
+    HaloContext.items[COMPANY] = "x-bian-company"
+    HaloContext.items[OPERATIONAL_ENTITY] = "x-bian-op-entity"
+    HaloContext.items[BRAND] = "x-bian-brand"
+    HaloContext.items[CHANNEL] = "x-bian-channel"
+    HaloContext.items[ENVIRONMENT] = "x-bian-env"
+    HaloContext.items[COUNTRY] = "x-bian-country"
+    HaloContext.items[TIME_ZONE] = "x-bian-tz"
+    HaloContext.items[LANGUAGE] = "x-bian-language"
+    HaloContext.items[BRANCH] = "x-bian-branch"
+    HaloContext.items[DPARTY] = "x-bian-devparty"
+    HaloContext.items[CONSUMER] = "x-bian-consumer"

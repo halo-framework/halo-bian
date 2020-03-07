@@ -10,8 +10,8 @@ class BianException(HaloException):
 class IllegalActionTermException(BianException):
     pass
 
-class MissingBianContextException(BianException):
-    pass
+#class MissingBianContextException(BianException):
+#    pass
 
 class ActionTermFailException(BianException):
     pass

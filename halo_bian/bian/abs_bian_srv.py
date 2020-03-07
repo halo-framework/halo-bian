@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import json
 import re
+import logging
+
 from halo_flask.exceptions import ApiError,BadRequestError,HaloMethodNotImplementedException
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
@@ -9,6 +11,7 @@ from halo_flask.logs import log_json
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.mixinx import AbsApiMixinX
 from halo_flask.flask.filter import RequestFilter
+from halo_flask.settingsx import settingsx
 
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
@@ -204,7 +207,7 @@ class AbsBianMixin(AbsApiMixinX):
         ga_obj = self.init_cr(ga_class,init_var)
         return ga_obj
 
-    def init_ctx(self, request):
+    def init_ctx1(self, request):
         if settings.BIAN_CONTEXT_CLASS:
             k = settings.BIAN_CONTEXT_CLASS.rfind(".")
             module_name = settings.BIAN_CONTEXT_CLASS[:k]
@@ -390,11 +393,11 @@ class AbsBianMixin(AbsApiMixinX):
             collection_filter = self.get_collection_filter(request.args["collection-filter"])
         if "queryparams" in request.args:
             query_params = self.get_query_params(request.args["queryparams"])
-        context = self.init_ctx(request)
-        for i in settings.BIAN_CONTEXT_LIST:
-            if i not in context.keys():
-                raise MissingBianContextException(i)
-        return BianRequest(action_term, request, context,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
+        #context = self.init_ctx(request)
+        #for i in settings.BIAN_CONTEXT_LIST:
+        #    if i not in context.keys():
+        #        raise MissingBianContextException(i)
+        return BianRequest(action_term, request,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -407,12 +410,12 @@ class AbsBianMixin(AbsApiMixinX):
             return True
         raise BianException("no Bian Request")
 
-    def get_request_filter(self):  #
+    def get_request_filter(self,halo_request):  #
         logger.debug("get_request_filter")
         # @todo fix filter config
         class BianRequestFilter(RequestFilter):
             def __init__(self,config, ref):
-                super(BianRequestFilter, self).__init__(config)
+                #super(BianRequestFilter, self).__init__(config)
                 self.ref = ref
             def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
                 event.put("functional_pattern",self.ref.functional_pattern)
