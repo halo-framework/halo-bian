@@ -411,16 +411,7 @@ class AbsBianMixin(AbsApiMixinX):
         raise BianException("no Bian Request")
 
     def get_request_filter(self,halo_request):  #
-        logger.debug("get_request_filter")
-        # @todo fix filter config
-        class BianRequestFilter(RequestFilter):
-            def __init__(self,config, ref):
-                #super(BianRequestFilter, self).__init__(config)
-                self.ref = ref
-            def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
-                event.put("functional_pattern",self.ref.functional_pattern)
-                print("event-functional_pattern:"+event.get("functional_pattern"))
-                return event
+        logger.debug("get_request_filter for bian")
         return BianRequestFilter(None,self)
 
     def process_ok(self, response):

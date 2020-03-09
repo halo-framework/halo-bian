@@ -5,6 +5,7 @@ from abc import ABCMeta
 from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
+from halo_flask.flask.filter import RequestFilter
 from halo_flask.settingsx import settingsx
 
 settings = settingsx()
@@ -56,6 +57,16 @@ class BianResponse(HaloResponse):
         self.payload = payload
         self.headers = headers
 
+# @todo fix filter config
+class BianRequestFilter(RequestFilter):
+    def __init__(self,config, ref):
+        #super(BianRequestFilter, self).__init__(config)
+        self.ref = ref
+    def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
+        event = super(BianRequestFilter, self).augment_event_with_headers_and_data(event, halo_request,halo_response)
+        event.put("functional_pattern",self.ref.functional_pattern)
+        print("event-functional_pattern:"+event.get("functional_pattern"))
+        return event
 
 class ServiceProperties(AbsBaseClass):
     status = "online"
