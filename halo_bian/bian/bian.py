@@ -57,15 +57,41 @@ class BianResponse(HaloResponse):
         self.payload = payload
         self.headers = headers
 
-# @todo fix filter config
 class BianRequestFilter(RequestFilter):
-    def __init__(self,config, ref):
-        #super(BianRequestFilter, self).__init__(config)
+    # bian data
+    service_domain = "service_domain"
+    asset_type = "asset_type"
+    functional_pattern = "functional_pattern"
+    generic_artifact = "generic_artifact"
+    behavior_qualifier_type = "behavior_qualifier_type"
+    service_operation = "service_operation"
+    action_term = "action_term"
+    # request
+    sd_reference_id = "sd_reference_id"
+    cr_reference_id = "cr_reference_id"
+    bq_reference_id = "bq_reference_id"
+    behavior_qualifier = "behavior_qualifier"
+
+    def set(self, ref):
         self.ref = ref
+
     def augment_event_with_headers_and_data(self,event, halo_request,halo_response):
         event = super(BianRequestFilter, self).augment_event_with_headers_and_data(event, halo_request,halo_response)
-        event.put("functional_pattern",self.ref.functional_pattern)
-        print("event-functional_pattern:"+event.get("functional_pattern"))
+        event.put(self.functional_pattern,self.ref.functional_pattern)
+        event.put(self.action_term,self.ref.bian_action)
+        event.put(self.service_domain, self.ref.service_domain)
+        event.put(self.asset_type, self.ref.asset_type)
+        event.put(self.generic_artifact, self.ref.generic_artifact)
+        event.put(self.behavior_qualifier_type, self.ref.behavior_qualifier_type)
+        event.put(self.service_operation, self.ref.service_operation)
+        event.put(self.sd_reference_id, halo_request.sd_reference_id)
+        event.put(self.cr_reference_id, halo_request.cr_reference_id)
+        event.put(self.bq_reference_id, halo_request.bq_reference_id)
+        event.put(self.behavior_qualifier, halo_request.behavior_qualifier)
+        event = self.augment_event_with_data(event, halo_request, halo_response)
+        return event
+
+    def augment_event_with_data(self,event, halo_request, halo_response):
         return event
 
 class ServiceProperties(AbsBaseClass):

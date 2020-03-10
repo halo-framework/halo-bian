@@ -410,9 +410,11 @@ class AbsBianMixin(AbsApiMixinX):
             return True
         raise BianException("no Bian Request")
 
-    def get_request_filter(self,halo_request):  #
+    def get_request_filter(self,halo_request):
         logger.debug("get_request_filter for bian")
-        return BianRequestFilter(None,self)
+        filter = super(AbsBianMixin,self).get_request_filter(halo_request)
+        filter.set(self)
+        return filter
 
     def process_ok(self, response):
         if response:

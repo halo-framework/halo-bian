@@ -13,7 +13,7 @@ from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
 from halo_flask.request import HaloContext
-from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext
+from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext,BianRequestFilter
 
 import unittest
 
@@ -37,6 +37,10 @@ class CAContext(BianContext):
     TESTER = "Tester"
     BianContext.items[TESTER]="test"
 
+class BianRequestFilterX(BianRequestFilter):
+    def augment_event_with_data(self, event, halo_request, halo_response):
+        raise BianException("req")
+        return event
 
 class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):
@@ -559,3 +563,22 @@ class TestUserDetailTestCase(unittest.TestCase):
                 ret = self.a5.process_put(request, {"cr_reference_id":"1","bq_reference_id":"1","sbq_reference_id":"1"})
             except Exception as e:
                 assert type(e).__name__ == "IllegalBQException"
+
+    def test_9995_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["REQUEST_FILTER_CLASS"] = 'halo_bian.bian.bian.BianRequestFilter'
+            self.a6 = A6()
+            self.a6.bian_action = ActionTerms.EXECUTE
+            ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_9996_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["REQUEST_FILTER_CLASS"] = 'tests_bian.BianRequestFilterX'
+            self.a6 = A6()
+            self.a6.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            except Exception as e:
+                assert type(e).__name__ == "BianException"
+
