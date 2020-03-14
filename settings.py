@@ -400,6 +400,7 @@ BIAN_API_VER = "2.0"
 HALO_CONTEXT_LIST = []
 HALO_CONTEXT_CLASS = 'tests.tests_bian.CAContext'
 REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'
+REQUEST_FILTER_CLEAR_CLASS = None
 SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL

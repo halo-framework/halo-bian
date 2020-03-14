@@ -12,7 +12,7 @@ from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
-from halo_flask.request import HaloContext
+from halo_flask.flask.filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext,BianRequestFilter
 
 import unittest
@@ -41,6 +41,14 @@ class BianRequestFilterX(BianRequestFilter):
     def augment_event_with_data(self, event, halo_request, halo_response):
         raise BianException("req")
         return event
+
+class BianRequestFilterClear(RequestFilterClear):
+    pass
+
+class RequestFilterClearX(RequestFilterClear):
+    def run(self):
+        for event in self.eventx:
+            logger.debug("insert_events_to_repository " + str(event.serialize()))
 
 class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):
@@ -575,6 +583,24 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_9996_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
             app.config["REQUEST_FILTER_CLASS"] = 'tests_bian.BianRequestFilterX'
+            self.a6 = A6()
+            self.a6.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            except Exception as e:
+                assert type(e).__name__ == "BianException"
+
+    def test_9997_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.BianRequestFilterClear'
+            self.a6 = A6()
+            self.a6.bian_action = ActionTerms.EXECUTE
+            ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_9998_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
             try:

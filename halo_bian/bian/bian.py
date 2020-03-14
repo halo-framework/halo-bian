@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 #@todo add json config file option replacing hard coded bian config
 #@todo add full life cycle managment + state machine
-#@todo
-#extension,anlytics,cloud
+#@todo life cycle for each type
+#@todo extension,anlytics,cloud
 
 class BianRequest(HaloRequest):
     action_term = None
@@ -66,7 +66,7 @@ class BianRequestFilter(RequestFilter):
     behavior_qualifier_type = "behavior_qualifier_type"
     service_operation = "service_operation"
     action_term = "action_term"
-    # request
+    # request parameters
     sd_reference_id = "sd_reference_id"
     cr_reference_id = "cr_reference_id"
     bq_reference_id = "bq_reference_id"
