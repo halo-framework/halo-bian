@@ -707,6 +707,7 @@ class BianContext(HaloContext):
     BRANCH = "Branch"
     DPARTY = "Dev Party"
     CONSUMER = "Consumer"
+    BIZ_SCENARIO = "Biz Scenario"
 
     HaloContext.items[COMPANY] = "x-bian-company"
     HaloContext.items[OPERATIONAL_ENTITY] = "x-bian-op-entity"
@@ -719,3 +720,4 @@ class BianContext(HaloContext):
     HaloContext.items[BRANCH] = "x-bian-branch"
     HaloContext.items[DPARTY] = "x-bian-devparty"
     HaloContext.items[CONSUMER] = "x-bian-consumer"
+    HaloContext.items[BIZ_SCENARIO] = "x-bian-biz-scenario"
