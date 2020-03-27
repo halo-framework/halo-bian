@@ -879,3 +879,153 @@ class InfoLinkX(Resource, AbsBianSrvMixin, AbsBaseLinkX):
     def delete(self):
         ret = self.do_process(HTTPChoice.delete)
         return Util.json_data_response(ret.payload, ret.code, ret.headers)
+
+class ActivationAbsBianMixin(AbsBianMixin):
+    __metaclass__ = ABCMeta
+
+    def process_request(self, request, vars):
+        data = request.get_json()
+        self.center_id = data["serviceDomainCenterReference"]
+        self.service_id = data["serviceDomainServiceReference"]
+        self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceConfigurationSettingReference"]
+
+    def get_activation_id(self):
+        pass
+
+    def get_session_id(self):
+        pass
+
+    def get_configuration_id(self):
+        return self.configuration_id
+
+    def get_subscriber_id(self):
+        pass
+
+    def get_agreement_id(self):
+        pass
+
+    def get_user_id(self):
+        pass
+
+    def process_post(self, request, vars):
+        logger.debug("in process_post " + str(vars))
+        self.process_request(request, vars)
+        payload = {
+            "serviceDomainActivationActionTaskReference": self.get_activation_id(),
+            "serviceDomainActivationActionTaskRecord": {},
+            "serviceDomainServicingSessionReference": self.get_session_id(),
+            "serviceDomainServicingSessionRecord": {},
+            "serviceDomainServiceConfigurationRecord": {
+                "serviceDomainServiceConfigurationSettingReference": self.get_configuration_id(),
+                "serviceDomainServiceConfigurationSettingDescription": "string",
+                "serviceDomainServiceConfigurationSetup": {
+                    "serviceDomainServiceConfigurationParameter": "string"
+                },
+                "serviceDomainServiceSubscription": {
+                    "serviceDomainServiceSubscriberReference": self.get_subscriber_id(),
+                    "serviceDomainServiceSubscriberAccessProfile": "string"
+                },
+                "serviceDomainServiceAgreement": {
+                    "serviceDomainServiceAgreementReference": self.get_agreement_id(),
+                    "serviceDomainServiceUserReference": self.get_user_id(),
+                    "serviceDomainServiceAgreementTermsandConditions": "string"
+                },
+                "serviceDomainServiceStatus": "string"
+            },
+            "serviceDomainServicingSessionStatus": "string"
+        }
+        return BianResponse(request, payload, {})
+
+class ConfigurationAbsBianMixin(AbsBianMixin):
+    __metaclass__ = ABCMeta
+
+    def process_request(self, request, vars):
+        data = request.get_json()
+        self.servicing_session_id = data["serviceDomainServicingSessionReference"]
+        self.service_id = data["serviceDomainServiceReference"]
+        self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceConfigurationSettingReference"]
+        self.subscriber_id = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceSubscription"]["serviceDomainServiceSubscriberReference"]
+        self.agreement_id = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceAgreement"]["serviceDomainServiceAgreementReference"]
+        self.user_id = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceAgreement"]["serviceDomainServiceUserReference"]
+
+    def get_activation_id(self):
+        pass
+
+    def get_session_id(self):
+        pass
+
+    def get_configuration_id(self):
+        return self.configuration_id
+
+    def get_subscriber_id(self):
+        return self.subscriber_id
+
+    def get_agreement_id(self):
+        return self.agreement_id
+
+    def get_user_id(self):
+        return self.user_id
+
+    def process_put(self, request, vars):
+        logger.debug("in process_put " + str(vars))
+        self.process_request(request, vars)
+        payload = {
+            "serviceDomainConfigurationActionTaskReference": "SCATR765419",
+            "serviceDomainConfigurationActionTaskRecord": {},
+            "serviceDomainServiceConfigurationRecord": {
+                "serviceDomainServiceConfigurationSettingDescription": "string",
+                "serviceDomainServiceConfigurationSetup": {
+                    "serviceDomainServiceConfigurationParameter": "string"
+                },
+                "serviceDomainServiceSubscription": {
+                    "serviceDomainServiceSubscriberReference": "756221",
+                    "serviceDomainServiceSubscriberAccessProfile": "string"
+                },
+                "serviceDomainServiceAgreement": {
+                    "serviceDomainServiceAgreementReference": "721156",
+                    "serviceDomainServiceUserReference": "733696",
+                    "serviceDomainServiceAgreementTermsandConditions": "string"
+                },
+                "serviceDomainServiceStatus": "string"
+            },
+            "serviceDomainServicingSessionStatus": "string"
+        }
+        return BianResponse(request, payload, {})
+
+class FeedbackAbsBianMixin(AbsBianMixin):
+    __metaclass__ = ABCMeta
+
+    def process_request(self, request, vars):
+        data = request.get_json()
+        self.servicing_session_id = data["serviceDomainFeedbackActionRecord"]["serviceDomainServicingSessionReference"]
+        self.cr_id = data["serviceDomainFeedbackActionRecord"]["controlRecordInstanceReference"]
+        self.bq_id = data["serviceDomainFeedbackActionRecord"]["behaviorQualifierInstanceReference"]
+        payload = {
+            "serviceDomainFeedbackActionTaskRecord": {},
+            "serviceDomainFeedbackActionRecord": {
+                "serviceDomainServicingSessionReference": "796678",
+                "controlRecordInstanceReference": "724385",
+                "behaviorQualifierInstanceReference": "789747",
+                "feedbackRecordType": "string",
+                "feedbackRecord": {}
+            }
+        }
+
+    def process_put(self, request, vars):
+        logger.debug("in process_put " + str(vars))
+        self.process_request(request, vars)
+        payload = {
+            "serviceDomainFeedbackActionTaskReference": "SFATR765157",
+            "serviceDomainFeedbackActionTaskRecord": {},
+            "serviceDomainFeedbackActionRecord": {
+                "feedbackRecordDateTime": "09-22-2018",
+                "feedbackRecordStatus": "string",
+                "employeeBusinessUnitReference": "769031"
+            }
+        }
+        return BianResponse(request, payload, {})
