@@ -7,7 +7,7 @@ from flask_restful import Api
 import json
 from halo_flask.exceptions import BadRequestError,ApiError
 from halo_flask.flask.utilx import status
-from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX
+from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
@@ -291,6 +291,15 @@ class A6(A5):
 
 
 class S1(InfoLinkX):
+    pass
+
+class X1(ActivationAbsBianMixin):
+    pass
+
+class X2(ConfigurationAbsBianMixin):
+    pass
+
+class X3(FeedbackAbsBianMixin):
     pass
 
 class TestUserDetailTestCase(unittest.TestCase):
@@ -608,3 +617,63 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 assert type(e).__name__ == "BianException"
 
+    def test_99991_request_sub_returns_a_response(self):
+        json = {
+          "serviceDomainActivationActionTaskRecord": {},
+          "serviceDomainCenterReference": "SCR793499",
+          "serviceDomainServiceReference": "CPASSR703914",
+          "serviceDomainServiceConfigurationRecord": {
+            "serviceDomainServiceConfigurationSettingReference": "700761",
+            "serviceDomainServiceConfigurationSettingType": "string",
+            "serviceDomainServiceConfigurationSetup": {
+              "serviceDomainServiceConfigurationParameter": "string"
+            }
+          }
+        }
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'},json=json):
+            self.x1 = X1()
+            ret = self.x1.process_post(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_99992_request_sub_returns_a_response(self):
+        json = {
+          "serviceDomainConfigurationActionTaskRecord": {},
+          "serviceDomainServicingSessionReference": "SSSR764367",
+          "serviceDomainServiceReference": "CPASSR744740",
+          "serviceDomainServiceConfigurationRecord": {
+            "serviceDomainServiceConfigurationSettingReference": "710630",
+            "serviceDomainServiceConfigurationSettingType": "string",
+            "serviceDomainServiceConfigurationSetup": {
+              "serviceDomainServiceConfigurationParameter": "string"
+            },
+            "serviceDomainServiceSubscription": {
+              "serviceDomainServiceSubscriberReference": "756221",
+              "serviceDomainServiceSubscriberAccessProfile": "string"
+            },
+            "serviceDomainServiceAgreement": {
+              "serviceDomainServiceAgreementReference": "721156",
+              "serviceDomainServiceUserReference": "733696",
+              "serviceDomainServiceAgreementTermsandConditions": "string"
+            }
+          }
+        }
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'},json=json):
+            self.x2 = X2()
+            ret = self.x2.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_99993_request_sub_returns_a_response(self):
+        json = {
+          "serviceDomainFeedbackActionTaskRecord": {},
+          "serviceDomainFeedbackActionRecord": {
+            "serviceDomainServicingSessionReference": "796678",
+            "controlRecordInstanceReference": "724385",
+            "behaviorQualifierInstanceReference": "789747",
+            "feedbackRecordType": "string",
+            "feedbackRecord": {}
+          }
+        }
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'},json=json):
+            self.x3 = X3()
+            ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            assert ret.code == 200
