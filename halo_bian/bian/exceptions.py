@@ -38,6 +38,18 @@ class FunctionalPatternNameException(BianException):
 class GenericArtifactNameException(BianException):
     pass
 
+class ServiceStateException(BianException):
+    pass
+
+class ServiceNotOpenException(BianException):
+    pass
+
+class LifeCycleInitStateException(BianException):
+    pass
+
+class LifeCycleNewStateException(BianException):
+    pass
+
 class BehaviorQualifierNameException(BianException):
     pass
 

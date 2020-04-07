@@ -7,7 +7,7 @@ from flask_restful import Api
 import json
 from halo_flask.exceptions import BadRequestError,ApiError
 from halo_flask.flask.utilx import status
-from halo_bian.bian.abs_bian_srv import AbsBianMixin,InfoLinkX,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
+from halo_bian.bian.abs_bian_srv import AbsBianMixin,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
@@ -290,8 +290,6 @@ class A6(A5):
         return
 
 
-class S1(InfoLinkX):
-    pass
 
 class X1(ActivationAbsBianMixin):
     pass
@@ -310,6 +308,24 @@ class TestUserDetailTestCase(unittest.TestCase):
     def setUp(self):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
+        from halo_bian.bian.abs_bian_srv import load_global_data
+        load_global_data()
+
+    def test_00_get_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter'):
+            self.a1 = A1()
+            try:
+                ret = self.a1.process_get(request, {})
+                assert False
+            except Exception as e:
+                print(str(e) + " " + str(type(e).__name__))
+                assert type(e).__name__ == 'ServiceNotOpenException'
+
+    def test_0_get_request_returns_a_given_string(self):
+        with app.test_request_context('/?name=Peter',json={"serviceDomainCenterReference":1,"serviceDomainServiceReference":1,"serviceDomainServiceConfigurationRecord":{"serviceDomainServiceConfigurationSettingReference":1}}):
+            self.x1 = X1()
+            ret = self.x1.process_post(request, {})
+            assert ret.code == status.HTTP_200_OK
 
     def test_1_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
@@ -484,13 +500,6 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a3.bian_action = ActionTerms.EXECUTE
             ret = self.a3.process_put(request, {"cr_reference_id":"1","bq_reference_id":"1"})
             assert ret.code == 200
-
-    def test_994_sp_request_returns_a_given_list(self):
-        with app.test_request_context('/info'):
-            self.s1 = S1()
-            ret = self.s1.process_get(request, {})
-            print("x="+str(ret.payload))
-            assert ret.code == status.HTTP_200_OK
 
     def test_995_control_record_returns_a_given_list(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement//?name=1&queryparams=amount>100@x=y'):

@@ -45,6 +45,8 @@ class AbsBianMixin(AbsApiMixinX):
     #id masks
     cr_reference_id_mask = None
     bq_reference_id_mask = None
+    #service state
+    service_state = None
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -82,6 +84,10 @@ class AbsBianMixin(AbsApiMixinX):
             self.cr_reference_id_mask = settings.CR_REFERENCE_ID_MASK
         if settings.BQ_REFERENCE_ID_MASK:
             self.bq_reference_id_mask = settings.BQ_REFERENCE_ID_MASK
+
+        self.service_state = get_service_state()
+        if not self.service_state:
+            raise ServiceStateException("missing service state")
 
     def get_filter_char(self,bian_request, item):
         the_filter_chars = self.get_filter_chars(bian_request)
@@ -155,6 +161,13 @@ class AbsBianMixin(AbsApiMixinX):
             for bq in self.filter_chars.keys():
                 if bq is not None and bq not in self.behavior_qualifier.keys():
                     raise SystemBQIdException("bq in filter_chars is not valid:"+bq)
+
+    def validate_service_state(self,bian_request):
+        if self.service_state:
+            if self.service_state.get_current_state().allows(bian_request.action_term):
+                return True
+            raise ServiceNotOpenException("Service not open for processing ")
+        raise ServiceStateException("missing Service State ")
 
     def set_bian_action(self,action):
         self.bian_action = action
@@ -407,6 +420,7 @@ class AbsBianMixin(AbsApiMixinX):
             self.validate_filter_key_values()
             self.validate_filter_chars()
             self.validate_collection_filter(bian_request)
+            self.validate_service_state(bian_request)
             return True
         raise BianException("no Bian Request")
 
@@ -820,12 +834,14 @@ class AbsBianMixin(AbsApiMixinX):
 
 #@TODO externelize all strings
 
+# service management
+
 class AbsBianSrvMixin(AbsBaseMixin):
     __metaclass__ = ABCMeta
 
     #service data
     service_properties = None
-    service_status = None
+    service_state = None
     bian_service_info = None
 
     def __init__(self):
@@ -848,39 +864,11 @@ class AbsBianSrvMixin(AbsBaseMixin):
         generic_artifact = FunctionalPatterns.patterns[functional_pattern][0]
         behavior_qualifier_type = FunctionalPatterns.patterns[functional_pattern][1]
         self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
+        self.service_properties = get_service_properties()
+        self.service_state = get_service_state()
 
 
-########################################
-import flask_restful as restful
-from halo_flask.flask.viewsx import AbsBaseLinkX
-from halo_flask.const import HTTPChoice
-
-class Resource(restful.Resource):
-    pass
-
-class InfoLinkX(Resource, AbsBianSrvMixin, AbsBaseLinkX):
-    def process_get(self, request, vars):
-        logger.debug("sd=" + str(self.bian_service_info.service_domain) + " in process_get " + str(vars))
-        payload = {"service_domain":self.bian_service_info.get_service_domain(),"asset_type":self.bian_service_info.get_asset_type()}
-        return BianResponse(request, payload, {})
-
-    def get(self):
-        ret = self.do_process(HTTPChoice.get)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def post(self):
-        ret = self.do_process(HTTPChoice.post)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def put(self):
-        ret = self.do_process(HTTPChoice.put)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-    def delete(self):
-        ret = self.do_process(HTTPChoice.delete)
-        return Util.json_data_response(ret.payload, ret.code, ret.headers)
-
-class ActivationAbsBianMixin(AbsBianMixin):
+class ActivationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
     def process_request(self, request, vars):
@@ -889,6 +877,7 @@ class ActivationAbsBianMixin(AbsBianMixin):
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceConfigurationSettingReference"]
+        self.service_state.set_new_state(self.service_state.Activated)
 
     def get_activation_id(self):
         return ""
@@ -961,7 +950,7 @@ class ActivationAbsBianMixin(AbsBianMixin):
         }
         return BianResponse(request, payload, {})
 
-class ConfigurationAbsBianMixin(AbsBianMixin):
+class ConfigurationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
     def process_request(self, request, vars):
@@ -1042,7 +1031,7 @@ class ConfigurationAbsBianMixin(AbsBianMixin):
         }
         return BianResponse(request, payload, {})
 
-class FeedbackAbsBianMixin(AbsBianMixin):
+class FeedbackAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
     feedback_id = ""
@@ -1085,3 +1074,21 @@ class FeedbackAbsBianMixin(AbsBianMixin):
             }
         }
         return BianResponse(request, payload, {})
+
+global_service_state = None
+global_service_props = None
+def load_global_data():
+    global global_service_state
+    if not global_service_state:
+        global_service_state = BianServiceLifeCycleStates("Started")
+    global global_service_props
+    if not global_service_props:
+        global_service_props = BianServiceProperties()
+
+def get_service_properties():
+    global global_service_props
+    return global_service_props
+
+def get_service_state():
+    global global_service_state
+    return global_service_state

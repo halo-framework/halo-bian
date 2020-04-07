@@ -7,6 +7,7 @@ from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 from halo_flask.flask.filter import RequestFilter
 from halo_flask.settingsx import settingsx
+from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException
 
 settings = settingsx()
 
@@ -47,7 +48,6 @@ class BianRequest(HaloRequest):
                     name = name + "_" + item.lower()
             return name
         return None
-
 
 class BianResponse(HaloResponse):
     request = None
@@ -94,24 +94,12 @@ class BianRequestFilter(RequestFilter):
     def augment_event_with_data(self,event, halo_request, halo_response):
         return event
 
-class ServiceProperties(AbsBaseClass):
-    status = "online"
-    props = []
-
-    def get_status(self):
-        return self.status
-
-    def get_props(self):
-        return self.props
-
-
 class AssetType(AbsBaseClass):
     __metaclass__ = ABCMeta
     ASSET_TYPE = None
 
     def get_asset_type(self):
         return self.ASSET_TYPE
-
 
 class GenericArtifact(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -147,8 +135,6 @@ class BehaviorQualifier(AbsBaseClass):
                     if d > depth:
                         depth = d
         return depth
-
-
 
 class BehaviorQualifierType(AbsBaseClass):
     __metaclass__ = ABCMeta
@@ -189,28 +175,59 @@ class BianCategory(AbsBaseClass):
     SETUP = "Setup"
 
 class LifeCycleState(AbsBaseClass):
-    state = None
+    state_name = None
     actions = []
     states = None
+    life_cycle = None
 
-    def __init__(self, state,states,actions=[]):
-        self.state = state
+    def __init__(self, state_name,life_cycle,actions=[]):
+        self.state_name = state_name
         self.actions = actions
-        self.states = states
+        self.life_cycle = life_cycle
 
     def allows(self,action_term):
         if action_term in self.actions:
             return True
         return False
 
+    def set_next_states(self,states):
+        self.states = states
+
+    def check_next_states(self,state):
+        if not self.states:
+            self.states = self.life_cycle.states
+        if state in self.states:
+            return True
+        return False
+
 class LifeCycleStates(AbsBaseClass):
     __metaclass__ = ABCMeta
 
+    current_state = None
     states = []
 
-    def __init__(self, states):
+    def __init__(self,init_state, states):
+        if init_state is None or init_state not in states:
+            raise LifeCycleInitStateException(init_state)
+        self.current_state = init_state
         self.states = states
 
+    def get_current_state(self):
+        return self.current_state
+
+    def set_new_state(self,state):
+        if state in self.states:
+            if self.current_state.check_next_states(state):
+                self.current_state = state
+                return
+        raise LifeCycleNewStateException(state.state_name)
+
+    def set_new_state1(self,state_name):
+        for i in self.states:
+            if i.state_name == state_name:
+                if self.current_state.check_next_states(i):
+                    self.current_state = i
+        raise LifeCycleNewStateException(state_name)
 
 class DirectLifeCycleStates(LifeCycleStates):
     #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
@@ -222,7 +239,7 @@ class DirectLifeCycleStates(LifeCycleStates):
         self.Strategy_under_review = LifeCycleState("Strategy-under-review",self)
         self.Strategy_suspended = LifeCycleState("Strategy-suspended",self)
         self.Strategy_concluded = LifeCycleState("Strategy-concluded",self)
-        super(DirectLifeCycleStates,self).__init__([self.Unassigned,self.Assigned_strategy_pending,self.Strategy_in_force,self.Strategy_under_review,self.Strategy_suspended,self.Strategy_concluded])
+        super(DirectLifeCycleStates,self).__init__(self.Unassigned,[self.Unassigned,self.Assigned_strategy_pending,self.Strategy_in_force,self.Strategy_under_review,self.Strategy_suspended,self.Strategy_concluded])
 
 #@todo check control record good - behavior_qualifier_type
 class ControlRecord(GenericArtifact):
@@ -261,59 +278,6 @@ class ControlRecord(GenericArtifact):
         if self.life_cycle_state.allows(action_term):
             return True
         return False
-
-
-class BianServiceInfo(AbsBaseClass):
-    # A Service Domain is a combination of a Functional Pattern and an Asset Type
-
-    # The BIAN service domain name
-    service_domain = None
-    # The BIAN asset type managed by the service
-    asset_type = "undefined"
-    # The BIAN functional pattern of the service
-    functional_pattern = None
-    # The BIAN generic artifiact type of the service domain control record
-    generic_artifact = "undefined"
-    # The BIAN behavior qualifier type for the service
-    behavior_qualifier_type = "undefined"
-    # The control record name used by the service to track state
-    control_record = "undefined"
-
-    def __init__(self, service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type):
-        self.service_domain = service_domain
-        self.asset_type = asset_type
-        self.functional_pattern = functional_pattern
-        self.generic_artifact = generic_artifact
-        self.control_record = asset_type + generic_artifact
-        self.behavior_qualifier_type = behavior_qualifier_type
-
-    def __init__1(self, service_domain, functional_pattern, control_record_obj):
-        self.service_domain = service_domain
-        self.functional_pattern = functional_pattern
-        if control_record_obj:
-            self.asset_type = control_record_obj.get_asset_type()
-            self.generic_artifact = control_record_obj.get_generic_artifact()
-            self.control_record = self.asset_type + self.generic_artifact
-            self.behavior_qualifier_type = control_record_obj.get_behavior_qualifier_type()
-
-    def get_service_domain(self):
-        return self.service_domain
-
-    def get_asset_type(self):
-        return self.asset_type
-
-    def get_functional_pattern(self):
-        return self.functional_pattern
-
-    def get_generic_artifact(self):
-        return self.generic_artifact
-
-    def get_behavior_qualifier_type(self):
-        return self.behavior_qualifier_type
-
-    def get_control_record(self):
-        return self.control_record
-
 
 # Service Operations - action terms v2
 class ActionTerms(AbsBaseClass):
@@ -395,155 +359,117 @@ class ActionTerms(AbsBaseClass):
 class Aspect(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Aspect"
 
-
 class Algorithm(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Algorithm"
-
 
 class Assignment(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Assignment"
 
-
 class Clause(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Clause"
-
 
 class Deliverable(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Deliverable"
 
-
 class Duty(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Duty"
-
 
 class Event(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Event"
 
-
 class Feature(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Feature"
-
 
 class Function(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Function"
 
-
 class Goal(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Goal"
-
 
 class Property(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Property"
 
-
 class Routine(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Routine"
-
 
 class Signal(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Signal"
 
-
 class Step(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Step"
-
 
 class Task(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Task"
 
-
 class Term(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Term"
-
 
 class Test(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Test"
 
-
 class Workstep(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Workstep"
 
-
 class Advise(BehaviorQualifierType):
     BEHAVIOR_QUALIFIER_TYPE = "Advise"
-
 
 # Generic Artifacts v2
 class AdministrativePlan(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "AdministrativePlan"
 
-
 class Allocation(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Allocation"
-
 
 class Agreement(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Agreement"
 
-
 class Analysis(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Analysis"
-
 
 class Assessment(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Assessment"
 
-
 class DevelopmentProject(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "DevelopmentProject"
-
 
 class Directory(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Directory"
 
-
 class FulfillmentArrangement(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "FulfillmentArrangement"
-
 
 class Log(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Log"
 
-
 class MaintenanceAgreement(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "MaintenanceAgreement"
-
 
 class ManagementPlan(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "ManagementPlan"
 
-
 class Measurement(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Measurement"
-
 
 class Membership(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Membership"
 
-
 class OperatingSession(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "OperatingSession"
-
 
 class Procedure(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Procedure"
 
-
 class Specification(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Specification"
-
 
 class Strategy(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Strategy"
 
-
 class Transaction(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Transaction"
 
-
 class Advice(GenericArtifact):
     GENERIC_ARTIFACT_TYPE = "Advice"
-
 
 # Functional Patterns v2
 class FunctionalPatterns(AbsBaseClass):
@@ -690,8 +616,6 @@ class FunctionalPatterns(AbsBaseClass):
         ADVISE: []
     }
 
-
-
 #Capture service operation connections – The service operation connections for each business event
 # Finance Context - Multi 10
 from halo_flask.request import HaloContext
@@ -721,3 +645,76 @@ class BianContext(HaloContext):
     HaloContext.items[DPARTY] = "x-bian-devparty"
     HaloContext.items[CONSUMER] = "x-bian-consumer"
     HaloContext.items[BIZ_SCENARIO] = "x-bian-biz-scenario"
+
+#bian services
+class BianServiceProperties(AbsBaseClass):
+    props = []
+
+    def get_props(self):
+        return self.props
+
+class BianServiceInfo(AbsBaseClass):
+    # A Service Domain is a combination of a Functional Pattern and an Asset Type
+
+    # The BIAN service domain name
+    service_domain = None
+    # The BIAN asset type managed by the service
+    asset_type = "undefined"
+    # The BIAN functional pattern of the service
+    functional_pattern = None
+    # The BIAN generic artifiact type of the service domain control record
+    generic_artifact = "undefined"
+    # The BIAN behavior qualifier type for the service
+    behavior_qualifier_type = "undefined"
+    # The control record name used by the service to track state
+    control_record = "undefined"
+
+    def __init__(self, service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type):
+        self.service_domain = service_domain
+        self.asset_type = asset_type
+        self.functional_pattern = functional_pattern
+        self.generic_artifact = generic_artifact
+        self.control_record = asset_type + generic_artifact
+        self.behavior_qualifier_type = behavior_qualifier_type
+
+    def __init__1(self, service_domain, functional_pattern, control_record_obj):
+        self.service_domain = service_domain
+        self.functional_pattern = functional_pattern
+        if control_record_obj:
+            self.asset_type = control_record_obj.get_asset_type()
+            self.generic_artifact = control_record_obj.get_generic_artifact()
+            self.control_record = self.asset_type + self.generic_artifact
+            self.behavior_qualifier_type = control_record_obj.get_behavior_qualifier_type()
+
+    def get_service_domain(self):
+        return self.service_domain
+
+    def get_asset_type(self):
+        return self.asset_type
+
+    def get_functional_pattern(self):
+        return self.functional_pattern
+
+    def get_generic_artifact(self):
+        return self.generic_artifact
+
+    def get_behavior_qualifier_type(self):
+        return self.behavior_qualifier_type
+
+    def get_control_record(self):
+        return self.control_record
+
+class BianServiceLifeCycleStates(LifeCycleStates):
+    #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
+
+    def __init__(self, init_state_name):
+        self.Started = LifeCycleState("Started", self,[ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.FEEDBACK])
+        self.Activated = LifeCycleState("Activated",self,ActionTerms.ops)
+        self.Deactivated = LifeCycleState("Deactivated",self,[ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.FEEDBACK])
+        self.Terminated = LifeCycleState("Terminated",self)
+        array = [self.Started,self.Activated,self.Deactivated,self.Terminated]
+        init_state = None
+        for i in array:
+            if i.state_name == init_state_name:
+                init_state = i
+        super(BianServiceLifeCycleStates,self).__init__(init_state,array)
