@@ -222,12 +222,6 @@ class LifeCycleStates(AbsBaseClass):
                 return
         raise LifeCycleNewStateException(state.state_name)
 
-    def set_new_state1(self,state_name):
-        for i in self.states:
-            if i.state_name == state_name:
-                if self.current_state.check_next_states(i):
-                    self.current_state = i
-        raise LifeCycleNewStateException(state_name)
 
 class DirectLifeCycleStates(LifeCycleStates):
     #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
