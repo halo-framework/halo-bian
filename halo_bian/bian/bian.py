@@ -702,14 +702,14 @@ class BianServiceInfo(AbsBaseClass):
         return self.control_record
 
 class BianServiceLifeCycleStates(LifeCycleStates):
-    #Unassigned Assigned-strategy-pending Strategy-in-force Strategy-under-review Strategy-suspended Strategy-concluded
+    # active, suspended, idle
 
     def __init__(self, init_state_name):
-        self.Started = LifeCycleState("Started", self,[ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.FEEDBACK])
-        self.Activated = LifeCycleState("Activated",self,ActionTerms.ops)
-        self.Deactivated = LifeCycleState("Deactivated",self,[ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.FEEDBACK])
-        self.Terminated = LifeCycleState("Terminated",self)
-        array = [self.Started,self.Activated,self.Deactivated,self.Terminated]
+        self.Idle = LifeCycleState("Idle", self,[ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.FEEDBACK])
+        self.Active = LifeCycleState("Active",self,ActionTerms.ops)
+        self.Suspended = LifeCycleState("Suspended",self,[ActionTerms.ACTIVATE,ActionTerms.CONFIGURE,ActionTerms.FEEDBACK])
+        self.Terminated = LifeCycleState("Terminated",self,[])
+        array = [self.Idle,self.Active,self.Suspended,self.Terminated]
         init_state = None
         for i in array:
             if i.state_name == init_state_name:

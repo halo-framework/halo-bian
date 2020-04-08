@@ -309,7 +309,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
         from halo_bian.bian.abs_bian_srv import load_global_data
-        load_global_data("Started","abc")
+        load_global_data("Idle","abc")
 
     def test_00_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):

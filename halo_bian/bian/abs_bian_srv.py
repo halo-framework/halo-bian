@@ -877,7 +877,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceConfigurationSettingReference"]
-        self.service_state.set_new_state(self.service_state.Activated)
+        self.service_state.set_new_state(self.service_state.Active)
 
     def get_activation_id(self):
         return ""
