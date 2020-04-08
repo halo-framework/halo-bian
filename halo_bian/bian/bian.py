@@ -644,6 +644,9 @@ class BianContext(HaloContext):
 class BianServiceProperties(AbsBaseClass):
     props = []
 
+    def __init__(self, prop_url):
+        pass
+
     def get_props(self):
         return self.props
 

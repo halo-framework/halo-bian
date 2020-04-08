@@ -1077,13 +1077,13 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
 
 global_service_state = None
 global_service_props = None
-def load_global_data():
+def load_global_data(initial_state,prop_url):
     global global_service_state
     if not global_service_state:
-        global_service_state = BianServiceLifeCycleStates("Started")
+        global_service_state = BianServiceLifeCycleStates(initial_state)
     global global_service_props
     if not global_service_props:
-        global_service_props = BianServiceProperties()
+        global_service_props = BianServiceProperties(prop_url)
 
 def get_service_properties():
     global global_service_props
