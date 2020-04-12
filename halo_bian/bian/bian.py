@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 from abc import ABCMeta
+import uuid
 
 from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloRequest
@@ -205,6 +206,7 @@ class LifeCycleStates(AbsBaseClass):
 
     current_state = None
     states = []
+    version = ""
 
     def __init__(self,init_state, states):
         if init_state is None or init_state not in states:
@@ -215,10 +217,14 @@ class LifeCycleStates(AbsBaseClass):
     def get_current_state(self):
         return self.current_state
 
+    def get_version(self):
+        return self.version
+
     def set_new_state(self,state):
         if state in self.states:
             if self.current_state.check_next_states(state):
                 self.current_state = state
+                self.version = uuid.uuid4().__str__()[0:4]
                 return
         raise LifeCycleNewStateException(state.state_name)
 

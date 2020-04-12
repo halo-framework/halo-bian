@@ -2,6 +2,7 @@
 import json
 import re
 import logging
+from abc import ABCMeta,abstractmethod
 
 from halo_flask.exceptions import ApiError,BadRequestError,HaloMethodNotImplementedException
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
@@ -12,7 +13,7 @@ from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.mixinx import AbsApiMixinX
 from halo_flask.flask.filter import RequestFilter
 from halo_flask.settingsx import settingsx
-
+from halo_flask.models import AbsDbMixin
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
 import importlib
@@ -85,7 +86,7 @@ class AbsBianMixin(AbsApiMixinX):
         if settings.BQ_REFERENCE_ID_MASK:
             self.bq_reference_id_mask = settings.BQ_REFERENCE_ID_MASK
 
-        self.service_state = get_service_state()
+        self.service_state = GlobalService.get_service_state()
         if not self.service_state:
             raise ServiceStateException("missing service state")
 
@@ -864,8 +865,8 @@ class AbsBianSrvMixin(AbsBaseMixin):
         generic_artifact = FunctionalPatterns.patterns[functional_pattern][0]
         behavior_qualifier_type = FunctionalPatterns.patterns[functional_pattern][1]
         self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
-        self.service_properties = get_service_properties()
-        self.service_state = get_service_state()
+        self.service_properties = GlobalService.get_service_properties()
+        self.service_state = GlobalService.get_service_state()
 
 
 class ActivationAbsBianMixin(AbsBianSrvMixin):
@@ -878,6 +879,12 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceConfigurationSettingReference"]
         self.service_state.set_new_state(self.service_state.Active)
+        self.persist_state(self.service_state)
+
+    @abstractmethod
+    def persist_state(self, state):
+        """Method documentation"""
+        return
 
     def get_activation_id(self):
         return ""
@@ -1077,18 +1084,21 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
 
 global_service_state = None
 global_service_props = None
-def load_global_data(initial_state,prop_url):
-    global global_service_state
-    if not global_service_state:
+class GlobalService():
+
+    def load_global_data(self,initial_state,prop_url):
+        global global_service_state
+        global global_service_props
         global_service_state = BianServiceLifeCycleStates(initial_state)
-    global global_service_props
-    if not global_service_props:
         global_service_props = BianServiceProperties(prop_url)
 
-def get_service_properties():
-    global global_service_props
-    return global_service_props
+    @staticmethod
+    def get_service_properties():
+        global global_service_props
+        return global_service_props
 
-def get_service_state():
-    global global_service_state
-    return global_service_state
+    @staticmethod
+    def get_service_state():
+        global global_service_state
+        return global_service_state
+
