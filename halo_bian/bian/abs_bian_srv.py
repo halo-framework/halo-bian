@@ -86,7 +86,7 @@ class AbsBianMixin(AbsApiMixinX):
         if settings.BQ_REFERENCE_ID_MASK:
             self.bq_reference_id_mask = settings.BQ_REFERENCE_ID_MASK
 
-        self.service_state = GlobalService.get_service_state()
+        self.service_state = BianGlobalService.get_service_state()
         if not self.service_state:
             raise ServiceStateException("missing service state")
 
@@ -865,8 +865,8 @@ class AbsBianSrvMixin(AbsBaseMixin):
         generic_artifact = FunctionalPatterns.patterns[functional_pattern][0]
         behavior_qualifier_type = FunctionalPatterns.patterns[functional_pattern][1]
         self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
-        self.service_properties = GlobalService.get_service_properties()
-        self.service_state = GlobalService.get_service_state()
+        self.service_properties = BianGlobalService.get_service_properties()
+        self.service_state = BianGlobalService.get_service_state()
 
 
 class ActivationAbsBianMixin(AbsBianSrvMixin):
@@ -1082,11 +1082,17 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
         }
         return BianResponse(request, payload, {})
 
+from halo_flask.flask.viewsx import GlobalService
 global_service_state = None
 global_service_props = None
-class GlobalService():
+class BianGlobalService(GlobalService):
 
-    def load_global_data(self,initial_state,prop_url):
+    def load_global_data(self):
+        initial_state = self.data_map["INIT_STATE"]
+        prop_url = self.data_map["PROP_URL"]
+        self.load_bian_global_data(initial_state, prop_url)
+
+    def load_bian_global_data(self,initial_state,prop_url):
         global global_service_state
         global global_service_props
         global_service_state = BianServiceLifeCycleStates(initial_state)

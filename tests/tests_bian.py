@@ -308,10 +308,14 @@ class TestUserDetailTestCase(unittest.TestCase):
     def setUp(self):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
-        from halo_bian.bian.abs_bian_srv import load_global_data
-        load_global_data("Idle","abc")
+
 
     def test_00_get_request_returns_a_given_string(self):
+        from halo_flask.flask.viewsx import load_global_data
+        app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL': "abc"}
+        load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
+        print("loaded data")
         with app.test_request_context('/?name=Peter'):
             self.a1 = A1()
             try:
