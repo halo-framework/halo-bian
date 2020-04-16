@@ -2,7 +2,7 @@
 import logging
 from abc import ABCMeta
 import uuid
-
+from datetime import datetime
 from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
@@ -629,7 +629,7 @@ class BianContext(HaloContext):
     TIME_ZONE = "Time Zone"
     LANGUAGE = "Language"
     BRANCH = "Branch"
-    DPARTY = "Dev Party"
+    APP_CLIENT = "App Client"
     CONSUMER = "Consumer"
     BIZ_SCENARIO = "Biz Scenario"
 
@@ -642,19 +642,11 @@ class BianContext(HaloContext):
     HaloContext.items[TIME_ZONE] = "x-bian-tz"
     HaloContext.items[LANGUAGE] = "x-bian-language"
     HaloContext.items[BRANCH] = "x-bian-branch"
-    HaloContext.items[DPARTY] = "x-bian-devparty"
+    HaloContext.items[APP_CLIENT] = "x-bian-app-client"
     HaloContext.items[CONSUMER] = "x-bian-consumer"
     HaloContext.items[BIZ_SCENARIO] = "x-bian-biz-scenario"
 
 #bian services
-class BianServiceProperties(AbsBaseClass):
-    props = []
-
-    def __init__(self, prop_url):
-        pass
-
-    def get_props(self):
-        return self.props
 
 class BianServiceInfo(AbsBaseClass):
     # A Service Domain is a combination of a Functional Pattern and an Asset Type
@@ -721,3 +713,38 @@ class BianServiceLifeCycleStates(LifeCycleStates):
             if i.state_name == init_state_name:
                 init_state = i
         super(BianServiceLifeCycleStates,self).__init__(init_state,array)
+
+class BianServiceConfigurationSetting(AbsBaseClass):
+    configuration_setting_id = None
+    configuration_setting_name = None
+    configuration_setting_type = None
+    configuration_setting_value = None
+
+class BianServiceConfiguration(AbsBaseClass):
+    configuration_settings = {}
+
+    def __init__(self, config_url):
+        pass
+
+    def get_configuration_setting(self,configuration_setting_id):
+        if configuration_setting_id in self.configuration_settings:
+            return self.configuration_settings[configuration_setting_id]
+        return None
+
+class BianServicingSession(AbsBaseClass):
+    start = None
+    end = None
+    session_id = None
+    bian_service = None
+    center_id = None
+    service_id = None
+    service_configuration = None
+    service_state = None
+
+    def __init__(self, center_id,service_id,service_configuration,service_state):
+        self.start = datetime.now()
+        self.session_id = uuid.uuid4().__str__()[0:8]
+        self.center_id = center_id
+        self.service_id = service_id
+        self.service_configuration = service_configuration
+        self.service_state = service_state

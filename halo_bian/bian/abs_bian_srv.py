@@ -841,8 +841,8 @@ class AbsBianSrvMixin(AbsBaseMixin):
     __metaclass__ = ABCMeta
 
     #service data
-    service_properties = None
     service_state = None
+    service_configuration = None
     bian_service_info = None
 
     def __init__(self):
@@ -865,7 +865,7 @@ class AbsBianSrvMixin(AbsBaseMixin):
         generic_artifact = FunctionalPatterns.patterns[functional_pattern][0]
         behavior_qualifier_type = FunctionalPatterns.patterns[functional_pattern][1]
         self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
-        self.service_properties = BianGlobalService.get_service_properties()
+        self.service_configuration = BianGlobalService.get_service_properties()
         self.service_state = BianGlobalService.get_service_state()
 
 
@@ -876,13 +876,21 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         data = request.get_json()
         self.center_id = data["serviceDomainCenterReference"]
         self.service_id = data["serviceDomainServiceReference"]
-        self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
+        self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceConfigurationSettingReference"]
+        param_type = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceConfigurationSettingType"]
+        param_value = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceConfigurationSetup"]["serviceDomainServiceConfigurationParameter"]
+        if self.service_configuration.get_configuration_setting(self.configuration_setting_id):
+            self.service_configuration.get_configuration_setting(self.configuration_setting_id).set_value(param_type,param_value)
         self.service_state.set_new_state(self.service_state.Active)
-        self.persist_state(self.service_state)
+        self.session = BianServicingSession(self.center_id,self.service_id,self.service_configuration,self.service_state)
+        self.persist_state(self.session)
 
     @abstractmethod
     def persist_state(self, state):
+        #@todo implement persistance
         """Method documentation"""
         return
 
@@ -898,8 +906,8 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
     def get_session_rec(self):
         return ""
 
-    def get_configuration_id(self):
-        return self.configuration_id
+    def get_configuration_setting_id(self):
+        return self.configuration_setting_id
 
     def get_configuration_desc(self):
         return ""
@@ -937,7 +945,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
             "serviceDomainServicingSessionReference": self.get_session_id(),
             "serviceDomainServicingSessionRecord": self.get_session_rec(),
             "serviceDomainServiceConfigurationRecord": {
-                "serviceDomainServiceConfigurationSettingReference": self.get_configuration_id(),
+                "serviceDomainServiceConfigurationSettingReference": self.get_configuration_setting_id(),
                 "serviceDomainServiceConfigurationSettingDescription": self.get_configuration_desc(),
                 "serviceDomainServiceConfigurationSetup": {
                     "serviceDomainServiceConfigurationParameter": self.get_configuration_param(),
@@ -964,7 +972,7 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
         data = request.get_json()
         self.servicing_session_id = data["serviceDomainServicingSessionReference"]
         self.service_id = data["serviceDomainServiceReference"]
-        self.configuration_id = data["serviceDomainServiceConfigurationRecord"][
+        self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceConfigurationSettingReference"]
         self.subscriber_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceSubscription"]["serviceDomainServiceSubscriberReference"]
@@ -979,8 +987,8 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
     def get_session_id(self):
         return ""
 
-    def get_configuration_id(self):
-        return self.configuration_id
+    def get_configuration_setting_id(self):
+        return self.configuration_setting_id
 
     def get_configuration_rec(self):
         return ""
@@ -1016,7 +1024,7 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
         logger.debug("in process_put " + str(vars))
         self.process_request(request, vars)
         payload = {
-            "serviceDomainConfigurationActionTaskReference": self.get_configuration_id(),
+            "serviceDomainConfigurationActionTaskReference": self.get_configuration_setting_id(),
             "serviceDomainConfigurationActionTaskRecord": self.get_configuration_rec(),
             "serviceDomainServiceConfigurationRecord": {
                 "serviceDomainServiceConfigurationSettingDescription": self.get_configuration_desc(),
@@ -1096,7 +1104,7 @@ class BianGlobalService(GlobalService):
         global global_service_state
         global global_service_props
         global_service_state = BianServiceLifeCycleStates(initial_state)
-        global_service_props = BianServiceProperties(prop_url)
+        global_service_props = BianServiceConfiguration(prop_url)
 
     @staticmethod
     def get_service_properties():

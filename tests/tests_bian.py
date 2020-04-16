@@ -326,7 +326,19 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert type(e).__name__ == 'ServiceNotOpenException'
 
     def test_0_get_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=Peter',json={"serviceDomainCenterReference":1,"serviceDomainServiceReference":1,"serviceDomainServiceConfigurationRecord":{"serviceDomainServiceConfigurationSettingReference":1}}):
+        json = {
+          "serviceDomainActivationActionTaskRecord": {},
+          "serviceDomainCenterReference": "SCR793499",
+          "serviceDomainServiceReference": "CPASSR703914",
+          "serviceDomainServiceConfigurationRecord": {
+            "serviceDomainServiceConfigurationSettingReference": "700761",
+            "serviceDomainServiceConfigurationSettingType": "string",
+            "serviceDomainServiceConfigurationSetup": {
+              "serviceDomainServiceConfigurationParameter": "string"
+            }
+          }
+        }
+        with app.test_request_context('/?name=Peter',json=json):
             self.x1 = X1()
             ret = self.x1.process_post(request, {})
             assert ret.code == status.HTTP_200_OK
@@ -520,7 +532,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_996_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
-            app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
+            app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.process_put(request, {"sd_reference_id":"1","cr_reference_id":"1","bq_reference_id":"1"})
@@ -528,7 +540,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_997_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty1': 'Your value'}):
-            app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
+            app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
@@ -538,7 +550,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_998_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
-            app.config["BIAN_CONTEXT_LIST"] = [BianContext.DPARTY]
+            app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.process_put(request, {"cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"4"})
