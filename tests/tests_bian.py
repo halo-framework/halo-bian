@@ -54,9 +54,9 @@ class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):
         if not foi:#not in seq
             if halo_request.request.method == HTTPChoice.get.value:
-                return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.get.value)
+                return CnnApi(halo_request.context,HTTPChoice.get.value)
             if halo_request.request.method == HTTPChoice.delete.value:
-                return CnnApi(Util.get_req_context(halo_request.request),HTTPChoice.delete.value)
+                return CnnApi(halo_request.context,HTTPChoice.delete.value)
         return super(A1,self).set_back_api(halo_request,foi)
 
     def set_added_api_vars(self, bian_request,vars, seq=None, dict=None):
@@ -158,7 +158,7 @@ class A3(AbsBianMixin):# the foi
         if foi:
             return super(A3,self).set_back_api(bian_request,foi)
         print("in set_back_api ")
-        api = TstApi(Util.get_req_context(bian_request.request))
+        api = TstApi(bian_request.context)
         api.set_api_url("ID","1")
         return api
 
@@ -184,7 +184,7 @@ class A3(AbsBianMixin):# the foi
         if foi:
             return self.set_back_api(bian_request,foi)
         print("in set_back_api_deposit ")
-        TstApi(Util.get_req_context(bian_request.request))
+        TstApi(bian_request.context)
 
     def set_api_headers_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
         print("in set_api_headers_deposit ")
@@ -248,7 +248,7 @@ class A4(AbsBianMixin):# the foi
         print("in set_back_api ")
         if foi:
             return super(A4,self).set_back_api(bian_request,foi)
-        api = TstApi(Util.get_req_context(bian_request.request))
+        api = TstApi(bian_request.context)
         api.set_api_url("ID", "1")
         return api
 
@@ -262,7 +262,7 @@ class A5(A3):
         if foi:
             return self.set_back_api(bian_request, foi)
         print("in set_back_api_deposit ")
-        return GoogleApi(Util.get_req_context(bian_request.request))
+        return GoogleApi(bian_request.context)
 
 class A6(A5):
     def validate_req_depositsandwithdrawals_deposits(self,bian_request):

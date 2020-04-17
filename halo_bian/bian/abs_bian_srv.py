@@ -446,14 +446,14 @@ class AbsBianMixin(AbsApiMixinX):
                     if response.request.request.method == 'DELETE':
                         response.code = status.HTTP_200_OK
                     logger.info('process_service_operation : '+response.request.request.method,
-                                extra=log_json(Util.get_req_context(response.request.request),  {"return": "success"}))
+                                extra=log_json(response.request.context,  {"return": "success"}))
                     return response
                 raise ActionTermFailException(response.request.action_term)
         raise ActionTermFailException(response)
 
     def process_service_operation(self, action, bian_request, vars):
         #logger.debug("in process_service_operation " + str(vars))
-        logger.info('process_service_operation : ', extra=log_json(Util.get_req_context(bian_request.request),vars,{"action":action}))
+        logger.info('process_service_operation : ', extra=log_json(bian_request.context,vars,{"action":action}))
         functionName = {
             ActionTerms.INITIATE: self.do_initiate,
             ActionTerms.CREATE: self.do_create,
@@ -735,7 +735,7 @@ class AbsBianMixin(AbsApiMixinX):
             if not issubclass(class_, AbsBaseApi):
                 from halo_flask.exceptions import ApiClassErrorException
                 raise ApiClassErrorException(sd_class_name)
-            instance = class_(Util.get_req_context(halo_request.request))
+            instance = class_(halo_request.context)
             instance.op = foi_op
             instance.set_api_base(sd_base_url)
             return instance
@@ -844,6 +844,7 @@ class AbsBianSrvMixin(AbsBaseMixin):
     service_state = None
     service_configuration = None
     bian_service_info = None
+    servicing_session = None
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -885,11 +886,11 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         if self.service_configuration.get_configuration_setting(self.configuration_setting_id):
             self.service_configuration.get_configuration_setting(self.configuration_setting_id).set_value(param_type,param_value)
         self.service_state.set_new_state(self.service_state.Active)
-        self.session = BianServicingSession(self.center_id,self.service_id,self.service_configuration,self.service_state)
-        self.persist_state(self.session)
+        self.servicing_session = BianServicingSession(self.center_id,self.service_id,self.service_configuration,self.service_state)
+        self.persist_servicing_session(self.servicing_session)
 
     @abstractmethod
-    def persist_state(self, state):
+    def persist_servicing_session(self, servicing_session):
         #@todo implement persistance
         """Method documentation"""
         return
