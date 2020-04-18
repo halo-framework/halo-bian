@@ -22,6 +22,7 @@ settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
+#@todo add jsonify to all responses
 
 class AbsBianMixin(AbsApiMixinX):
     __metaclass__ = ABCMeta
