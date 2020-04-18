@@ -893,6 +893,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
     def persist_servicing_session(self, servicing_session):
         #@todo implement persistance
         """Method documentation"""
+        dbaccess.save_servicing_session(servicing_session)
         return
 
     def get_activation_id(self):
