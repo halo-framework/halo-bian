@@ -874,8 +874,8 @@ class AbsBianSrvMixin(AbsBaseMixin):
 class ActivationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
-    def process_request(self, request, vars):
-        data = request.get_json()
+    def process_request(self, bian_request, vars):
+        data = bian_request.request.get_json()
         self.center_id = data["serviceDomainCenterReference"]
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][
@@ -888,12 +888,13 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
             self.service_configuration.get_configuration_setting(self.configuration_setting_id).set_value(param_type,param_value)
         self.service_state.set_new_state(self.service_state.Active)
         self.servicing_session = BianServicingSession(self.center_id,self.service_id,self.service_configuration,self.service_state)
-        self.persist_servicing_session(self.servicing_session)
+        self.persist_servicing_session(bian_request,self.servicing_session)
 
     @abstractmethod
-    def persist_servicing_session(self, servicing_session):
+    def persist_servicing_session(self,bian_request, servicing_session):
         #@todo implement persistance
         """Method documentation"""
+        dbaccess = self.get_dbaccess(bian_request)
         dbaccess.save_servicing_session(servicing_session)
         return
 
@@ -941,7 +942,8 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
 
     def process_post(self, request, vars):
         logger.debug("in process_post " + str(vars))
-        self.process_request(request, vars)
+        bian_request = BianRequest(ActionTerms.REQUEST,request)
+        self.process_request(bian_request, vars)
         payload = {
             "serviceDomainActivationActionTaskReference": self.get_activation_id(),
             "serviceDomainActivationActionTaskRecord": self.get_activation_rec(),
@@ -966,7 +968,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
             },
             "serviceDomainServicingSessionStatus": self.get_session_status()
         }
-        return BianResponse(request, payload, {})
+        return BianResponse(bian_request, payload, {})
 
 class ConfigurationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta

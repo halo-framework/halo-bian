@@ -8,6 +8,7 @@ import json
 from halo_flask.exceptions import BadRequestError,ApiError
 from halo_flask.flask.utilx import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
+from halo_bian.bian.db import AbsBianDbMixin
 from halo_bian.bian.exceptions import BianException
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
@@ -300,6 +301,9 @@ class X2(ConfigurationAbsBianMixin):
 class X3(FeedbackAbsBianMixin):
     pass
 
+class BianDbMixin(AbsBianDbMixin):
+    pass
+
 class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
@@ -338,6 +342,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             }
           }
         }
+        app.config["DBACCESS_CLASS"] = "tests.tests_bian.AbsBianDbMixin"
         with app.test_request_context('/?name=Peter',json=json):
             self.x1 = X1()
             ret = self.x1.process_post(request, {})
