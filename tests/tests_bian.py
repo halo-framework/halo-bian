@@ -342,7 +342,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             }
           }
         }
-        app.config["DBACCESS_CLASS"] = "tests.tests_bian.AbsBianDbMixin"
+        app.config["DBACCESS_CLASS"] = "tests.tests_bian.BianDbMixin"
         with app.test_request_context('/?name=Peter',json=json):
             self.x1 = X1()
             ret = self.x1.process_post(request, {})

@@ -448,6 +448,10 @@ SUB_QUALIFIER = {
   }
 }
 CONTROL_RECORD = 'tests.tests_bian.CAControlRecord'#extended classes of ControlRecord
+DBACCESS_CLASS = "halo_bian.bian.db.AbsBianDbMixin"
+
+PROVIDER = 'AWS'
+AWS_REGION = 'us-east-1'
 
 FILTER_SEPARATOR = "@"
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
