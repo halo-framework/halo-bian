@@ -5,14 +5,14 @@ from setuptools import setup
 # python setup.py sdist --formats=zip
 # python setup.py sdist bdist_wheel
 # twine upload dist/halolib-0.13.8.tar.gz -r pypitest
-# twine upload dist/halolib-0.13.8.tar.gz -r pypi
+# twine upload dist/halo_bian-0.13.8.tar.gz -r pypi
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name='halo_bian',
-    version='0.11.59',
+    version='0.11.60',
     packages=['halo_bian', 'halo_bian.bian','docs'],
     url='https://github.com/yoramk2/halo_bian',
     license='MIT License',
