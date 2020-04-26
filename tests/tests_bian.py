@@ -14,7 +14,7 @@ from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
 from halo_flask.flask.filter import RequestFilterClear
-from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext,BianRequestFilter
+from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext,BianRequestFilter,FunctionalPatterns
 
 import unittest
 
@@ -343,8 +343,12 @@ class TestUserDetailTestCase(unittest.TestCase):
           }
         }
         app.config["DBACCESS_CLASS"] = "tests.tests_bian.BianDbMixin"
+        #app.config['FUNCTIONAL_PATTERN'] =
         with app.test_request_context('/?name=Peter',json=json):
             self.x1 = X1()
+            self.x1.bian_action = ActionTerms.ACTIVATE
+            self.x1.functional_pattern = FunctionalPatterns.FULFILL
+            self.x1.filter_separator = ";"
             ret = self.x1.process_post(request, {})
             assert ret.code == status.HTTP_200_OK
 
@@ -660,9 +664,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             }
           }
         }
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'},json=json):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x1 = X1()
-            ret = self.x1.process_post(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            self.x1.bian_action = ActionTerms.ACTIVATE
+            ret = self.x1.process_post(request, {"sd_reference_id":"1","cr_reference_id":"2"})
             assert ret.code == 200
 
     def test_99992_request_sub_returns_a_response(self):
@@ -687,9 +692,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             }
           }
         }
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'},json=json):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x2 = X2()
-            ret = self.x2.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            self.x2.bian_action = ActionTerms.CONFIGURE
+            ret = self.x2.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2"})
             assert ret.code == 200
 
     def test_99993_request_sub_returns_a_response(self):
@@ -703,7 +709,59 @@ class TestUserDetailTestCase(unittest.TestCase):
             "feedbackRecord": {}
           }
         }
-        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'},json=json):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x3 = X3()
+            self.x3.bian_action = ActionTerms.FEEDBACK
+            ret = self.x3.process_put(request, {"sd_reference_id":"1"})
+            assert ret.code == 200
+
+    def test_99994_request_sub_returns_a_response(self):
+        json = {
+          "serviceDomainFeedbackActionTaskRecord": {},
+          "serviceDomainFeedbackActionRecord": {
+            "serviceDomainServicingSessionReference": "796678",
+            "controlRecordInstanceReference": "724385",
+            "behaviorQualifierInstanceReference": "789747",
+            "feedbackRecordType": "string",
+            "feedbackRecord": {}
+          }
+        }
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
+            self.x3 = X3()
+            self.x3.bian_action = ActionTerms.FEEDBACK
+            ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2"})
+            assert ret.code == 200
+
+    def test_99995_request_sub_returns_a_response(self):
+        json = {
+          "serviceDomainFeedbackActionTaskRecord": {},
+          "serviceDomainFeedbackActionRecord": {
+            "serviceDomainServicingSessionReference": "796678",
+            "controlRecordInstanceReference": "724385",
+            "behaviorQualifierInstanceReference": "789747",
+            "feedbackRecordType": "string",
+            "feedbackRecord": {}
+          }
+        }
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
+            self.x3 = X3()
+            self.x3.bian_action = ActionTerms.FEEDBACK
+            ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3"})
+            assert ret.code == 200
+
+    def test_99996_request_sub_returns_a_response(self):
+        json = {
+          "serviceDomainFeedbackActionTaskRecord": {},
+          "serviceDomainFeedbackActionRecord": {
+            "serviceDomainServicingSessionReference": "796678",
+            "controlRecordInstanceReference": "724385",
+            "behaviorQualifierInstanceReference": "789747",
+            "feedbackRecordType": "string",
+            "feedbackRecord": {}
+          }
+        }
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
+            self.x3 = X3()
+            self.x3.bian_action = ActionTerms.FEEDBACK
             ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
             assert ret.code == 200

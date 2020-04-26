@@ -838,7 +838,7 @@ class AbsBianMixin(AbsApiMixinX):
 
 # service management
 
-class AbsBianSrvMixin(AbsBaseMixin):
+class AbsBianSrvMixin(AbsBianMixin):
     __metaclass__ = ABCMeta
 
     #service data
@@ -848,25 +848,9 @@ class AbsBianSrvMixin(AbsBaseMixin):
     servicing_session = None
 
     def __init__(self):
-        super(AbsBaseMixin, self).__init__()
+        super(AbsBianSrvMixin, self).__init__()
         logger.debug("in __init__ ")
-        if settings.SERVICE_DOMAIN:
-            service_domain = settings.SERVICE_DOMAIN
-        else:
-            raise ServiceDomainNameException("missing Service Domain definition")
-        if settings.ASSET_TYPE:
-            asset_type = settings.ASSET_TYPE
-        else:
-            raise AssetTypeNameException("missing Asset Type definition")
-        if settings.FUNCTIONAL_PATTERN:
-           functional_pattern = settings.FUNCTIONAL_PATTERN
-        else:
-           raise FunctionalPatternNameException("missing Functional Pattern definition")
-        if functional_pattern not in FunctionalPatterns.patterns.keys():
-            raise FunctionalPatternNameException("Functional Pattern name not in list")
-        generic_artifact = FunctionalPatterns.patterns[functional_pattern][0]
-        behavior_qualifier_type = FunctionalPatterns.patterns[functional_pattern][1]
-        self.bian_service_info = BianServiceInfo(service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type)
+        self.bian_service_info = BianServiceInfo(self.service_domain, self.asset_type, self.functional_pattern, self.generic_artifact, self.behavior_qualifier_type)
         self.service_configuration = BianGlobalService.get_service_properties()
         self.service_state = BianGlobalService.get_service_state()
 
@@ -874,7 +858,7 @@ class AbsBianSrvMixin(AbsBaseMixin):
 class ActivationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
-    def process_request(self, bian_request, vars):
+    def process_request(self, bian_request):
         data = bian_request.request.get_json()
         self.center_id = data["serviceDomainCenterReference"]
         self.service_id = data["serviceDomainServiceReference"]
@@ -940,10 +924,9 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
     def get_session_status(self):
         return ""
 
-    def process_post(self, request, vars):
-        logger.debug("in process_post " + str(vars))
-        bian_request = BianRequest(ActionTerms.REQUEST,request)
-        self.process_request(bian_request, vars)
+    def do_operation_1(self,bian_request):
+        logger.debug("in do_operation_1 " + str(bian_request))
+        self.process_request(bian_request)
         payload = {
             "serviceDomainActivationActionTaskReference": self.get_activation_id(),
             "serviceDomainActivationActionTaskRecord": self.get_activation_rec(),
@@ -968,13 +951,15 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
             },
             "serviceDomainServicingSessionStatus": self.get_session_status()
         }
-        return BianResponse(bian_request, payload, {})
+        dict = {1: payload}
+        return dict
+
 
 class ConfigurationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
-    def process_request(self, request, vars):
-        data = request.get_json()
+    def process_request(self, bian_request):
+        data = bian_request.request.get_json()
         self.servicing_session_id = data["serviceDomainServicingSessionReference"]
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][
@@ -985,6 +970,8 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
             "serviceDomainServiceAgreement"]["serviceDomainServiceAgreementReference"]
         self.user_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceAgreement"]["serviceDomainServiceUserReference"]
+        self.config_servicing_session(bian_request, self.servicing_session)
+        self.persist_servicing_session(bian_request, self.servicing_session)
 
     def get_activation_id(self):
         return ""
@@ -1025,9 +1012,9 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
     def get_session_status(self):
         return ""
 
-    def process_put(self, request, vars):
-        logger.debug("in process_put " + str(vars))
-        self.process_request(request, vars)
+    def do_operation_1(self,bian_request):
+        logger.debug("in process_put ")
+        self.process_request(bian_request)
         payload = {
             "serviceDomainConfigurationActionTaskReference": self.get_configuration_setting_id(),
             "serviceDomainConfigurationActionTaskRecord": self.get_configuration_rec(),
@@ -1049,7 +1036,8 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
             },
             "serviceDomainServicingSessionStatus": self.get_session_status()
         }
-        return BianResponse(request, payload, {})
+        dict = {1: payload}
+        return dict
 
 class FeedbackAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
@@ -1060,11 +1048,13 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
     feedback_status = ""
     emp_id = ""
 
-    def process_request(self, request, vars):
-        data = request.get_json()
+    def process_request(self, bian_request):
+        data = bian_request.request.get_json()
         self.servicing_session_id = data["serviceDomainFeedbackActionRecord"]["serviceDomainServicingSessionReference"]
         self.cr_id = data["serviceDomainFeedbackActionRecord"]["controlRecordInstanceReference"]
         self.bq_id = data["serviceDomainFeedbackActionRecord"]["behaviorQualifierInstanceReference"]
+        self.persist_feedback_request(bian_request, self.servicing_session_id,self.cr_id,self.bq_id)
+
 
     def get_feedback_id(self):
         return self.feedback_id
@@ -1081,9 +1071,9 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
     def get_emp_id(self):
         return self.emp_id
 
-    def process_put(self, request, vars):
-        logger.debug("in process_put " + str(vars))
-        self.process_request(request, vars)
+    def do_operation_1(self, bian_request):
+        logger.debug("in process_put ")
+        self.process_request(bian_request)
         payload = {
             "serviceDomainFeedbackActionTaskReference": self.get_feedback_id(),
             "serviceDomainFeedbackActionTaskRecord": self.get_feedback_rec(),
@@ -1093,7 +1083,8 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
                 "employeeBusinessUnitReference": self.get_emp_id()
             }
         }
-        return BianResponse(request, payload, {})
+        dict = {1: payload}
+        return dict
 
 from halo_flask.flask.viewsx import GlobalService
 global_service_state = None

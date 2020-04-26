@@ -281,79 +281,75 @@ class ControlRecord(GenericArtifact):
 
 # Service Operations - action terms v2
 class ActionTerms(AbsBaseClass):
-    INITIATE = 'INITIATE'
-    CREATE = 'CREATE'
+    # sd ops
     ACTIVATE = 'ACTIVATE'
     CONFIGURE = 'CONFIGURE'
-    UPDATE = 'UPDATE'
+    FEEDBACK = 'FEEDBACK'
+    # instantiation
+    CREATE = 'CREATE'
+    INITIATE = 'INITIATE'
     REGISTER = 'REGISTER'
-    #RECORD = 'RECORD'
-    EXECUTE = 'EXECUTE'
     EVALUATE = 'EVALUATE'
     PROVIDE = 'PROVIDE'
-    #AUTHORIZE = 'AUTHORIZE'
-    REQUEST = 'REQUEST'
-    #TERMINATE = 'TERMINATE'
-    NOTIFY = 'NOTIFY'
-    RETRIEVE = 'RETRIEVE',
-    #new
-    CAPTURE = 'CAPTURE',
+    #invocation
+    UPDATE = 'UPDATE'
     CONTROL = 'CONTROL',
     EXCHANGE = 'EXCHANGE',
+    CAPTURE = 'CAPTURE',
+    EXECUTE = 'EXECUTE'
+    REQUEST = 'REQUEST'
     GRANT = 'GRANT',
-    FEEDBACK = 'FEEDBACK'
+    #reporting
+    RETRIEVE = 'RETRIEVE',
+    NOTIFY = 'NOTIFY'
+
+    # old
+    # RECORD = 'RECORD'
+    # AUTHORIZE = 'AUTHORIZE'
+    # TERMINATE = 'TERMINATE'
+
 
     ops = [
-        INITIATE,
-        CREATE,
         ACTIVATE,
         CONFIGURE,
-        UPDATE,
+        FEEDBACK,
+        CREATE,
+        INITIATE,
         REGISTER,
-        #RECORD,
-        EXECUTE,
         EVALUATE,
         PROVIDE,
-        #AUTHORIZE,
-        REQUEST,
-        #TERMINATE,
-        NOTIFY,
-        RETRIEVE,
-        CAPTURE,
+        UPDATE,
         CONTROL,
         EXCHANGE,
+        CAPTURE,
+        EXECUTE,
+        REQUEST,
         GRANT,
-        FEEDBACK
+        RETRIEVE,
+        NOTIFY
     ]
     categories = {
-
-        CREATE: BianCategory.ORIGINATION,
-        EVALUATE: BianCategory.ORIGINATION,
-        INITIATE: BianCategory.ORIGINATION,
-        PROVIDE: BianCategory.ORIGINATION,
-        REGISTER: BianCategory.ORIGINATION,
-
-        CAPTURE: BianCategory.INVOCATION,
-        CONTROL: BianCategory.INVOCATION,
-        EXCHANGE: BianCategory.INVOCATION,
-        EXECUTE: BianCategory.INVOCATION,
-        GRANT: BianCategory.INVOCATION,
-        REQUEST: BianCategory.INVOCATION,
-        UPDATE: BianCategory.INVOCATION,
-
-        NOTIFY: BianCategory.REPORTING,
-        RETRIEVE: BianCategory.REPORTING,
-
         ACTIVATE: BianCategory.SETUP,
         CONFIGURE: BianCategory.SETUP,
-        FEEDBACK: BianCategory.SETUP
+        FEEDBACK: BianCategory.SETUP,
 
+        CREATE: BianCategory.ORIGINATION,
+        INITIATE: BianCategory.ORIGINATION,
+        REGISTER: BianCategory.ORIGINATION,
+        EVALUATE: BianCategory.ORIGINATION,
+        PROVIDE: BianCategory.ORIGINATION,
+
+        UPDATE: BianCategory.INVOCATION,
+        CONTROL: BianCategory.INVOCATION,
+        EXCHANGE: BianCategory.INVOCATION,
+        CAPTURE: BianCategory.INVOCATION,
+        EXECUTE: BianCategory.INVOCATION,
+        REQUEST: BianCategory.INVOCATION,
+        GRANT: BianCategory.INVOCATION,
+
+        RETRIEVE: BianCategory.REPORTING,
+        NOTIFY: BianCategory.REPORTING,
     }
-
-
-        #RECORD: BianCategory.INVOCATION,
-        #AUTHORIZE: BianCategory.INVOCATION,
-        #TERMINATE: BianCategory.INVOCATION,
 
 # BehaviorQualifiers v2
 class Aspect(BehaviorQualifierType):
@@ -474,9 +470,9 @@ class Advice(GenericArtifact):
 # Functional Patterns v2
 class FunctionalPatterns(AbsBaseClass):
     #create
-    ADMINISTER = 'Administer'
     DIRECT = 'Direct'
     MANAGE = 'Manage'
+    ADMINISTER = 'Administer'
     DESIGN = 'Design'
     DEVELOP = 'Develop'
     #initiate
@@ -485,41 +481,41 @@ class FunctionalPatterns(AbsBaseClass):
     MAINTAIN = 'Maintain'
     FULFILL = 'Fulfill'
     TRANSACT = 'Transact'
-    ADVISE = 'Advise',
-    TRACK = 'Track'
+    ADVISE = 'Advise'
     MONITOR = 'Monitor'
+    TRACK = 'Track'
     #register
-    ENROLL = 'Enroll'
     CATALOG = 'Catalog'
+    ENROLL = 'Enroll'
     #evaluate
     AGREETERMS = 'Agree Terms'
-    ANALYZE = 'Analyze'
     ASSESS = 'Assess'
+    ANALYZE = 'Analyze'
     #provide
     ALLOCATE = 'Allocate'
 
     # Functional Pattern ==> Generic Artifact Type ==> Behavior Qualifier
     # pattern : [Generic Artifact,Behavior Qualifier Type]
     patterns = {
+        DIRECT: ['Strategy', 'Goal'],  #
+        MANAGE: ['ManagementPlan', 'Duty'],  #
         ADMINISTER: ['AdministrativePlan', 'Routine'],#
-        AGREETERMS: ['Agreement', 'Term'],#
-        ALLOCATE: ['Allocation', 'Criteria'],#
-        ANALYZE: ['Analysis', 'Algorithm'],#
-        ASSESS: ['Assessment', 'Test'],#
-        DESIGN: ['Specification', 'Aspect'],#
-        DEVELOP: ['DevelopmentProject', 'Deliverable'],#
-        DIRECT: ['Strategy', 'Goal'],#
-        MAINTAIN: ['MaintenanceAgreement', 'Task'],#
-        MANAGE: ['ManagementPlan', 'Duty'],#
-        CATALOG: ['DirectoryEntry', 'Property'],#
-        TRACK: ['Log', 'Event'],#
-        MONITOR: ['State', 'Measure'],#
-        OPERATE: ['OperatingSession', 'Function'],#
-        FULFILL: ['FulfillmentArrangement', 'Feature'],#
+        DESIGN: ['Specification', 'Aspect'],  #
+        DEVELOP: ['DevelopmentProject', 'Deliverable'],  #
+        PROCESS: ['Procedure', 'Workstep'],  #
+        OPERATE: ['OperatingSession', 'Function'],  #
+        MAINTAIN: ['MaintenanceAgreement', 'Task'],  #
+        FULFILL: ['FulfillmentArrangement', 'Feature'],  #
         TRANSACT: ['Transaction', 'Step'],
-        ENROLL: ['Membership', 'Clause'],#
-        PROCESS: ['Procedure', 'Workstep'],#
-        ADVISE: ['Advice', 'Topic'],#
+        ADVISE: ['Advice', 'Topic'],  #
+        MONITOR: ['State', 'Measure'],  #
+        TRACK: ['Log', 'Event'],  #
+        CATALOG: ['DirectoryEntry', 'Property'],  #
+        ENROLL: ['Membership', 'Clause'],  #
+        AGREETERMS: ['Agreement', 'Term'],#
+        ASSESS: ['Assessment', 'Test'],  #
+        ANALYZE: ['Analysis', 'Algorithm'],  #
+        ALLOCATE: ['Allocation', 'Criteria'],#
     }
 
     # action terms allowed for functional pattern
