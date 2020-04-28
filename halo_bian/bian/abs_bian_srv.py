@@ -12,6 +12,7 @@ from halo_flask.logs import log_json
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.mixinx import AbsApiMixinX
 from halo_flask.flask.filter import RequestFilter
+from halo_flask.reflect import Reflect
 from halo_flask.settingsx import settingsx
 from halo_flask.models import AbsDbMixin
 from halo_bian.bian.exceptions import *
@@ -182,7 +183,17 @@ class AbsBianMixin(AbsApiMixinX):
     def get_control_record(self):
         return self.control_record
 
-    def init_cr(self, cr_class_name,behavior_qualifier_type=None,init_vars=None):
+    def init_cr(self, cr_class_name, behavior_qualifier_type=None, init_vars=None):
+        if settings.CONTROL_RECORD:
+            k = settings.CONTROL_RECORD.rfind(".")
+            module_name = settings.CONTROL_RECORD[:k]
+            class_name = settings.CONTROL_RECORD[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = cr_class_name
+        return Reflect.do_instantiate(module_name,class_name,GenericArtifact,behavior_qualifier_type)
+
+    def init_cr1(self, cr_class_name,behavior_qualifier_type=None,init_vars=None):
         if settings.CONTROL_RECORD:
             k = settings.CONTROL_RECORD.rfind(".")
             module_name = settings.CONTROL_RECORD[:k]
@@ -202,7 +213,18 @@ class AbsBianMixin(AbsApiMixinX):
         cr_obj = self.init_cr(cr_class,behavior_qualifier_type,init_var)
         return cr_obj
 
-    def init_ga(self, ga_class_name,init_var=None):
+    def init_ga(self, ga_class_name, init_var=None):
+        if settings.GENERIC_ARTIFACT:
+            k = settings.GENERIC_ARTIFACT.rfind(".")
+            module_name = settings.GENERIC_ARTIFACT[:k]
+            class_name = settings.GENERIC_ARTIFACT[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = ga_class_name
+        return Reflect.do_instantiate(module_name, class_name, GenericArtifact, init_var)
+
+
+    def init_ga1(self, ga_class_name,init_var=None):
         if settings.GENERIC_ARTIFACT:
             k = settings.GENERIC_ARTIFACT.rfind(".")
             module_name = settings.GENERIC_ARTIFACT[:k]
@@ -238,6 +260,16 @@ class AbsBianMixin(AbsApiMixinX):
         return instance
 
     def init_bq(self, bq_class_name):
+        if settings.BEHAVIOR_QUALIFIER_TYPE:
+            k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
+            module_name = settings.BEHAVIOR_QUALIFIER_TYPE[:k]
+            class_name = settings.BEHAVIOR_QUALIFIER_TYPE[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = bq_class_name
+        return Reflect.do_instantiate(module_name, class_name, BehaviorQualifierType,settings.BEHAVIOR_QUALIFIER,settings.SUB_QUALIFIER)
+
+    def init_bq1(self, bq_class_name):
         if settings.BEHAVIOR_QUALIFIER_TYPE:
             k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
             module_name = settings.BEHAVIOR_QUALIFIER_TYPE[:k]
