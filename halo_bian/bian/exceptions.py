@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-from halo_flask.exceptions import HaloException
+from halo_flask.exceptions import HaloException, HaloError
 from abc import ABCMeta
 
 class BianException(HaloException):
     pass
 
+class BianError(HaloError):
+    pass
 
 class IllegalActionTermException(BianException):
     pass
