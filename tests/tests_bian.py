@@ -5,7 +5,7 @@ from flask import Flask, request
 from requests.auth import *
 from flask_restful import Api
 import json
-from halo_flask.exceptions import BadRequestError,ApiError
+from halo_flask.exceptions import ApiError
 from halo_flask.flask.utilx import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
 from halo_bian.bian.db import AbsBianDbMixin
@@ -317,7 +317,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_00_get_request_returns_a_given_string(self):
         from halo_flask.flask.viewsx import load_global_data
         app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
-        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL': "abc"}
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL': "C:\\dev\projects\\halo\\framework\\test179\\bian_service_domains\\halo_contact_dialogue\\env\\config\\bian_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
         print("loaded data")
         with app.test_request_context('/?name=Peter'):
@@ -382,7 +382,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
-                assert type(e).__name__ == 'IllegalBQException'
+                assert type(e).__name__ == 'IllegalBQError'
 
 
     def test_5_post_request_returns_a_given_error(self):
@@ -393,7 +393,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "IllegalActionTermException"
+                assert type(e).__name__ == "IllegalActionTermError"
 
     def test_6_post_request_returns_a_given_error1(self):
         with app.test_request_context(method='POST',path='/'):
@@ -403,7 +403,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
-                assert type(e).__name__ == "IllegalActionTermException"
+                assert type(e).__name__ == "IllegalActionTermError"
 
     def test_7_post_request_returns_a_given_string(self):
         with app.test_request_context(method='POST',path='/?name=Peter'):
@@ -485,7 +485,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 ret = self.a3.process_get(request, {})
                 assert ret.request.collection_filter[0] != "amount>100"
             except Exception as e:
-                assert type(e).__name__ == "IllegalActionTermException"
+                assert type(e).__name__ == "IllegalActionTermError"
 
     def test_990_mask_cr_request_returns_a_given_error(self):
         with app.test_request_context('/consumer-loan/1a/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?collection-filter=amount>100'):
@@ -495,7 +495,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 ret = self.a3.process_get(request, {"cr_reference_id":"2","bq_reference_id":"3a"})
                 assert False
             except Exception as e:
-                assert type(e).__name__ == "IllegalBQException"
+                assert type(e).__name__ == "IllegalBQError"
 
     def test_991_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/1b/?collection-filter=amount>100'):
@@ -505,7 +505,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 ret = self.a3.process_get(request, {"cr_reference_id":"","bq_reference_id":""})
                 assert False
             except Exception as e:
-                assert type(e).__name__ == "IllegalBQException"
+                assert type(e).__name__ == "IllegalBQError"
 
     def test_992_request_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
@@ -613,7 +613,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 ret = self.a5.process_put(request, {"cr_reference_id":"1","bq_reference_id":"1","sbq_reference_id":"1"})
             except Exception as e:
-                assert type(e).__name__ == "IllegalBQException"
+                assert type(e).__name__ == "IllegalBQError"
 
     def test_9995_request_sub_returns_a_response(self):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
@@ -692,6 +692,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             }
           }
         }
+        from halo_flask.flask.viewsx import load_global_data
+        app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
+            "C:\\dev\\projects\\halo\\halo_bian\\halo_bian\\env\\config\\bian_setting_mapping.json"}
+        load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x2 = X2()
             self.x2.bian_action = ActionTerms.CONFIGURE

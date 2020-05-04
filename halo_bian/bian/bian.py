@@ -2,13 +2,15 @@
 import logging
 from abc import ABCMeta
 import uuid
+import os
+import json
 from datetime import datetime
 from halo_flask.classes import AbsBaseClass
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 from halo_flask.flask.filter import RequestFilter
 from halo_flask.settingsx import settingsx
-from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException
+from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException,NoServiceConfigurationMappingException
 
 settings = settingsx()
 
@@ -720,7 +722,25 @@ class BianServiceConfiguration(AbsBaseClass):
     configuration_settings = {}
 
     def __init__(self, config_url):
-        pass
+        if config_url:
+            self.load_keys_for_prop(config_url)
+        else:
+            raise NoServiceConfigurationMappingException(config_url)
+
+    def load_keys_for_prop(self,config_url):
+        file_dir = os.path.dirname(__file__)
+        file_path = os.path.join(config_url)
+        with open(file_path, 'r') as fi:
+            map = json.load(fi)
+            for key in map:
+                self.configuration_settings[key] = map[key]
+            logger.info("loaded service configuration mapping!")
+
+    def set_configuration_setting(self, configuration_setting_id,param_type,param_value):
+        name = self.configuration_settings[configuration_setting_id]
+        value = self.get_val_by_type(param_type,param_value)
+        settings.__setattr__(name,value)
+        logger.debug("set_configuration_setting "+name+" "+settings.__getattribute__(name))
 
     def get_configuration_setting(self,configuration_setting_id):
         if configuration_setting_id in self.configuration_settings:

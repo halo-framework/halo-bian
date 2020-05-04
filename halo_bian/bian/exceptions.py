@@ -9,7 +9,7 @@ class BianException(HaloException):
 class BianError(HaloError):
     pass
 
-class IllegalActionTermException(BianException):
+class IllegalActionTermError(BianError):
     pass
 
 #class MissingBianContextException(BianException):
@@ -18,15 +18,14 @@ class IllegalActionTermException(BianException):
 class ActionTermFailException(BianException):
     pass
 
-class IllegalBQException(BianException):
+class IllegalBQError(BianError):
     pass
 
-class IllegalBQIdException(BianException):
+class IllegalBQIdError(BianError):
     pass
 
-class SystemBQIdException(BianException):
+class SystemBQIdError(BianError):
     pass
-
 
 class ServiceDomainNameException(BianException):
     pass
@@ -56,6 +55,9 @@ class BehaviorQualifierNameException(BianException):
     pass
 
 class ControlRecordNameException(BianException):
+    pass
+
+class NoServiceConfigurationMappingException(BianException):
     pass
 
 

@@ -4,7 +4,7 @@ import re
 import logging
 from abc import ABCMeta,abstractmethod
 
-from halo_flask.exceptions import ApiError,BadRequestError,HaloMethodNotImplementedException
+from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.utilx import status
@@ -95,11 +95,11 @@ class AbsBianMixin(AbsApiMixinX):
     def get_filter_char(self,bian_request, item):
         the_filter_chars = self.get_filter_chars(bian_request)
         if len(the_filter_chars) == 0:
-            raise BadRequestError("no defined comperator for query collection-filter defined")
+            raise ApiError("no defined comperator for query collection-filter defined")
         for c in the_filter_chars:
             if c in item:
                 return c
-        raise BadRequestError("wrong comperator for query var collection-filter :"+item)
+        raise ApiError("wrong comperator for query var collection-filter :"+item)
 
     def validate_collection_filter(self, bian_request):
         logger.debug("in validate_collection_filter ")
@@ -112,11 +112,11 @@ class AbsBianMixin(AbsApiMixinX):
                     the_filter_chars = self.get_filter_chars(bian_request)
                     the_filter_key_values = self.get_filter_key_values(bian_request)
                     if sign not in the_filter_chars:
-                        raise BadRequestError("filter sign for query var collection-filter is not allowed: " + sign)
+                        raise ApiError("filter sign for query var collection-filter is not allowed: " + sign)
                     if key not in the_filter_key_values.keys():
-                        raise BadRequestError("filter key value for query var collection-filter is not allowed: " + key)
+                        raise ApiError("filter key value for query var collection-filter is not allowed: " + key)
                     if not val:
-                        raise BadRequestError("missing value for query var collection-filter")
+                        raise ApiError("missing value for query var collection-filter")
         return True
 
     def break_filter(self,bian_request,f):
@@ -143,7 +143,7 @@ class AbsBianMixin(AbsApiMixinX):
             if bian_request.cr_reference_id and self.cr_reference_id_mask:
                 if re.match(self.cr_reference_id_mask,bian_request.cr_reference_id):
                     return
-                raise BadRequestError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
+                raise ApiError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
 
     def validate_bq_reference_id(self, bian_request):
         logger.debug("in validate_validate_bq_reference_id ")
@@ -151,19 +151,19 @@ class AbsBianMixin(AbsApiMixinX):
             if bian_request.bq_reference_id and self.bq_reference_id_mask:
                 if re.match(self.bq_reference_id_mask,bian_request.bq_reference_id):
                     return
-                raise BadRequestError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
+                raise ApiError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
 
     def validate_filter_key_values(self):
         if self.filter_key_values:
             for bq in self.filter_key_values.keys():
                 if bq is not None and bq not in self.behavior_qualifier.keys():
-                    raise SystemBQIdException("bq in filter_key_values is not valid:"+bq)
+                    raise SystemBQIdError("bq in filter_key_values is not valid:"+bq)
 
     def validate_filter_chars(self):
         if self.filter_chars:
             for bq in self.filter_chars.keys():
                 if bq is not None and bq not in self.behavior_qualifier.keys():
-                    raise SystemBQIdException("bq in filter_chars is not valid:"+bq)
+                    raise SystemBQIdError("bq in filter_chars is not valid:"+bq)
 
     def validate_service_state(self,bian_request):
         if self.service_state:
@@ -295,7 +295,7 @@ class AbsBianMixin(AbsApiMixinX):
             bq_obj = bqt_obj.get(bq_id)
             if bq_obj.name == bq_name.strip().replace("-","_").replace(" ","_"):
                 return bq_name
-        raise IllegalBQException(bq_name)
+        raise IllegalBQError(bq_name)
 
     def get_behavior_qualifier_by_id(self, op, bq_id):
         bq_obj = self.behavior_qualifier
@@ -303,7 +303,7 @@ class AbsBianMixin(AbsApiMixinX):
             bq_str = bq_obj.get(bq_id)
             if bq_str:
                 return bq_str.strip().replace("-","_").replace(" ","_")
-        raise IllegalBQIdException(bq_id)
+        raise IllegalBQIdError(bq_id)
 
     def get_behavior_qualifier_from_path(self, op, request,bq_ref_id):
         tokens = self.get_path_tokens(request)
@@ -319,7 +319,7 @@ class AbsBianMixin(AbsApiMixinX):
                             if bq_obj.name.lower() == bq_name.lower().strip().replace("-","_").replace(" ","_"):
                                 return bq_name
                 idx = idx + 1
-        raise IllegalBQException(bq_ref_id)
+        raise IllegalBQError(bq_ref_id)
 
     def get_sub_qualifiers(self,request, bq, vars):
         sub = "s"
@@ -416,7 +416,7 @@ class AbsBianMixin(AbsApiMixinX):
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         action_term = action
         if action_term not in ActionTerms.ops:
-            raise IllegalActionTermException(action)
+            raise IllegalActionTermError(action)
         sd_reference_id = None
         cr_reference_id = None
         behavior_qualifier_type = None
@@ -513,12 +513,12 @@ class AbsBianMixin(AbsApiMixinX):
         if bian_request.action_term in FunctionalPatterns.operations[self.functional_pattern]:
             bian_response = functionName(bian_request)
             return self.process_ok(bian_response)
-        raise IllegalActionTermException(bian_request.action_term)
+        raise IllegalActionTermError(bian_request.action_term)
 
     def do_initiate_bq(self, bian_request):
         logger.debug("in do_initiate_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_initiate(self, bian_request):
@@ -530,7 +530,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_create_bq(self, bian_request):
         logger.debug("in do_create_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_create(self, bian_request):
@@ -542,7 +542,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_activate_bq(self, bian_request):
         logger.debug("in do_activate_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_activate(self, bian_request):
@@ -554,7 +554,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_configure_bq(self, bian_request):
         logger.debug("in do_configure_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_configure(self, bian_request):
@@ -566,7 +566,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_update_bq(self, bian_request):
         logger.debug("in do_update_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_update(self, bian_request):
@@ -578,7 +578,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_register_bq(self, bian_request):
         logger.debug("in do_register_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_register(self, bian_request):
@@ -590,7 +590,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_record_bq(self, bian_request):
         logger.debug("in do_record_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_record(self, bian_request):
@@ -602,7 +602,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_execute_bq(self, bian_request):
         logger.debug("in do_execute_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_execute(self, bian_request):
@@ -614,7 +614,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_evaluate_bq(self, bian_request):
         logger.debug("in do_evaluate_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_evaluate(self, bian_request):
@@ -626,7 +626,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_provide_bq(self, bian_request):
         logger.debug("in do_provide_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_provide(self, bian_request):
@@ -638,7 +638,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_authorize_bq(self, bian_request):
         logger.debug("in do_authorize_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_authorize(self, bian_request):
@@ -650,7 +650,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_request_bq(self, bian_request):
         logger.debug("in do_request_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_request(self, bian_request):
@@ -662,7 +662,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_terminate_bq(self, bian_request):
         logger.debug("in do_terminate_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_terminate(self, bian_request):
@@ -674,7 +674,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_notify_bq(self, bian_request):
         logger.debug("in do_notify_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_notify(self, bian_request):
@@ -686,7 +686,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_retrieve_bq(self, bian_request):
         logger.debug("in do_retrieve_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_retrieve(self, bian_request):
@@ -698,7 +698,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_capture_bq(self, bian_request):
         logger.debug("in do_capture_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_capture(self, bian_request):
@@ -710,7 +710,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_control_bq(self, bian_request):
         logger.debug("in do_capture_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_control(self, bian_request):
@@ -722,7 +722,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_exchange_bq(self, bian_request):
         logger.debug("in do_capture_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_exchange(self, bian_request):
@@ -734,7 +734,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_grant_bq(self, bian_request):
         logger.debug("in do_capture_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_grant(self, bian_request):
@@ -746,7 +746,7 @@ class AbsBianMixin(AbsApiMixinX):
     def do_feedback_bq(self, bian_request):
         logger.debug("in do_capture_bq ")
         if bian_request.behavior_qualifier is None:
-            raise IllegalBQException("missing behavior_qualifier value")
+            raise IllegalBQError("missing behavior_qualifier value")
         return self.do_operation_bq(bian_request)
 
     def do_feedback(self, bian_request):
