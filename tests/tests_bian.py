@@ -9,7 +9,7 @@ from halo_flask.exceptions import ApiError
 from halo_flask.flask.utilx import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
 from halo_bian.bian.db import AbsBianDbMixin
-from halo_bian.bian.exceptions import BianException
+from halo_bian.bian.exceptions import BianException,BianError
 from halo_flask.apis import *
 from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
@@ -95,7 +95,7 @@ class A2(A1):# customized
             if "name" in bian_request.request.args:
                 name = bian_request.request.args['name']
                 if not name:
-                    raise BadRequestError("missing value for query var name")
+                    raise BianError("missing value for query var name")
         return True
 
     def set_api_headers(self,bian_request, seq=None, dict=None):
@@ -169,7 +169,7 @@ class A3(AbsBianMixin):# the foi
             if "name" in bian_request.request.args:
                 name = bian_request.request.args['name']
                 if not name:
-                    raise BadRequestError("missing value for query var name")
+                    raise BianError("missing value for query var name")
         return True
 
     def validate_pre_depositsandwithdrawals(self, bian_request):
@@ -178,7 +178,7 @@ class A3(AbsBianMixin):# the foi
             if "name" in bian_request.request.args:
                 name = bian_request.request.args['name']
                 if not name:
-                    raise BadRequestError("missing value for query var name")
+                    raise BianError("missing value for query var name")
         return True
 
     def set_back_api_depositsandwithdrawals(self,bian_request,foi=None):
@@ -313,13 +313,16 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
 
-
-    def test_00_get_request_returns_a_given_string(self):
+    def load_srv(self):
         from halo_flask.flask.viewsx import load_global_data
         app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
-        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL': "C:\\dev\projects\\halo\\framework\\test179\\bian_service_domains\\halo_contact_dialogue\\env\\config\\bian_setting_mapping.json"}
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle",
+                                       'PROP_URL': "C:\\dev\projects\\halo\\framework\\test179\\bian_service_domains\\halo_contact_dialogue\\env\\config\\bian_setting_mapping.json"}
         load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
         print("loaded data")
+
+    def test_00_get_request_returns_a_given_string(self):
+        self.load_srv()
         with app.test_request_context('/?name=Peter'):
             self.a1 = A1()
             try:
