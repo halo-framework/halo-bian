@@ -747,6 +747,12 @@ class BianServiceConfiguration(AbsBaseClass):
             return self.configuration_settings[configuration_setting_id]
         return None
 
+    def get_list(self):
+        return self.configuration_settings.keys()
+
+    def update_list(self,param_name,param_val):
+        self.configuration_settings[param_name] = param_val
+
 class BianServicingSession(AbsBaseClass):
     start = None
     end = None

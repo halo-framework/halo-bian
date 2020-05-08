@@ -910,8 +910,10 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
     def persist_servicing_session(self,bian_request, servicing_session):
         #@todo implement persistance
         """Method documentation"""
-        dbaccess = self.get_dbaccess(bian_request)
-        dbaccess.save_servicing_session(servicing_session)
+        #dbaccess = self.get_dbaccess(bian_request)
+        #dbaccess.save_servicing_session(servicing_session)
+        from halo_flask.ssm import set_app_param_config
+        set_app_param_config(settings.SSM_TYPE, "session_id", self.get_session_id())
         return
 
     def get_activation_id(self):
@@ -1133,6 +1135,16 @@ class BianGlobalService(GlobalService):
         global global_service_props
         global_service_state = BianServiceLifeCycleStates(initial_state)
         global_service_props = BianServiceConfiguration(prop_url)
+        for param_name in global_service_props.get_list():
+            param_val = self.load_app_param(param_name)
+            global_service_props.update_list(param_name,param_val)
+
+    def load_app_param(self,param_name):
+        from halo_flask.ssm import get_app_config
+        config = get_app_config(settings.SSM_TYPE)
+        param_val = config.get_param(settings.HALO_HOST)[param_name]
+        logger.info("in load_app_param "+ param_name+" = "+param_val)
+        return param_val
 
     @staticmethod
     def get_service_properties():
