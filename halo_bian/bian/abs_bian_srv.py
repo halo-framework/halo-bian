@@ -3,7 +3,7 @@ import json
 import re
 import logging
 from abc import ABCMeta,abstractmethod
-
+import importlib
 from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
@@ -17,7 +17,9 @@ from halo_flask.settingsx import settingsx
 from halo_flask.models import AbsDbMixin
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
-import importlib
+from halo_flask.ssm import get_app_config
+from halo_flask.exceptions import CacheKeyError
+from halo_flask.ssm import set_app_param_config
 
 settings = settingsx()
 
@@ -912,7 +914,6 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         """Method documentation"""
         #dbaccess = self.get_dbaccess(bian_request)
         #dbaccess.save_servicing_session(servicing_session)
-        from halo_flask.ssm import set_app_param_config
         set_app_param_config(settings.SSM_TYPE, "session_id", self.get_session_id())
         return
 
@@ -923,7 +924,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         return ""
 
     def get_session_id(self):
-        return ""
+        return self.servicing_session.get_session_id()
 
     def get_session_rec(self):
         return ""
@@ -1135,16 +1136,20 @@ class BianGlobalService(GlobalService):
         global global_service_props
         global_service_state = BianServiceLifeCycleStates(initial_state)
         global_service_props = BianServiceConfiguration(prop_url)
-        for param_name in global_service_props.get_list():
-            param_val = self.load_app_param(param_name)
-            global_service_props.update_list(param_name,param_val)
+        self.load_app_param(global_service_props)
 
-    def load_app_param(self,param_name):
-        from halo_flask.ssm import get_app_config
+
+    def load_app_param(self,global_service_props):
         config = get_app_config(settings.SSM_TYPE)
-        param_val = config.get_param(settings.HALO_HOST)[param_name]
-        logger.info("in load_app_param "+ param_name+" = "+param_val)
-        return param_val
+        try:
+            app_config = config.get_param(settings.HALO_HOST)
+            for param_name in global_service_props.get_list():
+                if param_name in app_config:
+                    param_val = app_config[param_name]
+                    logger.info("in load_app_param " + param_name + " = " + param_val)
+                    global_service_props.update_list(param_name,param_val)
+        except CacheKeyError as e:
+            logger.debug(e.message)
 
     @staticmethod
     def get_service_properties():

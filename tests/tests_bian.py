@@ -5,6 +5,7 @@ from flask import Flask, request
 from requests.auth import *
 from flask_restful import Api
 import json
+from nose.tools import eq_
 from halo_flask.exceptions import ApiError
 from halo_flask.flask.utilx import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
@@ -15,6 +16,9 @@ from halo_flask.flask.utilx import Util
 from halo_flask.flask.servicex import FoiBusinessEvent,SagaBusinessEvent
 from halo_flask.flask.filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory,ActionTerms,Feature,ControlRecord,GenericArtifact,BianContext,BianRequestFilter,FunctionalPatterns
+from halo_flask.ssm import set_app_param_config,set_host_param_config
+from halo_flask.flask.viewsx import load_global_data
+from halo_flask.base_util import BaseUtil
 
 import unittest
 
@@ -313,24 +317,23 @@ class TestUserDetailTestCase(unittest.TestCase):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
 
-    def load_srv(self):
-        from halo_flask.flask.viewsx import load_global_data
-        app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
-        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle",
-                                       'PROP_URL': "C:\\dev\projects\\halo\\framework\\test179\\bian_service_domains\\halo_contact_dialogue\\env\\config\\bian_setting_mapping.json"}
-        load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
-        print("loaded data")
-
     def test_00_get_request_returns_a_given_string(self):
-        self.load_srv()
+        from halo_flask.flask.viewsx import load_global_data
+        app.config['ENV_TYPE'] = LOC
+        app.config['SSM_TYPE'] = "AWS"
+        #app.config['FUNC_NAME'] = "FUNC_NAME"
+        app.config['HALO_HOST'] = "halo_bian"
+        app.config['AWS_REGION'] = 'us-east-1'
+        app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL': "C:\\dev\projects\\halo\\framework\\test179\\bian_service_domains\\halo_contact_dialogue\\env\\config\\bian_setting_mapping.json"}
         with app.test_request_context('/?name=Peter'):
-            self.a1 = A1()
             try:
-                ret = self.a1.process_get(request, {})
-                assert False
+                if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
+                    data_map = app.config['INIT_DATA_MAP']
+                    class_name = app.config['INIT_CLASS_NAME']
+                    load_global_data(class_name, data_map)
             except Exception as e:
-                print(str(e) + " " + str(type(e).__name__))
-                assert type(e).__name__ == 'ServiceNotOpenException'
+                eq_(e.__class__.__name__, "NoApiClassException")
 
     def test_0_get_request_returns_a_given_string(self):
         json = {
@@ -346,8 +349,21 @@ class TestUserDetailTestCase(unittest.TestCase):
           }
         }
         app.config["DBACCESS_CLASS"] = "tests.tests_bian.BianDbMixin"
-        #app.config['FUNCTIONAL_PATTERN'] =
+        app.config['ENV_TYPE'] = LOC
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['HALO_HOST'] = "halo_bian"
+        #app.config['FUNC_NAME'] = "FUNC_NAME"
+        app.config['AWS_REGION'] = 'us-east-1'
+        app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
+        app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL': "C:\\dev\projects\\halo\\framework\\test179\\bian_service_domains\\halo_contact_dialogue\\env\\config\\bian_setting_mapping.json"}
+
         with app.test_request_context('/?name=Peter',json=json):
+            app.config['HALO_HOST'] = "halo_bian"
+            if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
+                data_map = app.config['INIT_DATA_MAP']
+                class_name = app.config['INIT_CLASS_NAME']
+                load_global_data(class_name, data_map)
+
             self.x1 = X1()
             self.x1.bian_action = ActionTerms.ACTIVATE
             self.x1.functional_pattern = FunctionalPatterns.FULFILL

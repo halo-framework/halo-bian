@@ -770,3 +770,6 @@ class BianServicingSession(AbsBaseClass):
         self.service_id = service_id
         self.service_configuration = service_configuration
         self.service_state = service_state
+
+    def get_session_id(self):
+        return self.session_id

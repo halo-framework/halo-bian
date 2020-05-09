@@ -60,6 +60,5 @@ class ControlRecordNameException(BianException):
 class NoServiceConfigurationMappingException(BianException):
     pass
 
-
 class BianApiException(BianException):
     pass

@@ -85,7 +85,7 @@ DEBUG = env.bool('DEBUG', default=False)
 print("DEBUG=" + str(DEBUG))
 
 SERVER = env.str('SERVER_NAME')
-HALO_HOST = None
+HALO_HOST = 'halo_bian'
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
