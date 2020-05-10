@@ -1140,9 +1140,18 @@ class BianGlobalService(GlobalService):
 
 
     def load_app_param(self,global_service_props):
+        """
+        1. load on start
+        2. if no url data its the first instance - need to write url
+        3. if url data compare to halo_host - if different update url
+        3. if url data and same as halo_host then not first - read other params (session_id...)
+        4. if no session_id service closed - do load from 3 again next time
+        5. if session_id update val in list
+
+        """
         config = get_app_config(settings.SSM_TYPE)
         try:
-            app_config = config.get_param(settings.HALO_HOST)
+            app_config = config.get_param(settings.FUNC_NAME)
             for param_name in global_service_props.get_list():
                 if param_name in app_config:
                     param_val = app_config[param_name]
