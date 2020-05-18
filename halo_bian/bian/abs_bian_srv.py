@@ -892,6 +892,8 @@ class AbsBianSrvMixin(AbsBianMixin):
 class ActivationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
+    bian_action = ActionTerms.ACTIVATE
+
     def process_request(self, bian_request):
         data = bian_request.request.get_json()
         self.center_id = data["serviceDomainCenterReference"]
@@ -993,6 +995,8 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
 class ConfigurationAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
 
+    bian_action = ActionTerms.CONFIGURE
+
     def process_request(self, bian_request):
         data = bian_request.request.get_json()
         self.servicing_session_id = data["serviceDomainServicingSessionReference"]
@@ -1076,6 +1080,8 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
 
 class FeedbackAbsBianMixin(AbsBianSrvMixin):
     __metaclass__ = ABCMeta
+
+    bian_action = ActionTerms.FEEDBACK
 
     feedback_id = ""
     feedback_rec = ""
