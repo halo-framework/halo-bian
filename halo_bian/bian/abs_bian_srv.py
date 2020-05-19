@@ -52,6 +52,8 @@ class AbsBianMixin(AbsApiMixinX):
     bq_reference_id_mask = None
     #service state
     service_state = None
+    servicing_session = None
+
 
     def __init__(self):
         super(AbsBaseMixin, self).__init__()
@@ -85,6 +87,8 @@ class AbsBianMixin(AbsApiMixinX):
 
         if settings.FILTER_SEPARATOR:
             self.filter_separator = settings.FILTER_SEPARATOR
+        if settings.SD_REFERENCE_ID_MASK:
+            self.sd_reference_id_mask = settings.SD_REFERENCE_ID_MASK
         if settings.CR_REFERENCE_ID_MASK:
             self.cr_reference_id_mask = settings.CR_REFERENCE_ID_MASK
         if settings.BQ_REFERENCE_ID_MASK:
@@ -93,15 +97,16 @@ class AbsBianMixin(AbsApiMixinX):
         self.service_state = BianGlobalService.get_service_state()
         if not self.service_state:
             raise ServiceStateException("missing service state")
+        self.servicing_session = BianGlobalService.get_service_session()
 
     def get_filter_char(self,bian_request, item):
         the_filter_chars = self.get_filter_chars(bian_request)
         if len(the_filter_chars) == 0:
-            raise ApiError("no defined comperator for query collection-filter defined")
+            raise BianError("no defined comperator for query collection-filter defined")
         for c in the_filter_chars:
             if c in item:
                 return c
-        raise ApiError("wrong comperator for query var collection-filter :"+item)
+        raise BianError("wrong comperator for query var collection-filter :"+item)
 
     def validate_collection_filter(self, bian_request):
         logger.debug("in validate_collection_filter ")
@@ -114,11 +119,11 @@ class AbsBianMixin(AbsApiMixinX):
                     the_filter_chars = self.get_filter_chars(bian_request)
                     the_filter_key_values = self.get_filter_key_values(bian_request)
                     if sign not in the_filter_chars:
-                        raise ApiError("filter sign for query var collection-filter is not allowed: " + sign)
+                        raise BianError("filter sign for query var collection-filter is not allowed: " + sign)
                     if key not in the_filter_key_values.keys():
-                        raise ApiError("filter key value for query var collection-filter is not allowed: " + key)
+                        raise BianError("filter key value for query var collection-filter is not allowed: " + key)
                     if not val:
-                        raise ApiError("missing value for query var collection-filter")
+                        raise BianError("missing value for query var collection-filter")
         return True
 
     def break_filter(self,bian_request,f):
@@ -139,13 +144,24 @@ class AbsBianMixin(AbsApiMixinX):
                             return {self.filter_sign:bf.sign,self.filter_key:bf.key,self.filter_val:bf.val}
         return None
 
+    def validate_sd_reference_id(self, bian_request):
+        logger.debug("in validate_sd_reference_id ")
+        if bian_request:
+            if bian_request.sd_reference_id:
+                if self.sd_reference_id_mask:
+                    if not re.match(self.sd_reference_id_mask,bian_request.sd_reference_id):
+                        raise BianError("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
+                if bian_request.sd_reference_id != self.servicing_session.get_session_id():
+                    raise BianError("sd_reference_id value is not valid:" + bian_request.sd_reference_id)
+
+
     def validate_cr_reference_id(self, bian_request):
         logger.debug("in validate_validate_cr_reference_id ")
         if bian_request:
             if bian_request.cr_reference_id and self.cr_reference_id_mask:
                 if re.match(self.cr_reference_id_mask,bian_request.cr_reference_id):
                     return
-                raise ApiError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
+                raise BianError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
 
     def validate_bq_reference_id(self, bian_request):
         logger.debug("in validate_validate_bq_reference_id ")
@@ -153,7 +169,7 @@ class AbsBianMixin(AbsApiMixinX):
             if bian_request.bq_reference_id and self.bq_reference_id_mask:
                 if re.match(self.bq_reference_id_mask,bian_request.bq_reference_id):
                     return
-                raise ApiError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
+                raise BianError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
 
     def validate_filter_key_values(self):
         if self.filter_key_values:
@@ -169,7 +185,7 @@ class AbsBianMixin(AbsApiMixinX):
 
     def validate_service_state(self,bian_request):
         if self.service_state:
-            if self.service_state.get_current_state().allows(bian_request.action_term):
+            if self.service_state.get_current_state() and self.service_state.get_current_state().allows(bian_request.action_term):
                 return True
             raise ServiceNotOpenException("Service not open for processing ")
         raise ServiceStateException("missing Service State ")
@@ -451,6 +467,7 @@ class AbsBianMixin(AbsApiMixinX):
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
         if bian_request:
+            self.validate_sd_reference_id(bian_request)
             self.validate_cr_reference_id(bian_request)
             self.validate_bq_reference_id(bian_request)
             self.validate_filter_key_values()
@@ -909,6 +926,8 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         self.service_state.set_new_state(self.service_state.Active)
         self.servicing_session = BianServicingSession(self.center_id,self.service_id,self.service_configuration,self.service_state)
         self.persist_servicing_session(bian_request,self.servicing_session)
+        global global_service_session
+        global_service_session = self.servicing_session
 
     @abstractmethod
     def persist_servicing_session(self,bian_request, servicing_session):
@@ -1130,6 +1149,7 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
 from halo_flask.flask.viewsx import GlobalService
 global_service_state = None
 global_service_props = None
+global_service_session = None
 class BianGlobalService(GlobalService):
 
     def load_global_data(self):
@@ -1140,6 +1160,7 @@ class BianGlobalService(GlobalService):
     def load_bian_global_data(self,initial_state,prop_url):
         global global_service_state
         global global_service_props
+        global global_service_session
         global_service_state = BianServiceLifeCycleStates(initial_state)
         global_service_props = BianServiceConfiguration(prop_url)
         self.load_app_param(global_service_props)
@@ -1175,4 +1196,9 @@ class BianGlobalService(GlobalService):
     def get_service_state():
         global global_service_state
         return global_service_state
+
+    @staticmethod
+    def get_service_session():
+        global global_service_session
+        return global_service_session
 

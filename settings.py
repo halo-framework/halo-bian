@@ -454,6 +454,7 @@ PROVIDER = 'AWS'
 AWS_REGION = 'us-east-1'
 
 FILTER_SEPARATOR = "@"
+SD_REFERENCE_ID_MASK = '^([\s\d]+)$'
 CR_REFERENCE_ID_MASK = '^([\s\d]+)$'#'././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
 BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"#None
 
