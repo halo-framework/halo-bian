@@ -475,7 +475,7 @@ class AbsBianMixin(AbsApiMixinX):
             self.validate_collection_filter(bian_request)
             self.validate_service_state(bian_request)
             return True
-        raise BianException("no Bian Request")
+        raise BadBianRequestError("no Bian Request")
 
     def get_request_filter(self,halo_request):
         logger.debug("get_request_filter for bian")
@@ -1007,7 +1007,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
             },
             "serviceDomainServicingSessionStatus": self.get_session_status()
         }
-        dict = {1: payload}
+        dict = {'1': payload}
         return dict
 
 
@@ -1094,7 +1094,7 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
             },
             "serviceDomainServicingSessionStatus": self.get_session_status()
         }
-        dict = {1: payload}
+        dict = {'1': payload}
         return dict
 
 class FeedbackAbsBianMixin(AbsBianSrvMixin):
@@ -1143,7 +1143,7 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
                 "employeeBusinessUnitReference": self.get_emp_id()
             }
         }
-        dict = {1: payload}
+        dict = {'1': payload}
         return dict
 
 from halo_flask.flask.viewsx import GlobalService

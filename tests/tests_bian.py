@@ -239,7 +239,7 @@ class A3(AbsBianMixin):# the foi
 
     def map_from_json_depositsandwithdrawals(self, dict, payload):
         print("in map_from_json_deposit")
-        payload['name'] = dict[1]["title"]
+        payload['name'] = dict['1']["title"]
         return payload
 
     def set_resp_headers_depositsandwithdrawals(self, bian_request,headers):
@@ -259,7 +259,7 @@ class A4(AbsBianMixin):# the foi
 
     def create_resp_payload(self,halo_request, dict):
         print("in create_resp_payload")
-        json = dict[1]
+        json = dict['1']
         return {"name":json["title"]}
 
 class A5(A3):
@@ -312,6 +312,8 @@ class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
     """
+
+    session_id = None
 
     def setUp(self):
         #app.config.from_pyfile('../settings.py')
@@ -686,7 +688,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x1 = X1()
             self.x1.bian_action = ActionTerms.ACTIVATE
-            ret = self.x1.process_post(request, {"sd_reference_id":"1","cr_reference_id":"2"})
+            ret = self.x1.process_post(request, {})
+            print(ret.payload)
+            self.session_id = ret.payload["serviceDomainServicingSessionReference"]
             assert ret.code == 200
 
     def test_99992_request_sub_returns_a_response(self):
@@ -719,7 +723,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x2 = X2()
             self.x2.bian_action = ActionTerms.CONFIGURE
-            ret = self.x2.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2"})
+            ret = self.x2.process_put(request, {"sd_reference_id":self.session_id,"cr_reference_id":"2"})
             assert ret.code == 200
 
     def test_99993_request_sub_returns_a_response(self):
@@ -736,7 +740,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process_put(request, {"sd_reference_id":"1"})
+            ret = self.x3.process_put(request, {"sd_reference_id":self.session_id})
             assert ret.code == 200
 
     def test_99994_request_sub_returns_a_response(self):
@@ -753,7 +757,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2"})
+            ret = self.x3.process_put(request, {"sd_reference_id":self.session_id,"cr_reference_id":"2"})
             assert ret.code == 200
 
     def test_99995_request_sub_returns_a_response(self):
@@ -770,7 +774,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3"})
+            ret = self.x3.process_put(request, {"sd_reference_id":self.session_id,"cr_reference_id":"2","bq_reference_id":"3"})
             assert ret.code == 200
 
     def test_99996_request_sub_returns_a_response(self):
@@ -787,5 +791,5 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            ret = self.x3.process_put(request, {"sd_reference_id":self.session_id,"cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
             assert ret.code == 200
