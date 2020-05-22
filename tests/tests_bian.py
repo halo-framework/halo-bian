@@ -716,6 +716,7 @@ class TestUserDetailTestCase(unittest.TestCase):
           }
         }
         from halo_flask.flask.viewsx import load_global_data
+        app.config['SSM_TYPE'] = "AWS"
         app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
         app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
             "C:\\dev\\projects\\halo\\halo_bian\\halo_bian\\env\\config\\bian_setting_mapping.json"}

@@ -151,9 +151,11 @@ class AbsBianMixin(AbsApiMixinX):
                 if self.sd_reference_id_mask:
                     if not re.match(self.sd_reference_id_mask,bian_request.sd_reference_id):
                         raise BianError("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
-                if bian_request.sd_reference_id != self.servicing_session.get_session_id():
-                    raise BianError("sd_reference_id value is not valid:" + bian_request.sd_reference_id)
-
+                if self.servicing_session:
+                    if bian_request.sd_reference_id != self.servicing_session.get_session_id():
+                        raise BianError("sd_reference_id value is not valid:" + bian_request.sd_reference_id)
+                else:
+                    raise BianError("no service session available:" + bian_request.sd_reference_id)
 
     def validate_cr_reference_id(self, bian_request):
         logger.debug("in validate_validate_cr_reference_id ")
