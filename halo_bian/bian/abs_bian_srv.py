@@ -26,6 +26,7 @@ settings = settingsx()
 logger = logging.getLogger(__name__)
 
 #@todo add jsonify to all responses
+#@todo support for microservices break down of service domain
 
 class AbsBianMixin(AbsApiMixinX):
     __metaclass__ = ABCMeta
