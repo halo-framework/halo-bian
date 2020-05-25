@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 #@todo add full life cycle managment + state machine
 #@todo life cycle for each type
 #@todo extension,anlytics,cloud
+#@todo add microservice support
+
 
 class BianRequest(HaloRequest):
     action_term = None

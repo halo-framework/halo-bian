@@ -932,7 +932,6 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         global global_service_session
         global_service_session = self.servicing_session
 
-    @abstractmethod
     def persist_servicing_session(self,bian_request, servicing_session):
         #@todo implement persistance
         """Method documentation"""
@@ -1025,14 +1024,23 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceConfigurationSettingReference"]
+        self.configuration_setting_param = data["serviceDomainServiceConfigurationRecord"][
+            "serviceDomainServiceConfigurationSetup"]["serviceDomainServiceConfigurationParameter"]
         self.subscriber_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceSubscription"]["serviceDomainServiceSubscriberReference"]
         self.agreement_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceAgreement"]["serviceDomainServiceAgreementReference"]
         self.user_id = data["serviceDomainServiceConfigurationRecord"][
             "serviceDomainServiceAgreement"]["serviceDomainServiceUserReference"]
-        self.config_servicing_session(bian_request, self.servicing_session)
-        self.persist_servicing_session(bian_request, self.servicing_session)
+        self.persist_config_setting(bian_request)
+
+    def persist_config_setting(self,bian_request):
+        #@todo implement persistance
+        """Method documentation"""
+        #dbaccess = self.get_dbaccess(bian_request)
+        #dbaccess.save_servicing_session(servicing_session)
+        set_app_param_config(settings.SSM_TYPE, self.get_configuration_setting_id(), self.get_configuration_param())
+        return
 
     def get_activation_id(self):
         return ""
@@ -1050,7 +1058,7 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
         return ""
 
     def get_configuration_param(self):
-        return ""
+        return self.configuration_setting_param
 
     def get_subscriber_id(self):
         return self.subscriber_id
