@@ -1204,7 +1204,8 @@ class BianGlobalService(GlobalService):
             if session_id:
                 global global_service_session
                 global_service_session = BianServicingSession(session_id)
-                #global_service_props.update_list(SESSION_ID,session_id)
+                global global_service_state
+                global_service_state.set_new_state(global_service_state.Active)
 
     @staticmethod
     def get_service_properties():
