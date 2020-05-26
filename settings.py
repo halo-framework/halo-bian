@@ -505,5 +505,6 @@ file_path = os.path.join(file_dir,'env','config', 'bian_sds.json')
 with open(file_path, 'r') as fb:
     SERVICE_DOMAINS = json.load(fb)
 
+SSM_TYPE="AWS"
 
 print('The base settings file has been loaded. bian')

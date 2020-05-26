@@ -765,6 +765,11 @@ class BianServicingSession(AbsBaseClass):
     service_configuration = None
     service_state = None
 
+    def __init__(self, session_id):
+        self.start = datetime.now()
+        self.session_id = session_id
+
+
     def __init__(self, center_id,service_id,service_configuration,service_state):
         self.start = datetime.now()
         self.session_id = uuid.uuid4().__str__()[0:8]

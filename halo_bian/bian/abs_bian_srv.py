@@ -19,7 +19,7 @@ from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
 from halo_flask.ssm import get_app_config
 from halo_flask.exceptions import CacheKeyError
-from halo_flask.ssm import set_app_param_config
+from halo_flask.ssm import set_app_param_config,get_app_param_config
 
 settings = settingsx()
 
@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 #@todo add jsonify to all responses
 #@todo support for microservices break down of service domain
+
+SESSION_ID = "session_id"
 
 class AbsBianMixin(AbsApiMixinX):
     __metaclass__ = ABCMeta
@@ -896,10 +898,8 @@ class AbsBianSrvMixin(AbsBianMixin):
     __metaclass__ = ABCMeta
 
     #service data
-    service_state = None
     service_configuration = None
     bian_service_info = None
-    servicing_session = None
 
     def __init__(self):
         super(AbsBianSrvMixin, self).__init__()
@@ -937,7 +937,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         """Method documentation"""
         #dbaccess = self.get_dbaccess(bian_request)
         #dbaccess.save_servicing_session(servicing_session)
-        set_app_param_config(settings.SSM_TYPE, "session_id", self.get_session_id())
+        set_app_param_config(settings.SSM_TYPE, SESSION_ID, self.get_session_id())
         return
 
     def get_activation_id(self):
@@ -1197,6 +1197,14 @@ class BianGlobalService(GlobalService):
                     global_service_props.update_list(param_name,param_val)
         except CacheKeyError as e:
             logger.debug(e.message)
+        if settings.FUNC_NAME != settings.SERVICE_DOMAIN + '_service':
+            session_id = get_app_param_config(settings.SSM_TYPE, settings.SERVICE_DOMAIN + '_service',
+                                              SESSION_ID)
+            print("session_id=" + str(session_id))
+            if session_id:
+                global global_service_session
+                global_service_session = BianServicingSession(session_id)
+                #global_service_props.update_list(SESSION_ID,session_id)
 
     @staticmethod
     def get_service_properties():
