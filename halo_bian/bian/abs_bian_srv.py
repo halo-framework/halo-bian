@@ -927,7 +927,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         if self.service_configuration.get_configuration_setting(self.configuration_setting_id):
             self.service_configuration.get_configuration_setting(self.configuration_setting_id).set_value(param_type,param_value)
         self.service_state.set_new_state(self.service_state.Active)
-        self.servicing_session = BianServicingSession(self.center_id,self.service_id,self.service_configuration,self.service_state)
+        self.servicing_session = BianServicingSession(None,self.center_id,self.service_id,self.service_configuration,self.service_state)
         self.persist_servicing_session(bian_request,self.servicing_session)
         global global_service_session
         global_service_session = self.servicing_session
