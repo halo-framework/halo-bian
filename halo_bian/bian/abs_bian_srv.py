@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 #@todo support for microservices break down of service domain
 
 SESSION_ID = "session_id"
+STATE = "state"
 
 class AbsBianMixin(AbsApiMixinX):
     __metaclass__ = ABCMeta
@@ -938,6 +939,7 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         #dbaccess = self.get_dbaccess(bian_request)
         #dbaccess.save_servicing_session(servicing_session)
         set_app_param_config(settings.SSM_TYPE, SESSION_ID, self.get_session_id())
+        set_app_param_config(settings.SSM_TYPE, STATE, self.service_state.get_current_state().state_name)
         return
 
     def get_activation_id(self):
@@ -1198,14 +1200,33 @@ class BianGlobalService(GlobalService):
         except CacheKeyError as e:
             logger.debug(e.message)
         if settings.FUNC_NAME != settings.SERVICE_DOMAIN + '_service':
-            session_id = get_app_param_config(settings.SSM_TYPE, settings.SERVICE_DOMAIN + '_service',
-                                              SESSION_ID)
-            print("session_id=" + str(session_id))
-            if session_id:
-                global global_service_session
-                global_service_session = BianServicingSession(session_id)
+            try:
+                session_id = get_app_param_config(settings.SSM_TYPE, settings.SERVICE_DOMAIN + '_service',
+                                                  SESSION_ID)
+                print("session_id=" + str(session_id))
+                if session_id:
+                    global global_service_session
+                    global_service_session = BianServicingSession(session_id)
+            except CacheKeyError as e:
+                logger.debug(e.message)
+            try:
+                state = get_app_param_config(settings.SSM_TYPE, settings.SERVICE_DOMAIN + '_service',
+                                                      STATE)
+                print("state=" + str(state))
+                found = False
                 global global_service_state
-                global_service_state.set_new_state(global_service_state.Active)
+                for s in global_service_state.states:
+                    if s.state_name == state:
+                        global_service_state.set_new_state(s)
+                        found = True
+                if not found:
+                    if state == None:
+                        global_service_state.set_new_state(global_service_state.Idle)
+                    else:
+                        raise BianException("bad state :"+str(state))
+            except CacheKeyError as e:
+                global_service_state.set_new_state(global_service_state.Idle)
+                logger.debug(e.message)
 
     @staticmethod
     def get_service_properties():
