@@ -938,8 +938,12 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
         """Method documentation"""
         #dbaccess = self.get_dbaccess(bian_request)
         #dbaccess.save_servicing_session(servicing_session)
-        set_app_param_config(settings.SSM_TYPE, SESSION_ID, self.get_session_id())
-        set_app_param_config(settings.SSM_TYPE, STATE, self.service_state.get_current_state().state_name)
+        params = {}
+        params[SESSION_ID] = self.get_session_id()
+        params[STATE] = self.service_state.get_current_state().state_name
+        set_app_param_config(settings.SSM_TYPE, params)
+        #set_app_param_config(settings.SSM_TYPE, SESSION_ID, self.get_session_id())
+        #set_app_param_config(settings.SSM_TYPE, STATE, self.service_state.get_current_state().state_name)
         return
 
     def get_activation_id(self):
@@ -1041,7 +1045,10 @@ class ConfigurationAbsBianMixin(AbsBianSrvMixin):
         """Method documentation"""
         #dbaccess = self.get_dbaccess(bian_request)
         #dbaccess.save_servicing_session(servicing_session)
-        set_app_param_config(settings.SSM_TYPE, self.get_configuration_setting_id(), self.get_configuration_param())
+        params = {}
+        params[self.get_configuration_setting_id()] = self.get_configuration_param()
+        set_app_param_config(settings.SSM_TYPE,params)
+        #set_app_param_config(settings.SSM_TYPE, self.get_configuration_setting_id(), self.get_configuration_param())
         return
 
     def get_activation_id(self):

@@ -34,7 +34,9 @@ def register_halo(app):
             load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
                             app.config['API_CONFIG'])
             HALO_HOST = BaseUtil.get_host_name()
-            set_app_param_config(app.config['SSM_TYPE'], "url", set_host_param_config(HALO_HOST))
+            params = {}
+            params["url"] = set_host_param_config(HALO_HOST)
+            set_app_param_config(app.config['SSM_TYPE'], params)
         if 'INIT_DATA_MAP' in app.config and 'INIT_CLASS_NAME' in app.config:
             data_map = app.config['INIT_DATA_MAP']
             class_name = app.config['INIT_CLASS_NAME']
