@@ -10,8 +10,8 @@ requests==2.20.1
 environs
 python-json-logger
 PyJWT==1.6.3
-halo-flask==0.15.81
+halo-flask==0.15.82
 jsonpath-ng==1.4.3
 flask-executor==0.9.3
-halo_aws==0.11.29
+halo_aws==0.11.30
 boto3==1.7.16
