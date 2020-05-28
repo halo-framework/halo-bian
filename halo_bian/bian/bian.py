@@ -21,7 +21,10 @@ logger = logging.getLogger(__name__)
 #@todo life cycle for each type
 #@todo extension,anlytics,cloud
 #@todo add microservice support
-
+#@todo create saas implementation - json config files
+#@todo finish fargate deploy
+#@todo control,monitor,analytics
+#@todo ssm event processor,bian server cache
 
 class BianRequest(HaloRequest):
     action_term = None
