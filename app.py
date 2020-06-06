@@ -22,7 +22,7 @@ def create_app(config_object='settings'):
         from halo_flask.flask.viewsx import PerfLinkX,HealthLinkX,InfoLinkX#,TestLinkX
         #app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
-        app.add_url_rule("/info", view_func=AbsBianSrvMixin.as_view("info"))
+        app.add_url_rule("/info", view_func=InfoLinkX.as_view("info"))
         app.add_url_rule("/health", view_func=HealthLinkX.as_view("health"))
     api = Api(app, catch_all_404s=True)
     register_halo(app)

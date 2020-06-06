@@ -5,7 +5,7 @@ import uuid
 import os
 import json
 from datetime import datetime
-from halo_flask.classes import AbsBaseClass
+from halo_flask.classes import AbsBaseClass,ServiceInfo
 from halo_flask.request import HaloRequest
 from halo_flask.response import HaloResponse
 from halo_flask.flask.filter import RequestFilter
@@ -651,7 +651,7 @@ class BianContext(HaloContext):
 
 #bian services
 
-class BianServiceInfo(AbsBaseClass):
+class BianServiceInfo(ServiceInfo):
     # A Service Domain is a combination of a Functional Pattern and an Asset Type
 
     # The BIAN service domain name
@@ -668,6 +668,7 @@ class BianServiceInfo(AbsBaseClass):
     control_record = "undefined"
 
     def __init__(self, service_domain, asset_type, functional_pattern, generic_artifact, behavior_qualifier_type):
+        super(BianServiceInfo, self).__init__(settings.FUNC_NAME)
         self.service_domain = service_domain
         self.asset_type = asset_type
         self.functional_pattern = functional_pattern
@@ -701,6 +702,11 @@ class BianServiceInfo(AbsBaseClass):
 
     def get_control_record(self):
         return self.control_record
+
+class TheBianServiceInfo(BianServiceInfo):
+
+    def __init__(self):
+        super(TheBianServiceInfo, self).__init__(settings.SERVICE_DOMAIN, settings.ASSET_TYPE, settings.FUNCTIONAL_PATTERN, settings.GENERIC_ARTIFACT, settings.BEHAVIOR_QUALIFIER_TYPE)
 
 class BianServiceLifeCycleStates(LifeCycleStates):
     # active, suspended, idle
