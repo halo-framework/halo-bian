@@ -506,5 +506,6 @@ with open(file_path, 'r') as fb:
     SERVICE_DOMAINS = json.load(fb)
 
 SSM_TYPE="AWS"
+SERVICE_INFO_CLASS='halo_flask.flask.viewsx.InfoLinkX'
 
 print('The base settings file has been loaded. bian')

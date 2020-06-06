@@ -8,6 +8,7 @@ from halo_flask.ssm import set_app_param_config,set_host_param_config,get_app_pa
 from halo_flask.apis import load_api_config
 from halo_flask.flask.viewsx import load_global_data
 from halo_flask.base_util import BaseUtil
+from halo_bian.bian.abs_bian_srv import AbsBianSrvMixin
 
 def create_app(config_object='settings'):
     """An application factory, as explained here: http://flask.pocoo.org/docs/patterns/appfactories/.
@@ -18,10 +19,11 @@ def create_app(config_object='settings'):
 
     app.config.from_object(config_object)
     with app.app_context():
-        from halo_flask.flask.viewsx import PerfLinkX#,TestLinkX,
+        from halo_flask.flask.viewsx import PerfLinkX,HealthLinkX,InfoLinkX#,TestLinkX
         #app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
-        app.add_url_rule("/info", view_func=PerfLinkX.as_view("info"))
+        app.add_url_rule("/info", view_func=AbsBianSrvMixin.as_view("info"))
+        app.add_url_rule("/health", view_func=HealthLinkX.as_view("health"))
     api = Api(app, catch_all_404s=True)
     register_halo(app)
 
