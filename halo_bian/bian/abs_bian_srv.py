@@ -900,12 +900,12 @@ class AbsBianSrvMixin(AbsBianMixin):
 
     #service data
     service_configuration = None
-    bian_service_info = None
+    #bian_service_info = None
 
     def __init__(self):
         super(AbsBianSrvMixin, self).__init__()
         logger.debug("in __init__ ")
-        self.bian_service_info = BianServiceInfo(self.service_domain, self.asset_type, self.functional_pattern, self.generic_artifact, self.behavior_qualifier_type)
+        #self.bian_service_info = BianServiceInfo(self.service_domain, self.asset_type, self.functional_pattern, self.generic_artifact, self.behavior_qualifier_type)
         self.service_configuration = BianGlobalService.get_service_properties()
         self.service_state = BianGlobalService.get_service_state()
 
