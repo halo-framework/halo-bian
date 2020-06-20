@@ -26,7 +26,7 @@ fake = Faker()
 app = Flask(__name__)
 api = Api(app)
 
-class OutboundApi(AbsBaseApi):
+class OutboundApi(AbsRestApi):
     name = 'Outbound'
 
 class CAFeature(Feature):
@@ -54,6 +54,34 @@ class RequestFilterClearX(RequestFilterClear):
     def run(self):
         for event in self.eventx:
             logger.debug("insert_events_to_repository " + str(event.serialize()))
+
+
+class CnnApi(AbsRestApi):
+    name = 'Cnn'
+
+class GoogleApi(AbsRestApi):
+    name = 'Google'
+
+class TstApi(AbsRestApi):
+    name = 'Tst'
+
+class Tst2Api(AbsSoapApi):
+    name = 'Tst2'
+
+    def exec_soap(self,method,timeout, data=None, headers=None, auth=None):
+        if method == 'method1':
+            ret = self.client.service.Method1(data["first"], data['second'])
+        print(str(ret))
+        return {"msg":ret}
+
+class Tst3Api(AbsRestApi):
+    name = 'Tst3'
+
+class Tst4Api(AbsRestApi):
+    name = 'Tst4'
+
+
+
 
 class A1(AbsBianMixin):#the basic
     def set_back_api(self, halo_request, foi=None):
@@ -313,11 +341,27 @@ class TestUserDetailTestCase(unittest.TestCase):
     Tests /users detail operations.
     """
 
+    def start(self):
+        from halo_flask.const import LOC
+        app.config['ENV_TYPE'] = LOC
+        app.config['SSM_TYPE'] = "AWS"
+        app.config['FUNC_NAME'] = "FUNC_NAME"
+        #app.config['API_CONFIG'] =
+        app.config['AWS_REGION'] = 'us-east-1'
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            try:
+                load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
+                                app.config['API_CONFIG'])
+            except Exception as e:
+                eq_(e.__class__.__name__, "NoApiClassException")
     session_id = None
 
     def setUp(self):
         #app.config.from_pyfile('../settings.py')
         app.config.from_object('settings')
+        self.start()
+        self.test_0_get_request_returns_a_given_string()
+
 
     def test_00_get_request_returns_a_given_string(self):
         from halo_flask.flask.viewsx import load_global_data

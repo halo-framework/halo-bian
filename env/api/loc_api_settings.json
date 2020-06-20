@@ -1,62 +1,33 @@
 {
-  "About": {
-    "url": "http://127.0.0.1:7000/about/",
-    "type": "api"
-  },
-  "Task": {
-    "url": "http://127.0.0.1:7000/task/$upcid/",
-    "type": "api"
-  },
-  "Curr": {
-    "url": "http://127.0.0.1:7000/curr/",
-    "type": "api"
-  },
-  "Top": {
-    "url": "http://127.0.0.1:7000/top/",
-    "type": "api"
-  },
-  "Rupc": {
-    "url": "http://127.0.0.1:7000/upc/$upcid/",
-    "type": "api"
-  },
-  "Upc": {
-    "url": "http://127.0.0.1:7000/upc/$upcid/",
-    "type": "api"
-  },
-  "Contact": {
-    "url": "http://127.0.0.1:7000/contact/",
-    "type": "api"
-  },
-  "Fail": {
-    "url": "http://127.0.0.1:7000/fail/",
-    "type": "api"
-  },
-  "Rtask": {
-    "url": "http://127.0.0.1:7000/task/$upcid/",
-    "type": "api"
-  },
-  "Page": {
-    "url": "http://127.0.0.1:7000/page/$upcid/",
-    "type": "api"
-  },
-  "Sim": {
-    "url": "service://webback1/sim/",
-    "type": "service"
-  },
   "Google": {
-    "url": "https://www.google.com",
-    "type": "api"
+    "url": "http://www.yahoo.com",
+    "type": "api",
+    "class": "tests.tests_bian.GoogleApi"
   },
   "Cnn": {
-    "url": "https://www.cnn.com",
-    "type": "api"
+    "url": "http://www.cnn.com",
+    "type": "api",
+    "class": "tests.tests_bian.CnnApi"
   },
   "Tst": {
-    "url": "https://jsonplaceholder.typicode.com/todos/$ID",
-    "type": "api"
+    "url": "http://www.cnddmfgkkn.com",
+    "type": "api",
+    "class": "tests.tests_bian.TstApi"
+  },
+  "Tst1": {
+    "url": "http://127.0.0.1",
+    "type": "api",
+    "class": "tests.tests_bian.Tst1Api"
+  },
+  "Tst2": {
+    "url": "http://www.soapclient.com/xml/soapresponder.wsdl",
+    "type": "api",
+    "protocol": "soap",
+    "class": "tests.tests_bian.Tst2Api"
   },
   "Outbound": {
     "url": "https://base_url/$ID",
-    "type": "api"
+    "type": "api",
+    "class": "tests.tests_bian.OutboundApi"
   }
 }

@@ -1,16 +1,16 @@
 {
   "1": {
-    "name":"halo_flask.apis.CnnApi",
+    "name":"Cnn",
     "op":"GET",
     "conn":"sync"
   },
   "2":{
-    "name":"halo_flask.apis.GoogleApi",
+    "name":"Google",
     "op":"GET",
     "conn":"sync"
   },
   "3": {
-    "name":"bian.corespondance.Outbound",
+    "name":"Outbound",
     "op":"PUT",
     "conn":"sync"
   }

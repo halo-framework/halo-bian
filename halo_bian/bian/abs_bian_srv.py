@@ -780,6 +780,7 @@ class AbsBianMixin(AbsApiMixinX):
             return self.do_retrieve_bq(bian_request)
         return self.do_operation(bian_request)
 
+#@todo replace importlib with reflect
     def set_back_api(self, halo_request, foi=None):
         logger.debug("in set_back_api " + str(foi))
         if foi:
@@ -892,7 +893,8 @@ class AbsBianMixin(AbsApiMixinX):
         return self.process_service_operation(bian_action, bian_request, vars)
 
 #@TODO externelize all strings
-
+#@todo add log print of the method name and add x-header with method name to headers
+#@todo api finish authorization issues : curl -v -u "admin:secret" http://127.0.0.1:5000/secrets
 # service management
 
 class AbsBianSrvMixin(AbsBianMixin):
