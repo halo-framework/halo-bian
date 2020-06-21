@@ -26,6 +26,11 @@
     "class": "tests.tests_bian.Tst2Api"
   },
   "Outbound": {
+    "url": "https://www.cnn.com/$ID",
+    "type": "api",
+    "class": "tests.tests_bian.OutboundApi"
+  },
+  "Outbound1": {
     "url": "https://base_url/$ID",
     "type": "api",
     "class": "tests.tests_bian.OutboundApi"

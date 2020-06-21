@@ -484,7 +484,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_90_put_request_returns_a_given_string(self):
-        with app.test_request_context(method='PUT',path='/tst?name=1'):
+        with app.test_request_context(method='PUT',path='/tst?name=news'):
             self.a1 = A1()
             ret = self.a1.process_put(request, {})
             assert ret.code == status.HTTP_202_ACCEPTED
@@ -501,9 +501,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.a1.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
 
-
     def test_93_full_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=1'):
+        with app.test_request_context('/?name=news'):
             self.a2 = A2()
             ret = self.a2.process_get(request, {"cr_reference_id":"1"})
             assert ret.code == status.HTTP_200_OK
@@ -511,7 +510,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
 
     def test_94_request_returns_a_given_string(self):
-        with app.test_request_context('/x?name=1'):
+        with app.test_request_context('/x?name=news'):
             self.a4 = A4()
             ret = self.a4.process_get(request, {})
             assert ret.code == status.HTTP_200_OK
