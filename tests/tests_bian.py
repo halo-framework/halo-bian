@@ -68,11 +68,14 @@ class TstApi(AbsRestApi):
 class Tst2Api(AbsSoapApi):
     name = 'Tst2'
 
-    def exec_soap(self,method,timeout, data=None, headers=None, auth=None):
-        if method == 'method1':
-            ret = self.client.service.Method1(data["first"], data['second'])
-        print(str(ret))
-        return {"msg":ret}
+    def do_method1(self, timeout, data=None, headers=None, auth=None):
+        soap_ret = self.client.service.Method1(data["first"], data['second'])
+        print(str(soap_ret))
+        response = SoapResponse()
+        response.payload = {"msg": soap_ret}
+        response.status_code = 200
+        response.headers = {}
+        return response
 
 class Tst3Api(AbsRestApi):
     name = 'Tst3'
@@ -322,7 +325,19 @@ class A6(A5):
     def validate_post_depositsandwithdrawals_deposits(self,halo_request, halo_response):
         return
 
+class A7(AbsBianMixin):# the foi
+    def set_back_api(self,bian_request,foi=None):
+        print("in set_back_api ")
+        if foi:
+            return super(A4,self).set_back_api(bian_request,foi)
+        api = Tst2Api(bian_request.context)
+        api.set_api_url("ID", "1")
+        return api
 
+    def create_resp_payload(self,halo_request, dict):
+        print("in create_resp_payload")
+        json = dict['1']
+        return {"name":json["title"]}
 
 class X1(ActivationAbsBianMixin):
     pass
@@ -712,6 +727,16 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a6.bian_action = ActionTerms.EXECUTE
             try:
                 ret = self.a6.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2","bq_reference_id":"3","sbq_reference_id":"1"})
+            except Exception as e:
+                assert type(e).__name__ == "BianException"
+
+    def test_99981_request_sub_returns_a_response(self):
+        with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',headers={'x-bian-devparty': 'Your value'}):
+            app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
+            self.a7 = A7()
+            self.a7.bian_action = ActionTerms.EXECUTE
+            try:
+                ret = self.a7.process_put(request, {"sd_reference_id":"1","cr_reference_id":"2"})
             except Exception as e:
                 assert type(e).__name__ == "BianException"
 
