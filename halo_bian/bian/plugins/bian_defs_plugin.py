@@ -5,6 +5,7 @@ from halo_bian.bian.bian import FunctionalPatterns
 class BianPlugin():
 
     patterns = None
+    assets = None
 
     def __init__(self):
         self.do_patterns()
@@ -640,6 +641,7 @@ class BianPlugin():
         table["ECM/DCM"] = "ECM/DCM"
         table["Dealer Workbench"] = "TradingDesk"
         table["Credit Risk Operations"] = "TradingCreditPosition"
+        self.assets = table
 
     def ready(self):
         return True
@@ -649,15 +651,13 @@ class BianPlugin():
         record = core.record
         name = record["name"]
         fp = self.patterns[name]
-
-        if name == "current account":
-            at = "at"
-            fp = "fp"
-            ga = "ga"
-            bqt = "bqt"
-            bq = "bq"
-            sq = "sq"
-            cr = "cr"
+        at = self.assets[name]
+        array = FunctionalPatterns.patterns[fp]
+        ga = array[0]
+        bqt = array[1]
+        bq = "bq"
+        sq = "sq"
+        cr = at+ga
         defs = 'ASSET_TYPE = "'+at+'"\n'+\
         'FUNCTIONAL_PATTERN = FunctionalPatterns.'+fp+'\n'+\
         'GENERIC_ARTIFACT = "'+ga+'"\n'+\
