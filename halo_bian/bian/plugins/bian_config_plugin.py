@@ -650,36 +650,6 @@ class BianPlugin():
 
         record = core.record
         name = record["name"]
-        fp = self.patterns[name]
-        at = self.assets[name]
-        array = FunctionalPatterns.patterns[fp]
-        ga = array[0]
-        bqt = array[1]
-        bq = "bq"
-        sq = "sq"
-        cr = at+ga
-        defs = 'from halo_bian.bian.bian import FunctionalPatterns\n'+\
-        'ASSET_TYPE = "'+at+'"\n'+\
-        'FUNCTIONAL_PATTERN = FunctionalPatterns.'+fp+'\n'+\
-        'GENERIC_ARTIFACT = "'+ga+'"\n'+\
-        'BEHAVIOR_QUALIFIER_TYPE = "'+bqt+'"\n'+\
-        'BEHAVIOR_QUALIFIER = {'+bq+'}\n'+\
-        'SUB_QUALIFIER = {'+sq+'}\n'+\
-        'CONTROL_RECORD = "'+cr+'"\n'
-        conf = "\
-        # add to extend\
-        SERVICE_DOMAINS = None\
-        file_dir = os.path.dirname(__file__)\
-        file_path = os.path.join(file_dir, '..', '..', 'env', 'config', 'bian_sds.json')\
-        with open(file_path, 'r') as fb:\
-            SERVICE_DOMAINS = json.load(fb)\
-        BIAN_VER = '8'\
-        BIAN_API_VER = '2.0'\
-        SERVICE_DOMAIN = '" + name + "'\
-        HALO_CONTEXT_LIST = []\
-        HALO_CONTEXT_CLASS = 'halo_bian.bian.bian.BianContext'\
-        REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'\
-        REQUEST_FILTER_CLEAR_CLASS = None\
-        INIT_CLASS_NAME = 'halo_bian.bian.abs_bian_srv.BianGlobalService'"
+        conf = ""
 
-        return {"defs":defs+conf}
+        return {"conf":conf}
