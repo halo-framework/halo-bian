@@ -667,19 +667,19 @@ class BianPlugin():
         'SUB_QUALIFIER = {'+sq+'}\n'+\
         'CONTROL_RECORD = "'+cr+'"\n'
         conf = "\
-        # add to extend\
-        SERVICE_DOMAINS = None\
-        file_dir = os.path.dirname(__file__)\
-        file_path = os.path.join(file_dir, '..', '..', 'env', 'config', 'bian_sds.json')\
-        with open(file_path, 'r') as fb:\
-            SERVICE_DOMAINS = json.load(fb)\
-        BIAN_VER = '8'\
-        BIAN_API_VER = '2.0'\
-        SERVICE_DOMAIN = '" + name + "'\
-        HALO_CONTEXT_LIST = []\
-        HALO_CONTEXT_CLASS = 'halo_bian.bian.bian.BianContext'\
-        REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'\
-        REQUEST_FILTER_CLEAR_CLASS = None\
-        INIT_CLASS_NAME = 'halo_bian.bian.abs_bian_srv.BianGlobalService'"
+        # add to extend\n\
+        SERVICE_DOMAINS = None\n\
+        file_dir = os.path.dirname(__file__)\n\
+        file_path = os.path.join(file_dir, '..', '..', 'env', 'config', 'bian_sds.json')\n\
+        with open(file_path, 'r') as fb:\n\
+            SERVICE_DOMAINS = json.load(fb)\n\
+        BIAN_VER = '8'\n\
+        BIAN_API_VER = '2.0'\n\
+        SERVICE_DOMAIN = '" + name + "'\n\
+        HALO_CONTEXT_LIST = []\n\
+        HALO_CONTEXT_CLASS = 'halo_bian.bian.bian.BianContext'\n\
+        REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'\n\
+        REQUEST_FILTER_CLEAR_CLASS = None\n\
+        INIT_CLASS_NAME = 'halo_bian.bian.abs_bian_srv.BianGlobalService'\n"
 
         return {"defs":defs+conf}
