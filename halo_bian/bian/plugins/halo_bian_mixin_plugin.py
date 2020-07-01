@@ -7,8 +7,10 @@ class BianPlugin():
     def run(self,core,*params):
         if len(params) != 4:
             raise Exception("missing params:"+str(params))
-        imports = "from halo_bian.bian.exceptions import BianException\n\nfrom halo_bian.bian.bian import ActionTerms\n\nfrom botocore.exceptions import ClientError\n\n"
-        imports = imports + params[0]
+        init = "from halo_bian.bian.exceptions import BianException\n\nfrom halo_bian.bian.bian import ActionTerms\n\nfrom botocore.exceptions import ClientError\n\n"
+        imports = params[0]
+        if init not in imports:
+            imports = imports + init
         base_lib= params[1]
         base_class_name= params[2]
         name= params[3]
