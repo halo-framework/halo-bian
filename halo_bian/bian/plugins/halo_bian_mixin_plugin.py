@@ -5,8 +5,10 @@ class BianPlugin():
         return True
 
     def run(self,core,*params):
-
-        imports = params[0]
+        if len(params) != 4:
+            raise Exception("missing params:"+str(params))
+        imports = "from halo_bian.bian.exceptions import BianException\n\nfrom halo_bian.bian.bian import ActionTerms\n\nfrom botocore.exceptions import ClientError\n\n"
+        imports = imports + params[0]
         base_lib= params[1]
         base_class_name= params[2]
         name= params[3]
@@ -45,6 +47,6 @@ class BianPlugin():
             line3 = "class " + name + "Mixin(" + base_class_name + "):" + \
                     "\n\tbian_action = ActionTerms.RETRIEVE"
 
-        return {"imports":imports,"line3":line3}
+        return {"mixin":{"imports":imports,"code":line3}}
 
 

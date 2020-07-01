@@ -644,12 +644,18 @@ class BianPlugin():
         self.assets = table
 
     def ready(self):
-        return True
+        if self.assets and self.patterns:
+            return True
+        return False
 
     def run(self,core,*params):
-
         record = core.record
-        name = record["name"]
+        if not record:
+            raise Exception("no record")
+        if "name" in record:
+            name = record["name"]
+        else:
+            raise Exception("no name")
         fp = self.patterns[name]
         at = self.assets[name]
         array = FunctionalPatterns.patterns[fp]
