@@ -1,5 +1,5 @@
-from halo_bian.bian.bian import FunctionalPatterns
-
+import os
+import json
 
 
 class BianPlugin():
@@ -649,7 +649,39 @@ class BianPlugin():
     def run(self,core,*params):
 
         record = core.record
-        name = record["name"]
+        if not record:
+            raise Exception("no record")
+        if "wireframe" in record:
+            wireframe = record["wireframe"]
+        else:
+            raise Exception("no wireframe")
+        for name in wireframe:
+            sd = self.patterns
+
+        sds = {
+            "currentaccount": {
+                "sd_id": 1,
+                "details": {
+                    "role": "this is ...",
+                    "desc": "this is the desc",
+                    "url": "abc"
+                },
+                "api": {
+                    "Outbound": "tests.tests_bian.OutboundApi"
+                }
+            },
+            "corespondance": {
+                "sd_id": 2,
+                "details": {
+                    "role": "this is ...",
+                    "desc": "this is the desc",
+                    "url": "jsonplaceholder.typicode.com/todos"
+                },
+                "api": {
+                    "Outbound": "tests.tests_bian.OutboundApi"
+                }
+            }
+        }
 
 
         conf = ""

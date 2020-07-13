@@ -672,7 +672,7 @@ class BianPlugin():
         'BEHAVIOR_QUALIFIER = {'+bq+'}\n'+\
         'SUB_QUALIFIER = {'+sq+'}\n'+\
         'CONTROL_RECORD = "'+cr+'"\n'
-        conf = "\n\
+        conf = "\
         SERVICE_DOMAINS = None\n\
         file_dir = os.path.dirname(__file__)\n\
         file_path = os.path.join(file_dir, '..', '..', 'env', 'config', 'bian_sds.json')\n\

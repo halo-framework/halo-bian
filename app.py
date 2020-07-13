@@ -19,6 +19,7 @@ def create_app(config_object='settings'):
 
     app.config.from_object(config_object)
     with app.app_context():
+        #@todo add bian health and info mixins
         from halo_flask.flask.viewsx import PerfLinkX,HealthLinkX,InfoLinkX#,TestLinkX
         #app.add_url_rule("/", view_func=TestLinkX.as_view("member"))
         app.add_url_rule("/perf", view_func=PerfLinkX.as_view("perf"))
