@@ -346,7 +346,10 @@ class X2(ConfigurationAbsBianMixin):
     pass
 
 class X3(FeedbackAbsBianMixin):
-    pass
+    def persist_feedback_request(self,bian_request, servicing_session_id,cr_id,bq_id):
+        pass
+    def validate_req_depositsandwithdrawals(self,req):
+        pass
 
 class BianDbMixin(AbsBianDbMixin):
     pass
@@ -801,6 +804,12 @@ class TestUserDetailTestCase(unittest.TestCase):
           }
         }
         with app.test_request_context('/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',headers={'x-bian-devparty': 'Your value'},json=json):
+            from halo_flask.flask.viewsx import load_global_data
+            app.config['SSM_TYPE'] = "AWS"
+            app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
+            app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
+                "C:\\dev\\projects\\halo\\halo_bian\\halo_bian\\env\\config\\bian_setting_mapping.json"}
+            load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
             ret = self.x3.process_put(request, {"sd_reference_id":self.session_id})
