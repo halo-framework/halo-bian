@@ -7,7 +7,7 @@ import importlib
 from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_flask.flask.utilx import Util
-from halo_flask.flask.utilx import status
+from halo_flask.errors import status
 from halo_flask.logs import log_json
 from halo_flask.apis import AbsBaseApi
 from halo_flask.flask.mixinx import AbsApiMixinX
@@ -814,7 +814,7 @@ class AbsBianMixin(AbsApiMixinX):
         sd_class_name = sd_api_name[k + 1:]
         return sd_class_name,sd_module_name,sd_url
 
-    def set_api_vars(self, bian_request, seq=None, dict=None):
+    def set_api_vars(self, bian_request,api, seq=None, dict=None):
         logger.debug("in set_api_vars " + str(bian_request))
         ret = {}
         ret["sd_reference_id"] = bian_request.sd_reference_id

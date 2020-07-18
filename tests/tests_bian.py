@@ -7,7 +7,7 @@ from flask_restful import Api
 import json
 from nose.tools import eq_
 from halo_flask.exceptions import ApiError
-from halo_flask.flask.utilx import status
+from halo_flask.errors import status
 from halo_bian.bian.abs_bian_srv import AbsBianMixin,ActivationAbsBianMixin,ConfigurationAbsBianMixin,FeedbackAbsBianMixin
 from halo_bian.bian.db import AbsBianDbMixin
 from halo_bian.bian.exceptions import BianException,BianError
@@ -133,12 +133,12 @@ class A2(A1):# customized
                     raise BianError("missing value for query var name")
         return True
 
-    def set_api_headers(self,bian_request, seq=None, dict=None):
+    def set_api_headers(self,bian_request,api, seq=None, dict=None):
         print("in set_api_headers ")
         headers = {'Accept':'application/json'}
         return headers
 
-    def set_api_vars(self,bian_request, seq=None, dict=None):
+    def set_api_vars(self,bian_request,api, seq=None, dict=None):
         print("in set_api_vars " + str(bian_request))
         ret = {}
         name = bian_request.request.args['name']
@@ -149,7 +149,7 @@ class A2(A1):# customized
             ret["id"] = bian_request.cr_reference_id
         return ret
 
-    def set_api_auth(self,bian_request, seq=None, dict=None):
+    def set_api_auth(self,bian_request,api, seq=None, dict=None):
         print("in set_api_auth ")
         user = ''
         pswd = ''
@@ -222,12 +222,12 @@ class A3(AbsBianMixin):# the foi
         print("in set_back_api_deposit ")
         TstApi(bian_request.context)
 
-    def set_api_headers_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
+    def set_api_headers_depositsandwithdrawals(self, bian_request,api,foi=None,dict=None):
         print("in set_api_headers_deposit ")
         headers = {'Accept':'application/json'}
         return headers
 
-    def set_api_vars_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
+    def set_api_vars_depositsandwithdrawals(self, bian_request,api,foi=None,dict=None):
         print("in set_api_vars_deposit " + str(bian_request))
         ret = {}
         name = None
@@ -240,7 +240,7 @@ class A3(AbsBianMixin):# the foi
             ret["id"] = bian_request.cr_reference_id
         return ret
 
-    def set_api_auth_depositsandwithdrawals(self, bian_request,foi=None,dict=None):
+    def set_api_auth_depositsandwithdrawals(self, bian_request,api,foi=None,dict=None):
         print("in set_api_auth_deposit ")
         user = ''
         pswd = ''
@@ -258,13 +258,13 @@ class A3(AbsBianMixin):# the foi
                 raise BianException(e)
         return None
 
-    def create_resp_payload_depositsandwithdrawals(self, bian_request,dict):
-        print("in create_resp_payload_deposit " + str(dict))
-        if dict:
-            return self.map_from_json_depositsandwithdrawals(dict,{})
+    def create_resp_payload_depositsandwithdrawals(self, bian_request,create_resp_payloaddict):
+        print("in create_resp_payload_deposit " + str(create_resp_payloaddict))
+        if create_resp_payloaddict:
+            return self.map_from_json_depositsandwithdrawals(create_resp_payloaddict,{})
         return {}
 
-    def extract_json_depositsandwithdrawals(self,bian_request,back_json,foi=None):
+    def extract_json_depositsandwithdrawals(self,bian_request,api,back_json,foi=None):
         print("in extract_json_deposit")
         return {"title":"good"}
 
@@ -288,7 +288,7 @@ class A4(AbsBianMixin):# the foi
         api.set_api_url("ID", "1")
         return api
 
-    def create_resp_payload(self,halo_request, dict):
+    def create_resp_payload(self,halo_request, api,dict):
         print("in create_resp_payload")
         json = dict['1']
         return {"name":json["title"]}
@@ -307,16 +307,16 @@ class A6(A5):
         return
     def set_back_api_depositsandwithdrawals_deposits(self,bian_request):
         return
-    def set_api_headers_depositsandwithdrawals_deposits(self,bian_request):
+    def set_api_headers_depositsandwithdrawals_deposits(self,bian_request,api):
         return
-    def set_api_vars_depositsandwithdrawals_deposits(self,bian_request):
+    def set_api_vars_depositsandwithdrawals_deposits(self,bian_request,api):
         return
-    def set_api_auth_depositsandwithdrawals_deposits(self,bian_request):
+    def set_api_auth_depositsandwithdrawals_deposits(self,bian_request,api):
         return
     def execute_api_depositsandwithdrawals_deposits(self,bian_request, back_api, back_vars,
                                                                              back_headers, back_auth, back_data):
         return
-    def extract_json_depositsandwithdrawals_deposits(self,bian_request, back_response):
+    def extract_json_depositsandwithdrawals_deposits(self,bian_request, api,back_response):
         return
     def create_resp_payload_depositsandwithdrawals_deposits(self,bian_request, dict):
         return
@@ -334,7 +334,7 @@ class A7(AbsBianMixin):# the foi
         api.set_api_url("ID", "1")
         return api
 
-    def create_resp_payload(self,halo_request, dict):
+    def create_resp_payload(self,halo_request,api, dict):
         print("in create_resp_payload")
         json = dict['1']
         return {"name":json["title"]}
@@ -524,12 +524,6 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.payload["name"] == 'test'
 
 
-    def test_94_request_returns_a_given_string(self):
-        with app.test_request_context('/x?name=news'):
-            self.a4 = A4()
-            ret = self.a4.process_get(request, {})
-            assert ret.code == status.HTTP_200_OK
-            assert ret.payload["name"] == 'delectus aut autem'
 
     def test_95_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
