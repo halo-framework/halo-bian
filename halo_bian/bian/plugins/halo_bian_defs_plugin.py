@@ -666,25 +666,24 @@ class BianPlugin():
         cr = at+ga
         defs = 'from halo_bian.bian.bian import FunctionalPatterns\n'+\
         'ASSET_TYPE = "'+at+'"\n'+\
-        'FUNCTIONAL_PATTERN = FunctionalPatterns.'+fp+'\n'+\
+        'FUNCTIONAL_PATTERN = FunctionalPatterns.'+fp.upper()+'\n'+\
         'GENERIC_ARTIFACT = "'+ga+'"\n'+\
         'BEHAVIOR_QUALIFIER_TYPE = "'+bqt+'"\n'+\
         'BEHAVIOR_QUALIFIER = {'+bq+'}\n'+\
         'SUB_QUALIFIER = {'+sq+'}\n'+\
-        'CONTROL_RECORD = "'+cr+'"\n'
-        conf = "\
-        SERVICE_DOMAINS = None\n\
-        file_dir = os.path.dirname(__file__)\n\
-        file_path = os.path.join(file_dir, '..', '..', 'env', 'config', 'bian_sds.json')\n\
-        with open(file_path, 'r') as fb:\n\
-            SERVICE_DOMAINS = json.load(fb)\n\
-        BIAN_VER = '8'\n\
-        BIAN_API_VER = '2.0'\n\
-        SERVICE_DOMAIN = '" + name + "'\n\
-        HALO_CONTEXT_LIST = []\n\
-        HALO_CONTEXT_CLASS = 'halo_bian.bian.bian.BianContext'\n\
-        REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'\n\
-        REQUEST_FILTER_CLEAR_CLASS = None\n\
-        INIT_CLASS_NAME = 'halo_bian.bian.abs_bian_srv.BianGlobalService'\n"
+        'CONTROL_RECORD = "'+cr+'"\n'+\
+        'SERVICE_DOMAINS = None\n'+\
+        'file_dir = os.path.dirname(__file__)\n'+\
+        "file_path = os.path.join(file_dir, '..', '..', 'env', 'config', 'bian_sds.json')\n"+\
+        "with open(file_path, 'r') as fb:\n"+\
+        '    SERVICE_DOMAINS = json.load(fb)\n'+\
+        "BIAN_VER = '8'\n"+\
+        "BIAN_API_VER = '2.0'\n"+\
+        "SERVICE_DOMAIN = '" + name + "'\n"+\
+        "HALO_CONTEXT_LIST = []\n"+\
+        "HALO_CONTEXT_CLASS = 'halo_bian.bian.bian.BianContext'\n"+\
+        "REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'\n"\
+        "REQUEST_FILTER_CLEAR_CLASS = None\n"+\
+        "INIT_CLASS_NAME = 'halo_bian.bian.abs_bian_srv.BianGlobalService'\n"
 
-        return {"defs":defs+conf}
+        return {"defs":defs}

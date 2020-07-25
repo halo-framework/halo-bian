@@ -3,22 +3,20 @@
     "sd_id": 1,
     "details": {
       "role":"this is ...",
-      "desc": "this is the desc",
-      "url":"abc"
+      "desc": "this is the desc"
     },
     "api":{
-      "Outbound":"tests.tests_bian.OutboundApi"
+      "Outbound1":""
     }
   },
   "corespondance": {
     "sd_id": 2,
     "details": {
       "role":"this is ...",
-      "desc": "this is the desc",
-      "url":"jsonplaceholder.typicode.com/todos"
+      "desc": "this is the desc"
     },
     "api":{
-      "Outbound":"tests.tests_bian.OutboundApi"
+      "Outbound2":""
     }
   }
 }
