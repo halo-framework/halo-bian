@@ -1,0 +1,120 @@
+[
+  {
+    "scenarioHeader": "Initiate Servicing Session for Access Attempt with Stolen/Cancelled Token/Device",
+    "scenarioName": "Contact DialogueInvocationInitiate Servicing Session for Access Attempt with Stolen/Cancelled Token/Device",
+    "type": "Invocation",
+    "primaryServiceDomainName": "Contact Dialogue",
+    "purposeText": "To reject a request for a servicing session with a stolen/cancelled token/device",
+    "preconditionText": "Request from Contact Handler",
+    "postconditionText": "Request rejected returned to Contact Handler",
+    "excludedActivitiesText": "",
+    "scenarioSteps": [
+      {
+        "senderServiceDomainName": "Contact Handler",
+        "receiverServiceDomainName": "Contact Dialogue",
+        "actionTerm": "Execute",
+        "purposeOfCallText": "Initiate Servicing Session",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Contact Dialogue",
+        "receiverServiceDomainName": "Customer Workbench",
+        "actionTerm": "Execute",
+        "purposeOfCallText": "Get Customer Details ",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Contact Dialogue",
+        "receiverServiceDomainName": "Party Data Management",
+        "actionTerm": "Retrieve",
+        "purposeOfCallText": "Retrieve Customer Data",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Contact Dialogue",
+        "receiverServiceDomainName": "Customer Workbench",
+        "actionTerm": "Execute",
+        "purposeOfCallText": "Get Customer Password and Device ID ",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Contact Dialogue",
+        "receiverServiceDomainName": "Party Authentication",
+        "actionTerm": "Evaluate",
+        "purposeOfCallText": "Verify Password and Device ID ",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Contact Dialogue",
+        "receiverServiceDomainName": "Fraud/AML Resolution",
+        "actionTerm": "Request",
+        "purposeOfCallText": "Initiate Fraud Case ",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Contact Dialogue",
+        "receiverServiceDomainName": "Contact Dialogue",
+        "actionTerm": "Execute",
+        "purposeOfCallText": "Set Contact Request to Rejected ",
+        "messageTransmissionKind": "RequestAndHold"
+      }
+    ],
+    "workingGroup": "Semantic API",
+    "registered": false,
+    "registeredBy": "",
+    "registeredDate": "",
+    "updatedDate": "2018-01-25T13:22:08.413Z"
+  },
+  {
+    "scenarioHeader": "Complete Consumer Loan Origination Process",
+    "scenarioName": "Customer OfferInvocationComplete Consumer Loan Origination Process",
+    "type": "Invocation",
+    "primaryServiceDomainName": "Customer Offer",
+    "purposeText": "To complete the loan origination process and intiate loan setup",
+    "preconditionText": "Offer process audited",
+    "postconditionText": "loan setup initiated",
+    "excludedActivitiesText": "",
+    "scenarioSteps": [
+      {
+        "senderServiceDomainName": "Customer Offer",
+        "receiverServiceDomainName": "Customer Offer",
+        "actionTerm": "Execute",
+        "purposeOfCallText": "Offer Processing Continues ",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Customer Offer",
+        "receiverServiceDomainName": "Credit Management",
+        "actionTerm": "Record",
+        "purposeOfCallText": "Add Asset to Credit View",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Customer Offer",
+        "receiverServiceDomainName": "Corporate Treasury",
+        "actionTerm": "Record",
+        "purposeOfCallText": "Book Asset on Balance Sheet",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Customer Offer",
+        "receiverServiceDomainName": "Customer Product/Service Eligibility",
+        "actionTerm": "Record",
+        "purposeOfCallText": "Rcord New Product Status",
+        "messageTransmissionKind": "RequestAndHold"
+      },
+      {
+        "senderServiceDomainName": "Customer Offer",
+        "receiverServiceDomainName": "Consumer Loan",
+        "actionTerm": "Execute",
+        "purposeOfCallText": "Initiate Setup",
+        "messageTransmissionKind": "RequestAndHold"
+      }
+    ],
+    "workingGroup": "Semantic API",
+    "registered": false,
+    "registeredBy": "",
+    "registeredDate": "",
+    "updatedDate": "2018-02-05T10:47:56.500Z"
+  }
+]

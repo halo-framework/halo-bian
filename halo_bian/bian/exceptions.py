@@ -36,6 +36,9 @@ class ServiceDomainNameException(BianException):
 class AssetTypeNameException(BianException):
     pass
 
+class OrchException(BianException):
+    pass
+
 class FunctionalPatternNameException(BianException):
     pass
 

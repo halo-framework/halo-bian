@@ -505,6 +505,12 @@ file_path = os.path.join(file_dir,'env','config', 'bian_sds.json')
 with open(file_path, 'r') as fb:
     SERVICE_DOMAINS = json.load(fb)
 
+BIAN_FOI_SCENARIOS = None
+file_dir = os.path.dirname(__file__)
+file_path = os.path.join(file_dir,'env','config', 'bian_foi.json')
+with open(file_path, 'r') as fb:
+    BIAN_FOI_SCENARIOS = json.load(fb)
+
 SSM_TYPE="AWS"
 SERVICE_INFO_CLASS='halo_bian.bian.bian.TheBianServiceInfo'
 
