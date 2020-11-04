@@ -5,11 +5,11 @@ import uuid
 import os
 import json
 from datetime import datetime
-from halo_flask.classes import AbsBaseClass,ServiceInfo
-from halo_flask.request import HaloRequest
-from halo_flask.response import HaloResponse
-from halo_flask.flask.filter import RequestFilter
-from halo_flask.settingsx import settingsx
+from halo_app.classes import AbsBaseClass,ServiceInfo
+from halo_app.request import HaloRequest
+from halo_app.response import HaloResponse
+from halo_app.app.filter import RequestFilter
+from halo_app.settingsx import settingsx
 from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException,NoServiceConfigurationMappingException
 
 settings = settingsx()
@@ -621,7 +621,7 @@ class FunctionalPatterns(AbsBaseClass):
 
 #Capture service operation connections – The service operation connections for each business event
 # Finance Context - Multi 10
-from halo_flask.request import HaloContext
+from halo_app.request import HaloContext
 class BianContext(HaloContext):
     COMPANY = "Company"
     OPERATIONAL_ENTITY = "Operational Entity"

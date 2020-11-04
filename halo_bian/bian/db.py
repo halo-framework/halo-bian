@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from halo_flask.models import AbsDbMixin
+from halo_app.models import AbsDbMixin
 
 
 class AbsBianDbMixin(AbsDbMixin):

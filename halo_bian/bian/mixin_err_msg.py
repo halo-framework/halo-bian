@@ -6,9 +6,9 @@ import datetime
 import json
 # aws
 # common
-from halo_flask.const import HTTPChoice
-from halo_flask.exceptions import HaloException
-from halo_flask.mixin_err_msg import ErrorMessages
+from halo_app.const import HTTPChoice
+from halo_app.exceptions import HaloException
+from halo_app.mixin_err_msg import ErrorMessages
 
 
 

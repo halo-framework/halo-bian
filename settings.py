@@ -4,7 +4,7 @@
 import json
 import os
 from environs import Env
-from halo_flask.const import LOC,DEV,TST,PRD
+from halo_app.const import LOC,DEV,TST,PRD
 
 print("start base")
 

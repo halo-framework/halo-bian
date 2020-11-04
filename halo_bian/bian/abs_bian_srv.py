@@ -4,22 +4,22 @@ import re
 import logging
 from abc import ABCMeta,abstractmethod
 import importlib
-from halo_flask.exceptions import ApiError,HaloMethodNotImplementedException
-from halo_flask.flask.mixinx import AbsBaseMixinX as AbsBaseMixin
-from halo_flask.flask.utilx import Util
-from halo_flask.errors import status
-from halo_flask.logs import log_json
-from halo_flask.apis import AbsBaseApi
-from halo_flask.flask.mixinx import AbsApiMixinX
-from halo_flask.flask.filter import RequestFilter
-from halo_flask.reflect import Reflect
-from halo_flask.settingsx import settingsx
-from halo_flask.models import AbsDbMixin
+from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
+from halo_app.app.mixinx import AbsBaseMixinX as AbsBaseMixin
+from halo_app.app.utilx import Util
+from halo_app.errors import status
+from halo_app.logs import log_json
+from halo_app.apis import AbsBaseApi
+from halo_app.app.mixinx import AbsApiMixinX
+from halo_app.app.filter import RequestFilter
+from halo_app.reflect import Reflect
+from halo_app.settingsx import settingsx
+from halo_app.models import AbsDbMixin
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
-from halo_flask.ssm import get_app_config
-from halo_flask.exceptions import CacheKeyError
-from halo_flask.ssm import set_app_param_config,get_app_param_config
+from halo_app.ssm import get_app_config
+from halo_app.exceptions import CacheKeyError
+from halo_app.ssm import set_app_param_config,get_app_param_config
 
 settings = settingsx()
 
@@ -792,13 +792,13 @@ class AbsBianMixin(AbsApiMixinX):
             module = importlib.import_module(sd_module_name)
             class_ = getattr(module, sd_class_name)
             if not issubclass(class_, AbsBaseApi):
-                from halo_flask.exceptions import ApiClassErrorException
+                from halo_app.exceptions import ApiClassErrorException
                 raise ApiClassErrorException(sd_class_name)
             instance = class_(halo_request.context)
             instance.op = foi_op
             instance.set_api_base(sd_base_url)
             return instance
-        from halo_flask.exceptions import NoApiClassException
+        from halo_app.exceptions import NoApiClassException
         raise NoApiClassException("api class not defined")
 
     def get_api_from_sd(self, foi_name):
@@ -1168,7 +1168,7 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
         dict = {'1': payload}
         return dict
 
-from halo_flask.flask.viewsx import GlobalService
+from halo_app.app.viewsx import GlobalService
 global_service_state = None
 global_service_props = None
 global_service_session = None

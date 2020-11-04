@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
-from halo_flask.classes import AbsBaseClass
-from halo_flask.models import AbsDbMixin
+from halo_app.classes import AbsBaseClass
+from halo_app.models import AbsDbMixin
 
 
 class AbsBianFilter(AbsBaseClass):

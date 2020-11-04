@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
-from halo_flask.settingsx import settingsx
-from halo_flask.classes import AbsBaseClass
+from halo_app.settingsx import settingsx
+from halo_app.classes import AbsBaseClass
 from .exceptions import OrchException
 
 settings = settingsx()
