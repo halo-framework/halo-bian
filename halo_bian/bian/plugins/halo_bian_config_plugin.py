@@ -667,7 +667,7 @@ class BianPlugin():
                     "url": "abc"
                 },
                 "api": {
-                    "Outbound": "tests.tests_bian.OutboundApi"
+                    "Outbound": "tests.test_bian.OutboundApi"
                 }
             },
             "corespondance": {
@@ -678,7 +678,7 @@ class BianPlugin():
                     "url": "jsonplaceholder.typicode.com/todos"
                 },
                 "api": {
-                    "Outbound": "tests.tests_bian.OutboundApi"
+                    "Outbound": "tests.test_bian.OutboundApi"
                 }
             }
         }

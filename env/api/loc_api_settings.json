@@ -2,37 +2,37 @@
   "Google": {
     "url": "http://www.yahoo.com",
     "type": "api",
-    "class": "tests.tests_bian.GoogleApi"
+    "class": "tests.test_bian.GoogleApi"
   },
   "Cnn": {
     "url": "http://www.cnn.com",
     "type": "api",
-    "class": "tests.tests_bian.CnnApi"
+    "class": "tests.test_bian.CnnApi"
   },
   "Tst": {
     "url": "http://www.cnddmfgkkn.com",
     "type": "api",
-    "class": "tests.tests_bian.TstApi"
+    "class": "tests.test_bian.TstApi"
   },
   "Tst1": {
     "url": "http://127.0.0.1",
     "type": "api",
-    "class": "tests.tests_bian.Tst1Api"
+    "class": "tests.test_bian.Tst1Api"
   },
   "Tst2": {
     "url": "http://www.soapclient.com/xml/soapresponder.wsdl",
     "type": "api",
     "protocol": "soap",
-    "class": "tests.tests_bian.Tst2Api"
+    "class": "tests.test_bian.Tst2Api"
   },
   "Outbound": {
     "url": "https://www.cnn.com/$ID",
     "type": "api",
-    "class": "tests.tests_bian.OutboundApi"
+    "class": "tests.test_bian.OutboundApi"
   },
   "Outbound1": {
     "url": "https://base_url/$ID",
     "type": "api",
-    "class": "tests.tests_bian.OutboundApi"
+    "class": "tests.test_bian.OutboundApi"
   }
 }
