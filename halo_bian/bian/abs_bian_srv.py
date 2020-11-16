@@ -414,7 +414,8 @@ class AbsBianMixin(AbsApiMixinX):
             self.validate_filter_key_values()
             self.validate_filter_chars()
             self.validate_collection_filter(bian_request)
-            self.validate_service_state(bian_request)
+            if settings.SERVICING_SESSION:
+                self.validate_service_state(bian_request)
             return True
         raise BadBianRequestError("no Bian Request")
 
