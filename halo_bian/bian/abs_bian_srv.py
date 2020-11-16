@@ -370,7 +370,7 @@ class AbsBianMixin(AbsApiMixinX):
             ret = arr
         return ret
 
-    def bian_validate_req(self, action: ActionTerms, vars) -> BianRequest:
+    def bian_validate_req(self, method,action: ActionTerms, vars) -> BianRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         action_term = action
         if action_term not in ActionTerms.ops:
@@ -402,7 +402,7 @@ class AbsBianMixin(AbsApiMixinX):
         #for i in settings.BIAN_CONTEXT_LIST:
         #    if i not in context.keys():
         #        raise MissingBianContextException(i)
-        return BianRequest(action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
+        return BianRequest(method,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
