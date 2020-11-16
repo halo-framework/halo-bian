@@ -329,72 +329,6 @@ class AbsBianMixin(AbsApiMixinX):
                 return bq_str.strip().replace("-","_").replace(" ","_")
         raise IllegalBQIdError(bq_id)
 
-    def get_behavior_qualifier_from_path(self, op, request,bq_ref_id):
-        tokens = self.get_path_tokens(request)
-        if bq_ref_id in tokens:
-            bqt_obj = self.behavior_qualifier_type
-            idx = 0
-            for item in tokens:
-                if item == bq_ref_id:
-                    if idx > 0:
-                        bq_name = tokens[idx-1]
-                        for bq_id in bqt_obj.keys():
-                            bq_obj = bqt_obj.get(bq_id)
-                            if bq_obj.name.lower() == bq_name.lower().strip().replace("-","_").replace(" ","_"):
-                                return bq_name
-                idx = idx + 1
-        raise IllegalBQError(bq_ref_id)
-
-    def get_sub_qualifiers(self,request, bq, vars):
-        sub = "s"
-        sub_qualifiers = {}
-        bqri = "bq_reference_id"
-        bqt_obj = self.behavior_qualifier_type
-        for item in bqt_obj.keys():
-            bq_obj = bqt_obj.get(item)
-            if bq.lower() == bq_obj.name.lower():
-                tokens = self.get_path_tokens(request)
-                for token in tokens:
-                    for key in bq_obj.sub_qualifiers:
-                        if key.lower() == token.lower():
-                            count = 0
-                            while (count < bq_obj.qualifiers_depth):
-                                bqri = sub + bqri
-                                if bq_obj.sub_qualifiers:
-                                    sub_qualifier_name = key
-                                    if bqri in vars:
-                                        sbq_reference_id = vars[bqri]
-                                        sub_qualifiers[sub_qualifier_name] = sbq_reference_id
-                                count = count + 1
-        return sub_qualifiers
-
-    def get_path_tokens(self,request):
-        """
-
-        :param request:
-        :return:
-        """
-        tokens = request.path.split("/")
-        return tokens
-
-    """
-
-    request.method:              GET
-    request.url:                 http://127.0.0.1:5000/alert/dingding/test?x=y
-    request.base_url:            http://127.0.0.1:5000/alert/dingding/test
-    request.url_charset:         utf-8
-    request.url_root:            http://127.0.0.1:5000/
-    str(request.url_rule):       /alert/dingding/test
-    request.host_url:            http://127.0.0.1:5000/
-    request.host:                127.0.0.1:5000
-    request.script_root:
-    request.path:                /alert/dingding/test
-    request.full_path:           /alert/dingding/test?x=y
-
-    request.args:                ImmutableMultiDict([('x', 'y')])
-    request.args.get('x'):       y
-
-    """
 
     def get_collection_filter(self, collection_filter):
         ret = None
@@ -436,7 +370,7 @@ class AbsBianMixin(AbsApiMixinX):
             ret = arr
         return ret
 
-    def bian_validate_req(self, action: ActionTerms, request, vars) -> BianRequest:
+    def bian_validate_req(self, action: ActionTerms, vars) -> BianRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         action_term = action
         if action_term not in ActionTerms.ops:
@@ -457,18 +391,18 @@ class AbsBianMixin(AbsApiMixinX):
             behavior_qualifier = self.get_behavior_qualifier(action_term, vars["behavior_qualifier"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
-            behavior_qualifier = self.get_behavior_qualifier_from_path(action_term,request,bq_reference_id)
+            behavior_qualifier = self.get_behavior_qualifier_from_path(action_term,bq_reference_id)
         if "sbq_reference_id" in vars:
-            sub_qualifiers = self.get_sub_qualifiers(request,behavior_qualifier, vars)
-        if "collection-filter" in request.args:
-            collection_filter = self.get_collection_filter(request.args["collection-filter"])
-        if "queryparams" in request.args:
-            query_params = self.get_query_params(request.args["queryparams"])
+            sub_qualifiers = self.get_sub_qualifiers(behavior_qualifier, vars)
+        if "collection-filter" in vars:
+            collection_filter = vars["collection-filter"]
+        if "queryparams" in vars:
+            query_params = vars["queryparams"]
         #context = self.init_ctx(request)
         #for i in settings.BIAN_CONTEXT_LIST:
         #    if i not in context.keys():
         #        raise MissingBianContextException(i)
-        return BianRequest(action_term, request,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
+        return BianRequest(action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -855,42 +789,13 @@ class AbsBianMixin(AbsApiMixinX):
        self.set_businss_event(request, event_category)
 
 
-    #this is the http part
-
-    def process_get(self, request, vars):
+    def process(self,method,vars):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        bian_action = self.get_bian_action(ActionTerms.RETRIEVE)
-        bian_request = self.bian_validate_req(bian_action, request, vars)
+        bian_action = self.get_bian_action(self.bian_action)
+        bian_request = self.bian_validate_req(method,bian_action, vars)
         self.set_bian_businss_event(bian_request, bian_action)
         return self.process_service_operation(bian_action, bian_request, vars)
 
-    def process_post(self, request, vars):
-        logger.debug("in process_post " + str(vars))
-        bian_action = self.get_bian_action(ActionTerms.CREATE)
-        bian_request = self.bian_validate_req(bian_action, request, vars)
-        self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, bian_request, vars)
-
-    def process_put(self, request, vars):
-        logger.debug("in process_put " + str(vars))
-        bian_action = self.get_bian_action(ActionTerms.UPDATE)
-        bian_request = self.bian_validate_req(bian_action, request, vars)
-        self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, bian_request, vars)
-
-    def process_patch(self, request, vars):
-        logger.debug("in process_patch " + str(vars))
-        bian_action = self.get_bian_action(ActionTerms.UPDATE)
-        bian_request = self.bian_validate_req(bian_action, request, vars)
-        self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, bian_request, vars)
-
-    def process_delete(self, request, vars):
-        logger.debug("in process_delete " + str(vars))
-        bian_action = self.get_bian_action(ActionTerms.CONTROL)
-        bian_request = self.bian_validate_req(bian_action, request, vars)
-        self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, bian_request, vars)
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers

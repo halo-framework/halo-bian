@@ -432,13 +432,13 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.x1.bian_action = ActionTerms.ACTIVATE
             self.x1.functional_pattern = FunctionalPatterns.FULFILL
             self.x1.filter_separator = ";"
-            ret = self.x1.process_post(request, {})
+            ret = self.x1.process("X", {})
             assert ret.code == status.HTTP_200_OK
 
     def test_1_get_request_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             self.a1 = A1()
-            ret = self.a1.process_get(request, {})
+            ret = self.a1.process("x", {})
             assert ret.code == status.HTTP_200_OK
 
     def test_2_get_request_with_ref_returns_a_given_string(self):
@@ -472,7 +472,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST',path='/tst'):
             self.a1 = A1()
             try:
-                ret = self.a1.process_post(request, {})
+                ret = self.a1.process({})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
@@ -482,7 +482,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST',path='/'):
             self.a1 = A1()
             try:
-                ret = self.a1.process_post(request, {})
+                ret = self.a1.process( {})
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
@@ -492,25 +492,25 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(method='POST',path='/?name=Peter'):
             self.a1 = A1()
             self.a1.bian_action = ActionTerms.INITIATE
-            ret = self.a1.process_post(request, {})
+            ret = self.a1.process( {})
             assert ret.code == status.HTTP_201_CREATED
 
     def test_8_patch_request_returns_a_given_string(self):
         with app.test_request_context(method='PATCH',path='/?name=Peter'):
             self.a1 = A1()
-            ret = self.a1.process_patch(request, {})
+            ret = self.a1.process( {})
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_90_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT',path='/tst?name=news'):
             self.a1 = A1()
-            ret = self.a1.process_put(request, {})
+            ret = self.a1.process( {})
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE',path='/tst'):
             self.a1 = A1()
-            ret = self.a1.process_delete(request, {})
+            ret = self.a1.process( {})
             assert ret.code == status.HTTP_200_OK
 
     def test_92_get_request_returns_a_given_stringx_for_test(self):
@@ -547,7 +547,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             self.a3.filter_separator = ";"
-            ret = self.a3.process_post(request, {})
+            ret = self.a3.process( {})
             assert ret.request.collection_filter[0] == "amount>100"
             assert ret.request.collection_filter[1] == "user = 100"
             assert ret.request.collection_filter[2] == "page_no = 2"

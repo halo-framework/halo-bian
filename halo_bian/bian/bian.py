@@ -37,8 +37,8 @@ class BianRequest(HaloRequest):
     sub_qualifiers = None
 
 
-    def __init__(self, action_term, request, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None,sub_qualifiers=None):
-        super(BianRequest,self).__init__(request,self.get_bq_func_name(behavior_qualifier,sub_qualifiers))
+    def __init__(self, method,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,query_params=None,sub_qualifiers=None):
+        super(BianRequest,self).__init__(method,self.get_bq_func_name(behavior_qualifier,sub_qualifiers))
         self.action_term = action_term
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
