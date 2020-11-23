@@ -97,11 +97,11 @@ class AbsBianMixin(AbsApiMixinX):
             self.cr_reference_id_mask = settings.CR_REFERENCE_ID_MASK
         if settings.BQ_REFERENCE_ID_MASK:
             self.bq_reference_id_mask = settings.BQ_REFERENCE_ID_MASK
-
-        self.service_state = BianGlobalService.get_service_state()
-        if not self.service_state:
-            raise ServiceStateException("missing service state")
-        self.servicing_session = BianGlobalService.get_service_session()
+        if settings.SERVICING_SESSION:
+            self.service_state = BianGlobalService.get_service_state()
+            if not self.service_state:
+                raise ServiceStateException("missing service state")
+            self.servicing_session = BianGlobalService.get_service_session()
 
     def get_filter_char(self,bian_request, item):
         the_filter_chars = self.get_filter_chars(bian_request)
@@ -371,7 +371,7 @@ class AbsBianMixin(AbsApiMixinX):
             ret = arr
         return ret
 
-    def bian_validate_req(self, method,action: ActionTerms, vars) -> BianRequest:
+    def bian_validate_req(self, method,action: ActionTerms, vars,headers) -> BianRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         action_term = action
         if action_term not in ActionTerms.ops:
@@ -403,7 +403,7 @@ class AbsBianMixin(AbsApiMixinX):
         #for i in settings.BIAN_CONTEXT_LIST:
         #    if i not in context.keys():
         #        raise MissingBianContextException(i)
-        return BianRequest(method,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
+        return BianRequest(method,vars,headers,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -425,7 +425,10 @@ class AbsBianMixin(AbsApiMixinX):
         filter.set(self)
         return filter
 
-    def process_ok(self, response):
+    def process_ok(self, halo_response):
+        return halo_response
+
+    def process_ok1(self, response):
         if response:
             if response.request:
                 if response.request.request:
@@ -791,10 +794,10 @@ class AbsBianMixin(AbsApiMixinX):
        self.set_businss_event(request, event_category)
 
 
-    def process(self,method,vars):
+    def process(self,method,vars={},headers={}):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
         bian_action = self.get_bian_action(self.bian_action)
-        bian_request = self.bian_validate_req(method,bian_action, vars)
+        bian_request = self.bian_validate_req(method,bian_action, vars,headers)
         self.set_bian_businss_event(bian_request, bian_action)
         return self.process_service_operation(bian_action, bian_request, vars)
 
@@ -825,7 +828,9 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
     bian_action = ActionTerms.ACTIVATE
 
     def process_request(self, bian_request):
-        data = bian_request.request.get_json()
+        data = {}
+        if 'body' in bian_request.vars:
+            data = bian_request.vars['body']
         self.center_id = data["serviceDomainCenterReference"]
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][

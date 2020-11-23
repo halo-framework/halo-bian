@@ -33,7 +33,7 @@ ENV_TYPE = LOC
 
 FUNC_NAME = 'sdapi'
 APP_NAME = 'sdapp'
-
+SERVICING_SESSION = False
 SERVER_LOCAL = env.bool('SERVER_LOCAL', default=False)
 DB_URL = env.str('DYNAMODB_URL')
 SECRET_JWT_KEY = env.str('SECRET_JWT_KEY')
