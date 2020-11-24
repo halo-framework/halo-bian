@@ -14,7 +14,7 @@ setup(
     name='halo-bian',
     version='0.12.7',
     packages=['halo_bian', 'halo_bian.bian','halo_bian.bian.plugins','docs'],
-    url='https://github.com/halo-framework/halo-app',
+    url='https://github.com/halo-framework/halo-bian',
     license='MIT License',
     author='halo-framework',
     author_email='halo-framework@gmail.com',
