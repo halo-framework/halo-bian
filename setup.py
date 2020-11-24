@@ -12,12 +12,12 @@ with open("README.md", "r") as fh:
 
 setup(
     name='halo-bian',
-    version='0.12.6',
+    version='0.12.7',
     packages=['halo_bian', 'halo_bian.bian','halo_bian.bian.plugins','docs'],
-    url='https://github.com/yoramk2/halo_bian',
+    url='https://github.com/halo-framework/halo-app',
     license='MIT License',
-    author='yoramk2',
-    author_email='yoramk2@yahoo.com',
+    author='halo-framework',
+    author_email='halo-framework@gmail.com',
     description='this is the Halo Bian library',
     long_description=long_description,
     long_description_content_type="text/markdown",
