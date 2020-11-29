@@ -12,7 +12,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='halo-bian',
-    version='0.12.7',
+    version='0.12.8',
     packages=['halo_bian', 'halo_bian.bian','halo_bian.bian.plugins','docs'],
     url='https://github.com/halo-framework/halo-bian',
     license='MIT License',
@@ -23,11 +23,9 @@ setup(
     long_description_content_type="text/markdown",
     classifiers=[
         'Environment :: Console',
-        'License :: OSI Approved :: Apache Software License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
-        'Framework :: Flask',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ]

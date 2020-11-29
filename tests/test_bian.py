@@ -14,7 +14,7 @@ app = Flask(__name__)
 with app.app_context():
     from halo_bian.bian.abs_bian_srv import AbsBianMixin, ActivationAbsBianMixin, ConfigurationAbsBianMixin,FeedbackAbsBianMixin
     from halo_bian.bian.db import AbsBianDbMixin
-    from halo_app.app.filter import RequestFilterClear
+    from halo_app.app.filterx import RequestFilterClear
     from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianContext, BianRequestFilter, FunctionalPatterns
     from halo_app.exceptions import ApiError
     from halo_app.errors import status

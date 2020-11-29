@@ -11,7 +11,7 @@ from halo_app.errors import status
 from halo_app.logs import log_json
 from halo_app.apis import AbsBaseApi
 from halo_app.app.mixinx import AbsApiMixinX
-from halo_app.app.filter import RequestFilter
+from halo_app.app.filterx import RequestFilter
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 from halo_app.models import AbsDbMixin

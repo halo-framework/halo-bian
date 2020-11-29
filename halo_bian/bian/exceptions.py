@@ -68,3 +68,6 @@ class NoServiceConfigurationMappingException(BianException):
 
 class BianApiException(BianException):
     pass
+
+class CollectionFilterException(BianException):
+    pass

@@ -8,7 +8,7 @@ from datetime import datetime
 from halo_app.classes import AbsBaseClass,ServiceInfo
 from halo_app.request import HaloRequest
 from halo_app.response import HaloResponse
-from halo_app.app.filter import RequestFilter
+from halo_app.app.filterx import RequestFilter
 from halo_app.settingsx import settingsx
 from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException,NoServiceConfigurationMappingException
 
