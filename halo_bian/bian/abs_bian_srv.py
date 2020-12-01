@@ -117,9 +117,9 @@ class AbsBianMixin(AbsApiMixinX):
         if bian_request:
             if bian_request.collection_filter:
                 for f in bian_request.collection_filter:
-                    sign = self.get_filter_char(bian_request,f)
-                    key = f.split(sign)[0].strip()
-                    val = f.split(sign)[1].strip()
+                    sign = f.op
+                    key = f.field
+                    val = f.value
                     the_filter_chars = self.get_filter_chars(bian_request)
                     the_filter_key_values = self.get_filter_key_values(bian_request)
                     if sign not in the_filter_chars:
@@ -395,8 +395,8 @@ class AbsBianMixin(AbsApiMixinX):
             behavior_qualifier = self.get_behavior_qualifier_from_path(action_term,bq_reference_id)
         if "sbq_reference_id" in vars:
             sub_qualifiers = self.get_sub_qualifiers(behavior_qualifier, vars)
-        if "collection-filter" in vars:
-            collection_filter = vars["collection-filter"]
+        if "collection_filter" in vars:
+            collection_filter = vars["collection_filter"]
         if "queryparams" in vars:
             query_params = vars["queryparams"]
         #context = self.init_ctx(request)
