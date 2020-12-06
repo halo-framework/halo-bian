@@ -305,7 +305,7 @@ THRIFT_MAX_RETRY = 4
 
 HTTP_RETRY_SLEEP = 0.300  # in seconds
 
-ERR_MSG_CLASS = 'sdapiservice.api.mixin.mixin_err_msg'
+ERR_MSG_CLASS = 'halo_bian.bian.mixin_err_msg'
 
 # in case a web edge
 FRONT_WEB = False  # env.str('FRONT_API',default=False)

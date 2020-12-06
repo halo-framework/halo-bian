@@ -23,7 +23,7 @@ with app.app_context():
     from halo_app.app.utilx import Util
     from halo_app.app.servicex import FoiBusinessEvent, SagaBusinessEvent
     from halo_app.ssm import set_app_param_config, set_host_param_config
-    from halo_app.app.viewsx import load_global_data
+    from halo_app.app.viewsx import load_global_data, AbsBaseLinkX
     from halo_app.base_util import BaseUtil
 
     class OutboundApi(AbsRestApi):
@@ -199,7 +199,8 @@ with app.app_context():
         pass
 
 
-    class A3(AbsBianMixin):  # the foi
+    class A3(AbsBianMixin,AbsBaseLinkX):  # the foi
+        bian_action = ActionTerms.REQUEST
         filter_separator = "#"
         filter_key_values = {
             None: {'customer-reference-id': 'customerId', 'amount': 'amount', 'user': 'user', 'page_no': 'page_no',
@@ -214,41 +215,31 @@ with app.app_context():
             api.set_api_url("ID", "1")
             return api
 
-        def validate_req_depositsandwithdrawals(self, bian_request):
+        def validate_pre(self, bian_request):
             print("in validate_req_deposit ")
             if bian_request:
-                if "name" in bian_request.request.args:
-                    name = bian_request.request.args['name']
-                    if not name:
-                        raise BianError("missing value for query var name")
-            return True
+                for f in bian_request.collection_filter:
+                    if "amount" == f.field:
+                        return True
+            raise BianError("missing value for query var amount")
 
-        def validate_pre_depositsandwithdrawals(self, bian_request):
-            print("in validate_req_deposit ")
-            if bian_request:
-                if "name" in bian_request.request.args:
-                    name = bian_request.request.args['name']
-                    if not name:
-                        raise BianError("missing value for query var name")
-            return True
-
-        def set_back_api_depositsandwithdrawals(self, bian_request, foi=None):
+        def set_back_api(self, bian_request, foi=None):
             if foi:
                 return self.set_back_api(bian_request, foi)
             print("in set_back_api_deposit ")
             TstApi(bian_request.context)
 
-        def set_api_headers_depositsandwithdrawals(self, bian_request, api, foi=None, dict=None):
+        def set_api_headers(self, bian_request, api, foi=None, dict=None):
             print("in set_api_headers_deposit ")
             headers = {'Accept': 'application/json'}
             return headers
 
-        def set_api_vars_depositsandwithdrawals(self, bian_request, api, foi=None, dict=None):
+        def set_api_vars(self, bian_request, api, foi=None, dict=None):
             print("in set_api_vars_deposit " + str(bian_request))
             ret = {}
             name = None
-            if 'name' in bian_request.request.args:
-                name = bian_request.request.args['name']
+            if bian_request.body and 'name' in bian_request.body:
+                name = bian_request.body['name']
             if name:
                 ret['name'] = name
             if bian_request:
@@ -256,17 +247,17 @@ with app.app_context():
                 ret["id"] = bian_request.cr_reference_id
             return ret
 
-        def set_api_auth_depositsandwithdrawals(self, bian_request, api, foi=None, dict=None):
+        def set_api_auth(self, bian_request, api, foi=None, dict=None):
             print("in set_api_auth_deposit ")
             user = ''
             pswd = ''
             return HTTPBasicAuth(user, pswd)
 
-        def execute_api_depositsandwithdrawals(self, bian_request, back_api, back_vars, back_headers, back_auth, back_data,
+        def execute_api(self, bian_request, back_api, back_vars, back_headers, back_auth, back_data,
                                                foi=None, dict=None):
             print("in execute_api_deposit ")
             if back_api:
-                timeout = Util.get_timeout(bian_request.request)
+                timeout = Util.get_timeout(bian_request.timeout)
                 try:
                     back_api.set_api_url('ID', back_vars['name'])
                     ret = back_api.get(timeout, headers=back_headers, auth=back_auth)
@@ -275,25 +266,24 @@ with app.app_context():
                     raise BianException(e)
             return None
 
-        def create_resp_payload_depositsandwithdrawals(self, bian_request, create_resp_payloaddict):
+        def create_resp_payload(self, bian_request, create_resp_payloaddict):
             print("in create_resp_payload_deposit " + str(create_resp_payloaddict))
             if create_resp_payloaddict:
-                return self.map_from_json_depositsandwithdrawals(create_resp_payloaddict, {})
+                return self.map_from_json(create_resp_payloaddict, {})
             return {}
 
-        def extract_json_depositsandwithdrawals(self, bian_request, api, back_json, foi=None):
+        def extract_json(self, bian_request, api, back_json, foi=None):
             print("in extract_json_deposit")
             return {"title": "good"}
 
-        def map_from_json_depositsandwithdrawals(self, dict, payload):
+        def map_from_json(self, dict, payload):
             print("in map_from_json_deposit")
             payload['name'] = dict['1']["title"]
             return payload
 
-        def set_resp_headers_depositsandwithdrawals(self, bian_request, headers):
-            return self.set_resp_headers(bian_request, headers)
 
-        def validate_post_depositsandwithdrawals(self, bian_request, ret):
+
+        def validate_post(self, bian_request, ret):
             return True
 
 
@@ -579,6 +569,34 @@ with app.app_context():
                 self.a3 = A3()
                 ret = self.a3.process_get(request, {})
                 assert ret.request.collection_filter[0] == "amount>100"
+
+        def test_961_cf_request_returns_a_given_string(self):
+            with app.test_request_context('/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
+                q = request.args['collection-filter']
+                import json
+                from flask_filter.schemas import FilterSchema
+                filter_schema = FilterSchema()
+                try:
+                    collection_filter_json = json.loads(q)
+                    if "field" in collection_filter_json:
+                        many = False
+                    else:
+                        many = True
+                    filters = filter_schema.load(collection_filter_json, many=many)
+                    if not many:
+                        filters = [filters]
+                    from halo_app.filters import Filter
+                    arr = []
+                    for f in filters:
+                        filter = Filter(f.field, f.OP, f.value)
+                        arr.append(filter)
+                except Exception as e:
+                    raise e
+                vars = {'collection_filter':arr}
+                self.a3 = A3()
+                ret = self.a3.do_process("x", vars)
+                assert str(ret.request.collection_filter[0]) == "Filter(field='amount', op='>', value=10.24)"
+                assert ret.payload == {'name': 'good'}
 
         def test_97_cf_request_returns_a_given_list(self):
             with app.test_request_context(method='POST',

@@ -116,12 +116,12 @@ class AbsBianMixin(AbsApiMixinX):
         logger.debug("in validate_collection_filter ")
         if bian_request:
             if bian_request.collection_filter:
+                the_filter_chars = self.get_filter_chars(bian_request)
+                the_filter_key_values = self.get_filter_key_values(bian_request)
                 for f in bian_request.collection_filter:
                     sign = f.op
                     key = f.field
                     val = f.value
-                    the_filter_chars = self.get_filter_chars(bian_request)
-                    the_filter_key_values = self.get_filter_key_values(bian_request)
                     if sign not in the_filter_chars:
                         raise BianError("filter sign for query var collection-filter is not allowed: " + sign)
                     if key not in the_filter_key_values.keys():
@@ -360,16 +360,7 @@ class AbsBianMixin(AbsApiMixinX):
                 return self.filter_chars[None]
         return []
 
-    def get_query_params(self, query_params):
-        ret = None
-        arr = []
-        if query_params is not None:
-            if self.filter_separator and self.filter_separator in query_params:
-                arr = [x.strip() for x in query_params.split(self.filter_separator)]
-            else:
-                arr.append(query_params)
-            ret = arr
-        return ret
+
 
     def bian_validate_req(self, method,action: ActionTerms, vars,headers) -> BianRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
@@ -383,7 +374,7 @@ class AbsBianMixin(AbsApiMixinX):
         bq_reference_id = None
         sub_qualifiers = None
         collection_filter = None
-        query_params = None
+        body = None
         if "sd_reference_id" in vars:
             sd_reference_id = vars["sd_reference_id"]
         if "cr_reference_id" in vars:
@@ -397,13 +388,13 @@ class AbsBianMixin(AbsApiMixinX):
             sub_qualifiers = self.get_sub_qualifiers(behavior_qualifier, vars)
         if "collection_filter" in vars:
             collection_filter = vars["collection_filter"]
-        if "queryparams" in vars:
-            query_params = vars["queryparams"]
+        if "body" in vars:
+            body = vars["body"]
         #context = self.init_ctx(request)
         #for i in settings.BIAN_CONTEXT_LIST:
         #    if i not in context.keys():
         #        raise MissingBianContextException(i)
-        return BianRequest(method,vars,headers,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,query_params=query_params,sub_qualifiers=sub_qualifiers)
+        return BianRequest(method,vars,headers,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -411,8 +402,8 @@ class AbsBianMixin(AbsApiMixinX):
             self.validate_sd_reference_id(bian_request)
             self.validate_cr_reference_id(bian_request)
             self.validate_bq_reference_id(bian_request)
-            self.validate_filter_key_values()
-            self.validate_filter_chars()
+            #self.validate_filter_key_values()
+            #self.validate_filter_chars()
             self.validate_collection_filter(bian_request)
             if settings.SERVICING_SESSION:
                 self.validate_service_state(bian_request)
@@ -761,7 +752,7 @@ class AbsBianMixin(AbsApiMixinX):
         ret["cr_reference_id"] = bian_request.cr_reference_id
         ret["bq_reference_id"] = bian_request.bq_reference_id
         ret["collection_filter"] = bian_request.collection_filter
-        ret["query_params"] = bian_request.query_params
+        ret["body"] = bian_request.body
         ret = self.set_added_api_vars(bian_request,ret, seq, dict)
         return ret
 

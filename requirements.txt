@@ -1,4 +1,3 @@
-connexion >= 2.6.0
 jsonschema==2.6.0
 Faker==0.9.0
 mock==2.0.0
@@ -9,8 +8,9 @@ requests==2.20.1
 environs
 python-json-logger
 PyJWT==1.6.3
-halo-app==0.10.10
+halo-app==0.10.11
 jsonpath-ng==1.4.3
 halo-aws==0.11.41
 boto3==1.7.16
-pytest
+
+flask_sqlalchemy
