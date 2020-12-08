@@ -5,7 +5,6 @@ import logging
 from abc import ABCMeta,abstractmethod
 import importlib
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
-from halo_app.app.mixinx import AbsBaseMixinX as AbsBaseMixin
 from halo_app.app.utilx import Util
 from halo_app.errors import status
 from halo_app.logs import log_json
@@ -60,7 +59,7 @@ class AbsBianMixin(AbsApiMixinX):
 
 
     def __init__(self):
-        super(AbsBaseMixin, self).__init__()
+        super(AbsApiMixinX, self).__init__()
         logger.debug("in __init__ ")
         if settings.SERVICE_DOMAIN:
             self.service_domain = settings.SERVICE_DOMAIN
@@ -362,7 +361,7 @@ class AbsBianMixin(AbsApiMixinX):
 
 
 
-    def bian_validate_req(self, method,action: ActionTerms, vars,headers) -> BianRequest:
+    def bian_validate_req(self,halo_context, method,action: ActionTerms, vars) -> BianRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         action_term = action
         if action_term not in ActionTerms.ops:
@@ -394,7 +393,7 @@ class AbsBianMixin(AbsApiMixinX):
         #for i in settings.BIAN_CONTEXT_LIST:
         #    if i not in context.keys():
         #        raise MissingBianContextException(i)
-        return BianRequest(method,vars,headers,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
+        return BianRequest(halo_context,method,vars,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -416,24 +415,24 @@ class AbsBianMixin(AbsApiMixinX):
         filter.set(self)
         return filter
 
-    def process_ok(self, halo_response):
+    def process_ok1(self, halo_response):
         return halo_response
 
-    def process_ok1(self, response):
+    def process_ok(self, response):
         if response:
             if response.request:
-                if response.request.request:
-                    if response.request.request.method == 'GET':
+                if response.request.context:
+                    if response.request.context.get(HaloContext.method) == 'GET':
                         response.code = status.HTTP_200_OK
-                    if response.request.request.method == 'POST':
+                    if response.request.context.get(HaloContext.method) == 'POST':
                         response.code = status.HTTP_201_CREATED
-                    if response.request.request.method == 'PUT':
+                    if response.request.context.get(HaloContext.method) == 'PUT':
                         response.code = status.HTTP_202_ACCEPTED
-                    if response.request.request.method == 'PATCH':
+                    if response.request.context.get(HaloContext.method) == 'PATCH':
                         response.code = status.HTTP_202_ACCEPTED
-                    if response.request.request.method == 'DELETE':
+                    if response.request.context.get(HaloContext.method) == 'DELETE':
                         response.code = status.HTTP_200_OK
-                    logger.info('process_service_operation : '+response.request.request.method,
+                    logger.info('process_service_operation : '+response.request.context.get(HaloContext.method),
                                 extra=log_json(response.request.context,  {"return": "success"}))
                     return response
                 raise ActionTermFailException(response.request.action_term)
@@ -785,10 +784,10 @@ class AbsBianMixin(AbsApiMixinX):
        self.set_businss_event(request, event_category)
 
 
-    def process(self,method,vars={},headers={}):
+    def process(self,halo_context,method_id,vars={}):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
         bian_action = self.get_bian_action(self.bian_action)
-        bian_request = self.bian_validate_req(method,bian_action, vars,headers)
+        bian_request = self.bian_validate_req(halo_context,method_id,bian_action, vars)
         self.set_bian_businss_event(bian_request, bian_action)
         return self.process_service_operation(bian_action, bian_request, vars)
 
