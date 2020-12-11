@@ -31,7 +31,7 @@ with app.app_context():
     from halo_app.app.utilx import Util
     from halo_app.app.servicex import FoiBusinessEvent, SagaBusinessEvent
     from halo_app.ssm import set_app_param_config, set_host_param_config
-    from halo_app.app.viewsx import load_global_data, AbsBaseLinkX
+    from halo_app.app.viewsx import load_global_data, AbsService
     from halo_app.base_util import BaseUtil
 
     class OutboundApi(AbsRestApi):
@@ -207,7 +207,7 @@ with app.app_context():
         pass
 
 
-    class A3(AbsBianMixin,AbsBaseLinkX):  # the foi
+    class A3(AbsBianMixin,AbsService):  # the foi
         bian_action = ActionTerms.REQUEST
         filter_separator = "#"
         filter_key_values = {
