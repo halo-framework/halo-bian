@@ -4,12 +4,14 @@ import re
 import logging
 from abc import ABCMeta,abstractmethod
 import importlib
+
+from halo_app.app.context import HaloContext
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_app.app.utilx import Util
 from halo_app.errors import status
 from halo_app.logs import log_json
-from halo_app.apis import AbsBaseApi
-from halo_app.app.mixinx import AbsApiMixinX
+from halo_app.infra.apis import AbsBaseApi
+from halo_app.app.mixinx import AbsCommandHandler
 from halo_app.app.filterx import RequestFilter
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 SESSION_ID = "session_id"
 STATE = "state"
 
-class AbsBianMixin(AbsApiMixinX):
+class AbsBianCommandHandler(AbsCommandHandler):
     __metaclass__ = ABCMeta
 
     #bian data
@@ -51,6 +53,7 @@ class AbsBianMixin(AbsApiMixinX):
     filter_val = "val"
     filter_separator = ";"
     #id masks
+    sd_reference_id_mask = None
     cr_reference_id_mask = None
     bq_reference_id_mask = None
     #service state
@@ -59,7 +62,7 @@ class AbsBianMixin(AbsApiMixinX):
 
 
     def __init__(self):
-        super(AbsApiMixinX, self).__init__()
+        super(AbsBianCommandHandler, self).__init__()
         logger.debug("in __init__ ")
         if settings.SERVICE_DOMAIN:
             self.service_domain = settings.SERVICE_DOMAIN
@@ -361,39 +364,6 @@ class AbsBianMixin(AbsApiMixinX):
 
 
 
-    def bian_validate_req(self,halo_context, method,action: ActionTerms, vars) -> BianRequest:
-        logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
-        action_term = action
-        if action_term not in ActionTerms.ops:
-            raise IllegalActionTermError(action)
-        sd_reference_id = None
-        cr_reference_id = None
-        behavior_qualifier_type = None
-        behavior_qualifier = None
-        bq_reference_id = None
-        sub_qualifiers = None
-        collection_filter = None
-        body = None
-        if "sd_reference_id" in vars:
-            sd_reference_id = vars["sd_reference_id"]
-        if "cr_reference_id" in vars:
-            cr_reference_id = vars["cr_reference_id"]
-        if "behavior_qualifier" in vars:
-            behavior_qualifier = self.get_behavior_qualifier(action_term, vars["behavior_qualifier"])
-        if "bq_reference_id" in vars:
-            bq_reference_id = vars["bq_reference_id"]
-            behavior_qualifier = self.get_behavior_qualifier_from_path(action_term,bq_reference_id)
-        if "sbq_reference_id" in vars:
-            sub_qualifiers = self.get_sub_qualifiers(behavior_qualifier, vars)
-        if "collection_filter" in vars:
-            collection_filter = vars["collection_filter"]
-        if "body" in vars:
-            body = vars["body"]
-        #context = self.init_ctx(request)
-        #for i in settings.BIAN_CONTEXT_LIST:
-        #    if i not in context.keys():
-        #        raise MissingBianContextException(i)
-        return BianRequest(halo_context,method,vars,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
@@ -411,7 +381,7 @@ class AbsBianMixin(AbsApiMixinX):
 
     def get_request_filter(self,halo_request):
         logger.debug("get_request_filter for bian")
-        filter = super(AbsBianMixin,self).get_request_filter(halo_request)
+        filter = super(AbsBianCommandHandler, self).get_request_filter(halo_request)
         filter.set(self)
         return filter
 
@@ -715,7 +685,7 @@ class AbsBianMixin(AbsApiMixinX):
         if foi:
             foi_name = foi["name"]
             if not foi_name.startswith('bian.'):
-                return super(AbsBianMixin,self).set_back_api(halo_request, foi)
+                return super(AbsBianCommandHandler, self).set_back_api(halo_request, foi)
             foi_op = foi["op"]
             sd_class_name,sd_module_name,sd_base_url = self.get_api_from_sd(foi_name)
             module = importlib.import_module(sd_module_name)
@@ -791,13 +761,19 @@ class AbsBianMixin(AbsApiMixinX):
         self.set_bian_businss_event(bian_request, bian_action)
         return self.process_service_operation(bian_action, bian_request, vars)
 
+    def process(self,bian_request):
+        logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
+        bian_action = self.get_bian_action(self.bian_action)
+        self.set_bian_businss_event(bian_request, bian_action)
+        return self.process_service_operation(bian_action, bian_request, vars)
+
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers
 #@todo api finish authorization issues : curl -v -u "admin:secret" http://127.0.0.1:5000/secrets
 # service management
 
-class AbsBianSrvMixin(AbsBianMixin):
+class AbsBianSrvMixin(AbsBianCommandHandler):
     __metaclass__ = ABCMeta
 
     #service data

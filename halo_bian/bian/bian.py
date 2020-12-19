@@ -6,8 +6,8 @@ import os
 import json
 from datetime import datetime
 from halo_app.classes import AbsBaseClass,ServiceInfo
-from halo_app.request import HaloRequest
-from halo_app.response import HaloResponse
+from halo_app.app.request import HaloRequest, HaloCommandRequest
+from halo_app.app.response import HaloResponse
 from halo_app.app.filterx import RequestFilter
 from halo_app.settingsx import settingsx
 from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException,NoServiceConfigurationMappingException
@@ -26,46 +26,6 @@ logger = logging.getLogger(__name__)
 #@todo control,monitor,analytics
 #@todo ssm event processor,bian server cache
 
-class BianRequest(HaloRequest):
-    action_term = None
-    sd_reference_id = None
-    cr_reference_id = None
-    bq_reference_id = None
-    behavior_qualifier = None
-    collection_filter = None
-    body = None
-    sub_qualifiers = None
-    timeout = None
-
-
-    def __init__(self,halo_context, func,vars,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,body=None,sub_qualifiers=None,timeout=1000):
-        super(BianRequest,self).__init__(halo_context,func,vars,sub_func=self.get_bq_func_name(behavior_qualifier,sub_qualifiers))
-        self.action_term = action_term
-        self.sd_reference_id = sd_reference_id
-        self.cr_reference_id = cr_reference_id
-        self.behavior_qualifier = behavior_qualifier
-        self.bq_reference_id = bq_reference_id
-        self.collection_filter = collection_filter
-        self.body = body
-        self.sub_qualifiers = sub_qualifiers
-        self.timeout = timeout
-
-    def get_bq_func_name(self,behavior_qualifier,sub_qualifiers):
-        if behavior_qualifier:
-            name = behavior_qualifier.lower()
-            if sub_qualifiers:
-                for item in sub_qualifiers.keys():
-                    name = name + "_" + item.lower()
-            return name
-        return None
-
-class BianResponse(HaloResponse):
-    request = None
-
-    def __init__(self, bian_request, payload=None, headers=None):
-        self.request = bian_request
-        self.payload = payload
-        self.headers = headers
 
 class BianRequestFilter(RequestFilter):
     # bian data
@@ -622,34 +582,6 @@ class FunctionalPatterns(AbsBaseClass):
     }
 
 #Capture service operation connections – The service operation connections for each business event
-# Finance Context - Multi 10
-from halo_app.request import HaloContext
-class BianContext(HaloContext):
-    COMPANY = "Company"
-    OPERATIONAL_ENTITY = "Operational Entity"
-    BRAND = "Brand"
-    CHANNEL = "Channel"
-    ENVIRONMENT = "Environment"
-    COUNTRY = "Country"
-    TIME_ZONE = "Time Zone"
-    LANGUAGE = "Language"
-    BRANCH = "Branch"
-    APP_CLIENT = "App Client"
-    CONSUMER = "Consumer"
-    BIZ_SCENARIO = "Biz Scenario"
-
-    HaloContext.items[COMPANY] = "x-bian-company"
-    HaloContext.items[OPERATIONAL_ENTITY] = "x-bian-op-entity"
-    HaloContext.items[BRAND] = "x-bian-brand"
-    HaloContext.items[CHANNEL] = "x-bian-channel"
-    HaloContext.items[ENVIRONMENT] = "x-bian-env"
-    HaloContext.items[COUNTRY] = "x-bian-country"
-    HaloContext.items[TIME_ZONE] = "x-bian-tz"
-    HaloContext.items[LANGUAGE] = "x-bian-language"
-    HaloContext.items[BRANCH] = "x-bian-branch"
-    HaloContext.items[APP_CLIENT] = "x-bian-app-client"
-    HaloContext.items[CONSUMER] = "x-bian-consumer"
-    HaloContext.items[BIZ_SCENARIO] = "x-bian-biz-scenario"
 
 #bian services
 

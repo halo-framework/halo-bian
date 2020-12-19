@@ -14,7 +14,7 @@ fake = Faker()
 app = Flask(__name__)
 
 with app.app_context():
-    from halo_bian.bian.abs_bian_srv import AbsBianMixin, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
+    from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
         FeedbackAbsBianMixin
     from halo_bian.bian.db import AbsBianDbMixin
     from halo_app.app.filterx import RequestFilterClear
@@ -91,7 +91,7 @@ class Tst4Api(AbsRestApi):
 
 
 
-class A1(AbsBianMixin):#the basic
+class A1(AbsBianCommandHandler):#the basic
     def set_back_api(self, halo_request, foi=None):
         if not foi:#not in seq
             if halo_request.request.method == HTTPChoice.get.value:
@@ -190,7 +190,7 @@ class SaBusinessEvent(SagaBusinessEvent):
     pass
 
 
-class A3(AbsBianMixin):# the foi
+class A3(AbsBianCommandHandler):# the foi
     filter_separator = "#"
     filter_key_values = {None: {'customer-reference-id': 'customerId','amount':'amount','user':'user','page_no':'page_no','count':'count'}}
     filter_chars = {None: ['=','>']}
@@ -284,7 +284,7 @@ class A3(AbsBianMixin):# the foi
     def validate_post_depositsandwithdrawals(self, bian_request,ret):
         return True
 
-class A4(AbsBianMixin):# the foi
+class A4(AbsBianCommandHandler):# the foi
     def set_back_api(self,bian_request,foi=None):
         print("in set_back_api ")
         if foi:
@@ -330,7 +330,7 @@ class A6(A5):
     def validate_post_depositsandwithdrawals_deposits(self,halo_request, halo_response):
         return
 
-class A7(AbsBianMixin):# the foi
+class A7(AbsBianCommandHandler):# the foi
     def set_back_api(self,bian_request,foi=None):
         print("in set_back_api ")
         if foi:

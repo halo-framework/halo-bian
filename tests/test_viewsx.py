@@ -18,11 +18,11 @@ settings = settingsx()
 ############################################
 from halo_app.app.mixinx import AbsApiMixinX
 from halo_app.app.viewsx import AbsBaseLinkX
-from halo_bian.bian.abs_bian_srv import AbsBianMixin
+from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler
 from flask.views import MethodView
 from flask import request,Response
 import json
-class TestMixinX(AbsBianMixin,MethodView):
+class TestMixinX(AbsBianCommandHandler, MethodView):
     def get(self):
         ret = self.do_process("abc",request.args,request.headers)
         print(str(ret.payload))
