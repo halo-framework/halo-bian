@@ -6,16 +6,19 @@ from abc import ABCMeta,abstractmethod
 import importlib
 
 from halo_app.app.context import HaloContext
+from halo_app.app.request import HaloQueryRequest
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_app.app.utilx import Util
 from halo_app.errors import status
 from halo_app.logs import log_json
 from halo_app.infra.apis import AbsBaseApi
-from halo_app.app.mixinx import AbsCommandHandler
+from halo_app.app.mixinx import AbsCommandHandler, AbsBaseHandler, AbsQueryHandler
 from halo_app.app.filterx import RequestFilter
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 from halo_app.models import AbsDbMixin
+
+from halo_bian.bian.context import BianContext
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
 from halo_app.ssm import get_app_config
@@ -32,7 +35,7 @@ logger = logging.getLogger(__name__)
 SESSION_ID = "session_id"
 STATE = "state"
 
-class AbsBianCommandHandler(AbsCommandHandler):
+class AbsBianHandler(AbsBaseHandler):
     __metaclass__ = ABCMeta
 
     #bian data
@@ -62,7 +65,7 @@ class AbsBianCommandHandler(AbsCommandHandler):
 
 
     def __init__(self):
-        super(AbsBianCommandHandler, self).__init__()
+        super(AbsBianHandler, self).__init__()
         logger.debug("in __init__ ")
         if settings.SERVICE_DOMAIN:
             self.service_domain = settings.SERVICE_DOMAIN
@@ -408,9 +411,9 @@ class AbsBianCommandHandler(AbsCommandHandler):
                 raise ActionTermFailException(response.request.action_term)
         raise ActionTermFailException(response)
 
-    def process_service_operation(self, action, bian_request, vars):
+    def process_service_operation(self, bian_request):
         #logger.debug("in process_service_operation " + str(vars))
-        logger.info('process_service_operation : ', extra=log_json(bian_request.context,vars,{"action":action}))
+        logger.info('process_service_operation : ', extra=log_json(bian_request.context,bian_request.vars,{"action":bian_request.action_term}))
         functionName = {
             ActionTerms.INITIATE: self.do_initiate,
             ActionTerms.CREATE: self.do_create,
@@ -754,19 +757,26 @@ class AbsBianCommandHandler(AbsCommandHandler):
        self.set_businss_event(request, event_category)
 
 
-    def process(self,halo_context,method_id,vars={}):
+    def process1(self,halo_context,method_id,vars={}):
         logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
         bian_action = self.get_bian_action(self.bian_action)
         bian_request = self.bian_validate_req(halo_context,method_id,bian_action, vars)
         self.set_bian_businss_event(bian_request, bian_action)
         return self.process_service_operation(bian_action, bian_request, vars)
 
-    def process(self,bian_request):
-        logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        bian_action = self.get_bian_action(self.bian_action)
-        self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, bian_request, vars)
+    def process_bian_request(self,bian_request):
+        logger.debug("sd=" + str(self.service_domain))
+        self.set_bian_businss_event(bian_request, bian_request.action_term)
+        return self.process_service_operation(bian_request)
 
+class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
+    def run_command1(self,bian_request:HaloCommandRequest) ->HaloResponse:
+        return self.process_bian_request(bian_request)
+
+
+class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
+    def run_query1(self, bian_request: HaloQueryRequest) -> HaloResponse:
+        return self.process_bian_request(bian_request)
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers

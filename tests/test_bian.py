@@ -10,7 +10,8 @@ import unittest
 from halo_app.const import LOC
 from halo_bian.bian.context import BianContext
 from halo_bian.bian.util import BianUtil
-from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin,FeedbackAbsBianMixin
+from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
+    FeedbackAbsBianMixin, AbsBianQueryHandler
 from halo_bian.bian.db import AbsBianDbMixin
 from halo_app.app.filterx import RequestFilterClear
 from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianRequestFilter, FunctionalPatterns
@@ -209,7 +210,7 @@ class SaBusinessEvent(SagaBusinessEvent):
     pass
 
 
-class A3(AbsBianCommandHandler, AbsBoundaryService):  # the foi
+class A3(BoundaryService,AbsBianCommandHandler):  # the foi
     bian_action = ActionTerms.REQUEST
     filter_separator = "#"
     filter_key_values = {
@@ -370,6 +371,8 @@ class A7(AbsBianCommandHandler):  # the foi
         json = dict['1']
         return {"name": json["title"]}
 
+class A8(BoundaryService,AbsBianQueryHandler):
+    pass
 
 class X1(ActivationAbsBianMixin):
     pass
@@ -473,7 +476,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.x1.functional_pattern = FunctionalPatterns.FULFILL
             self.x1.filter_separator = ";"
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context,"X", {"body":json})
+            bian_request = BianUtil.create_bian_request(bian_context,"X", {"body":json},ActionTerms.CONTROL)
             ret = self.x1.process(bian_request)
             assert ret.code == status.HTTP_200_OK
 
@@ -488,7 +491,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_get_request_with_ref_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"})
+            bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"},ActionTerms.REQUEST)
             self.a1 = A1()
             ret = self.a1.process(request)
             assert ret.code == status.HTTP_200_OK
@@ -500,7 +503,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 bian_request = BianUtil.create_bian_request(halo_context,"x",
                                           {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"})
-                ret = self.a1.process(bian_request)
+                ret = self.a1.execute(bian_request)
                 assert ret.code == status.HTTP_200_OK
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
