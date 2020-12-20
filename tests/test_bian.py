@@ -374,15 +374,15 @@ class A7(AbsBianCommandHandler):  # the foi
 class A8(BoundaryService,AbsBianQueryHandler):
     pass
 
-class X1(ActivationAbsBianMixin):
+class X1(BoundaryService,ActivationAbsBianMixin):
     pass
 
 
-class X2(ConfigurationAbsBianMixin):
+class X2(BoundaryService,ConfigurationAbsBianMixin):
     pass
 
 
-class X3(FeedbackAbsBianMixin):
+class X3(BoundaryService,FeedbackAbsBianMixin):
     def persist_feedback_request(self, bian_request, servicing_session_id, cr_id, bq_id):
         pass
 
@@ -477,7 +477,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.x1.filter_separator = ";"
             bian_context = get_bian_context(request)
             bian_request = BianUtil.create_bian_request(bian_context,"X", {"body":json},ActionTerms.CONTROL)
-            ret = self.x1.process(bian_request)
+            ret = self.x1.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_1_get_request_returns_a_given_string(self):
@@ -491,18 +491,18 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_get_request_with_ref_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"},ActionTerms.REQUEST)
+            bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"},ActionTerms.CONTROL)
             self.a1 = A1()
-            ret = self.a1.process(request)
+            ret = self.a1.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_3_get_request_with_ref_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            halo_context = get_bian_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
             try:
-                bian_request = BianUtil.create_bian_request(halo_context,"x",
-                                          {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"})
+                bian_request = BianUtil.create_bian_request(bian_context,"x",
+                                          {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"},ActionTerms.EXECUTE)
                 ret = self.a1.execute(bian_request)
                 assert ret.code == status.HTTP_200_OK
             except Exception as e:
@@ -511,34 +511,35 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_4_get_request_with_bad_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
-            halo_context = get_halo_context(request)
-            self.a1 = A1()
+            bian_context = get_bian_context(request)
+            self.a8 = A8()
             try:
-                ret = self.a1.process(halo_context,"x", {"cr_reference_id": "123", "behavior_qualifier": "456"})
-                assert False
+                bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"})
+                ret = self.a8.execute(bian_request)
+                assert ret.code == status.HTTP_200_OK
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQError'
 
     def test_5_post_request_returns_a_given_error(self):
         with app.test_request_context(method='POST', path='/tst'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
-            self.a1.bian_action = "xx"
             try:
-                ret = self.a1.process(halo_context,"x",{})
-                assert False
+                bian_request = BianUtil.create_bian_request(bian_context,"x",{},ActionTerms.EXECUTE)
+                ret = self.a1.execute(bian_request)
+                assert ret.code == status.HTTP_200_OK
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
 
     def test_6_post_request_returns_a_given_error1(self):
         with app.test_request_context(method='POST', path='/'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
-            self.a1.bian_action = "xxx"
             try:
-                ret = self.a1.process(halo_context,"x1",{})
+                bian_request = BianUtil.create_bian_request(bian_context, "x1", {}, ActionTerms.EXECUTE)
+                ret = self.a1.execute(bian_request)
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
@@ -546,62 +547,62 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_7_post_request_returns_a_given_string(self):
         with app.test_request_context(method='POST', path='/?name=Peter'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
             self.a1.bian_action = ActionTerms.INITIATE
-            ret = self.a1.process(halo_context,"x",{})
+            ret = self.a1.execute(bian_context,"x",{})
             assert ret.code == status.HTTP_201_CREATED
 
     def test_8_patch_request_returns_a_given_string(self):
         with app.test_request_context(method='PATCH', path='/?name=Peter'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
-            ret = self.a1.process(halo_context,"x",{})
+            ret = self.a1.execute(bian_context,"x",{})
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_90_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT', path='/tst?name=news'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
-            ret = self.a1.process(halo_context,"x",{})
+            ret = self.a1.execute(bian_context,"x",{})
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE', path='/tst'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
-            ret = self.a1.process(halo_context,"x",{})
+            ret = self.a1.execute(bian_context,"x",{})
             assert ret.code == status.HTTP_200_OK
 
     def test_92_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a1 = A1()
-            ret = self.a1.process(halo_context,"x", {})
+            ret = self.a1.execute(bian_context,"x", {})
             assert ret.code == status.HTTP_200_OK
 
     def test_93_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=news'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a2 = A2()
-            ret = self.a2.process(halo_context,"x", {"cr_reference_id": "1"})
+            ret = self.a2.execute(bian_context,"x", {"cr_reference_id": "1"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'test'
 
     def test_95_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.filter_separator = ";"
-            ret = self.a3.process(halo_context,"x", {"behavior_qualifier": "DepositsandWithdrawals"})
+            ret = self.a3.execute(bian_context,"x", {"behavior_qualifier": "DepositsandWithdrawals"})
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'good'
 
     def test_96_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
-            ret = self.a3.process(halo_context,"x", {})
+            ret = self.a3.execute(bian_context,"x", {})
             assert ret.request.collection_filter[0] == "amount>100"
 
     def test_961_cf_request_returns_a_given_string(self):
@@ -627,9 +628,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 raise e
             vars = {'collection_filter':arr}
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
-            ret = self.a3.do_process(halo_context,"x", vars)
+            ret = self.a3.do_process(bian_context,"x", vars)
             assert str(ret.request.collection_filter[0]) == "Filter(field='amount', op='>', value=10.24)"
             assert ret.payload == {'name': 'good'}
 
@@ -639,8 +640,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             self.a3.filter_separator = ";"
-            halo_context = get_halo_context(request)
-            ret = self.a3.process(halo_context,"x",{})
+            bian_context = get_bian_context(request)
+            ret = self.a3.execute(bian_context,"x",{})
             assert ret.request.collection_filter[0] == "amount>100"
             assert ret.request.collection_filter[1] == "user = 100"
             assert ret.request.collection_filter[2] == "page_no = 2"
@@ -648,11 +649,11 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_98_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EVALUATE
             try:
-                ret = self.a3.process(halo_context,"x", {})
+                ret = self.a3.execute(bian_context,"x", {})
                 assert ret.request.collection_filter[0] != "amount>100"
             except Exception as e:
                 assert type(e).__name__ == "IllegalActionTermError"
@@ -663,8 +664,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             try:
-                halo_context = get_halo_context(request)
-                ret = self.a3.process_get(halo_context,"x", {"cr_reference_id": "2", "bq_reference_id": "3a"})
+                bian_context = get_bian_context(request)
+                ret = self.a3.process_get(bian_context,"x", {"cr_reference_id": "2", "bq_reference_id": "3a"})
                 assert False
             except Exception as e:
                 assert type(e).__name__ == "IllegalBQError"
@@ -672,11 +673,11 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_991_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/1b/?collection-filter=amount>100'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a3.process_get(halo_context,"x", {"cr_reference_id": "", "bq_reference_id": ""})
+                ret = self.a3.process_get(bian_context,"x", {"cr_reference_id": "", "bq_reference_id": ""})
                 assert False
             except Exception as e:
                 assert type(e).__name__ == "IllegalBQError"
@@ -684,10 +685,10 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_992_request_returns_a_response(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
-            ret = self.a3.process_get(halo_context,"x", {"cr_reference_id": "1", "bq_reference_id": "1"})
+            ret = self.a3.process_get(bian_context,"x", {"cr_reference_id": "1", "bq_reference_id": "1"})
             assert ret.code == status.HTTP_200_OK
             assert len(ret.request.collection_filter) == 1
             assert ret.request.action_term == ActionTerms.EXECUTE
@@ -698,18 +699,18 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_993_request_returns_a_response(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
-            ret = self.a3.process_put(halo_context,"x", {"cr_reference_id": "1", "bq_reference_id": "1"})
+            ret = self.a3.process_put(bian_context,"x", {"cr_reference_id": "1", "bq_reference_id": "1"})
             assert ret.code == 200
 
     def test_995_control_record_returns_a_given_list(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement//?name=1&queryparams=amount>100@x=y'):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a3 = A3()
-            ret = self.a3.process_get(halo_context,"x", {"sd_reference_id": "1", "behavior_qualifier": "DepositsandWithdrawals"})
+            ret = self.a3.process_get(bian_context,"x", {"sd_reference_id": "1", "behavior_qualifier": "DepositsandWithdrawals"})
             print("x=" + str(ret.payload))
             assert ret.code == status.HTTP_200_OK
             assert ret.request.behavior_qualifier == 'DepositsandWithdrawals'
@@ -724,10 +725,10 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process_put(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "1"})
+            ret = self.a5.process_put(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "1"})
             assert ret.code == 200
 
     def test_997_request_sub_returns_a_response(self):
@@ -735,11 +736,11 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty1': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a5.process(halo_context,"x",
+                ret = self.a5.execute(bian_context,"x",
                                           {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "1"})
             except Exception as e:
                 assert type(e).__name__ == "MissingBianContextException"
@@ -749,10 +750,10 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process(halo_context,"x",
+            ret = self.a5.execute(bian_context,"x",
                                       {"cr_reference_id": "2", "bq_reference_id": "3", "sbq_reference_id": "4"})
             assert ret.code == 200
 
@@ -761,32 +762,32 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
             app.config["HALO_CONTEXT_CLASS"] = None
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3"})
+            ret = self.a5.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3"})
             assert ret.code == 200
 
     def test_9991_request_sub_returns_a_response(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
-            ret = self.a5.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "3"})
+            ret = self.a5.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "3"})
             assert ret.code == 200
 
     def test_9992_request_sub_returns_a_response(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["BIAN_CONTEXT_LIST"] = [CAContext.TESTER]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a5.process(halo_context,"x",
+                ret = self.a5.execute(bian_context,"x",
                                           {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "3"})
             except Exception as e:
                 assert type(e).__name__ == "HaloMethodNotImplementedException"
@@ -795,11 +796,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/4/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["HALO_CONTEXT_CLASS"] = None
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
-            ret = self.a6.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
+            ret = self.a6.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
                                                 "sbq_reference_id": "4"})
             assert ret.code == 200
 
@@ -807,11 +808,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["HALO_CONTEXT_CLASS"] = None
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
-            ret = self.a6.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
+            ret = self.a6.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
                                                 "sbq_reference_id": "1"})
             assert ret.code == 200
 
@@ -819,11 +820,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a5.process(halo_context,"x",
+                ret = self.a5.execute(bian_context,"x",
                                           {"cr_reference_id": "1", "bq_reference_id": "1", "sbq_reference_id": "1"})
             except Exception as e:
                 assert type(e).__name__ == "IllegalBQError"
@@ -832,11 +833,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["REQUEST_FILTER_CLASS"] = 'halo_bian.bian.bian.BianRequestFilter'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
-            ret = self.a6.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
+            ret = self.a6.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
                                                 "sbq_reference_id": "1"})
             assert ret.code == 200
 
@@ -844,12 +845,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["REQUEST_FILTER_CLASS"] = 'tests_bian.BianRequestFilterX'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a6.process(halo_context,"x",
+                ret = self.a6.execute(bian_context,"x",
                                           {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
                                            "sbq_reference_id": "1"})
             except Exception as e:
@@ -859,11 +860,11 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.BianRequestFilterClear'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
-            ret = self.a6.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
+            ret = self.a6.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
                                                 "sbq_reference_id": "1"})
             assert ret.code == 200
 
@@ -871,12 +872,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a6.process(halo_context,"x",
+                ret = self.a6.execute(bian_context,"x",
                                           {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3",
                                            "sbq_reference_id": "1"})
             except Exception as e:
@@ -886,12 +887,12 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
             self.a7 = A7()
             self.a7.bian_action = ActionTerms.EXECUTE
             try:
-                ret = self.a7.process(halo_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2"})
+                ret = self.a7.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2"})
             except Exception as e:
                 assert type(e).__name__ == "BianException"
 
@@ -911,10 +912,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.x1 = X1()
             self.x1.bian_action = ActionTerms.ACTIVATE
-            ret = self.x1.process(halo_context,"x", {})
+            ret = self.x1.execute(bian_context,"x", {})
             print(ret.payload)
             self.session_id = ret.payload["serviceDomainServicingSessionReference"]
             assert ret.code == 200
@@ -944,7 +945,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             from halo_app.app.viewsx import load_global_data
             app.config['SSM_TYPE'] = "AWS"
             app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
@@ -953,7 +954,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
             self.x2 = X2()
             self.x2.bian_action = ActionTerms.CONFIGURE
-            ret = self.x2.process(halo_context,"x", {"sd_reference_id": self.session_id})
+            ret = self.x2.execute(bian_context,"x", {"sd_reference_id": self.session_id})
             assert ret.code == 200
 
     def test_99993_request_sub_returns_a_response(self):
@@ -970,7 +971,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             from halo_app.app.viewsx import load_global_data
             app.config['SSM_TYPE'] = "AWS"
             app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
@@ -979,7 +980,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             load_global_data(app.config["INIT_CLASS_NAME"], app.config["INIT_DATA_MAP"])
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process(halo_context,"x", {"sd_reference_id": self.session_id})
+            ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id})
             assert ret.code == 200
 
     def test_99994_request_sub_returns_a_response(self):
@@ -996,10 +997,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process(halo_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2"})
+            ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2"})
             assert ret.code == 200
 
     def test_99995_request_sub_returns_a_response(self):
@@ -1016,10 +1017,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process(halo_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2",
+            ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2",
                                                 "bq_reference_id": "3"})
             assert ret.code == 200
 
@@ -1037,9 +1038,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            halo_context = get_halo_context(request)
+            bian_context = get_bian_context(request)
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
-            ret = self.x3.process(halo_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2",
+            ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2",
                                                 "bq_reference_id": "3", "sbq_reference_id": "1"})
             assert ret.code == 200

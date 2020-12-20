@@ -8,7 +8,7 @@ from halo_app.classes import AbsBaseClass
 from halo_bian.bian.bian import ActionTerms
 from halo_bian.bian.command import BianQuery, BianCommand
 from halo_bian.bian.context import BianContext, BianCtxFactory
-from halo_bian.bian.exceptions import IllegalActionTermError
+from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException
 from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class BianUtil(AbsBaseClass):
             behavior_qualifier = cls.get_behavior_qualifier(action_term, vars["behavior_qualifier"])
         if "bq_reference_id" in vars:
             bq_reference_id = vars["bq_reference_id"]
-            behavior_qualifier = cls.get_behavior_qualifier_from_path(action_term,bq_reference_id)
+            #behavior_qualifier = cls.get_behavior_qualifier_from_path(action_term,bq_reference_id)
         if "sbq_reference_id" in vars:
             sub_qualifiers = cls.get_sub_qualifiers(behavior_qualifier, vars)
         if "collection_filter" in vars:
@@ -71,3 +71,18 @@ class BianUtil(AbsBaseClass):
         bian_command = BianCommand(bian_context, method_id, vars)
         return BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
 
+    @classmethod
+    def get_behavior_qualifier(cls, op, bq_name):
+        bqt_obj = cls.get_behavior_qualifier_type()
+        for bq_id in bqt_obj.keys():
+            bq_obj = bqt_obj.get(bq_id)
+            if bq_obj.name == bq_name.strip().replace("-","_").replace(" ","_"):
+                return bq_name
+        raise IllegalBQError(bq_name)
+
+    @classmethod
+    def get_behavior_qualifier_type(cls):
+        if settings.BEHAVIOR_QUALIFIER:
+            self.behavior_qualifier_type = cls.get_bq_obj()
+        else:
+            raise BehaviorQualifierNameException("missing Behavior Qualifier definition")

@@ -319,14 +319,6 @@ class AbsBianHandler(AbsBaseHandler):
         bq_obj = self.init_bq(bq_class)
         return bq_obj
 
-    def get_behavior_qualifier(self, op, bq_name):
-        bqt_obj = self.behavior_qualifier_type
-        for bq_id in bqt_obj.keys():
-            bq_obj = bqt_obj.get(bq_id)
-            if bq_obj.name == bq_name.strip().replace("-","_").replace(" ","_"):
-                return bq_name
-        raise IllegalBQError(bq_name)
-
     def get_behavior_qualifier_by_id(self, op, bq_id):
         bq_obj = self.behavior_qualifier
         if bq_id in bq_obj.keys():
@@ -756,27 +748,17 @@ class AbsBianHandler(AbsBaseHandler):
        event_category = ActionTerms.categories[bian_action]
        self.set_businss_event(request, event_category)
 
-
-    def process1(self,halo_context,method_id,vars={}):
-        logger.debug("sd=" + str(self.service_domain) + " in process_get " + str(vars))
-        bian_action = self.get_bian_action(self.bian_action)
-        bian_request = self.bian_validate_req(halo_context,method_id,bian_action, vars)
-        self.set_bian_businss_event(bian_request, bian_action)
-        return self.process_service_operation(bian_action, bian_request, vars)
-
     def process_bian_request(self,bian_request):
         logger.debug("sd=" + str(self.service_domain))
         self.set_bian_businss_event(bian_request, bian_request.action_term)
         return self.process_service_operation(bian_request)
 
 class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
-    def run_command1(self,bian_request:HaloCommandRequest) ->HaloResponse:
-        return self.process_bian_request(bian_request)
+    pass
 
 
 class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
-    def run_query1(self, bian_request: HaloQueryRequest) -> HaloResponse:
-        return self.process_bian_request(bian_request)
+    pass
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers
