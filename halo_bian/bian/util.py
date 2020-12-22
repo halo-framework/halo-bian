@@ -4,12 +4,17 @@ import logging
 from halo_app.app.command import HaloQuery, HaloCommand
 from halo_app.app.request import HaloRequest
 from halo_app.classes import AbsBaseClass
+from halo_app.reflect import Reflect
 
-from halo_bian.bian.bian import ActionTerms
+from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifierType
 from halo_bian.bian.command import BianQuery, BianCommand
 from halo_bian.bian.context import BianContext, BianCtxFactory
-from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException
+from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \
+    FunctionalPatternNameException
 from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
+from halo_app.settingsx import settingsx
+
+settings = settingsx()
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +88,27 @@ class BianUtil(AbsBaseClass):
     @classmethod
     def get_behavior_qualifier_type(cls):
         if settings.BEHAVIOR_QUALIFIER:
-            self.behavior_qualifier_type = cls.get_bq_obj()
+            return cls.get_bq_obj()
         else:
             raise BehaviorQualifierNameException("missing Behavior Qualifier definition")
+
+    @classmethod
+    def get_bq_obj(cls):
+        if settings.FUNCTIONAL_PATTERN:
+            functional_pattern = settings.FUNCTIONAL_PATTERN
+        else:
+            raise FunctionalPatternNameException("missing Functional Pattern definition")
+        bq_class = FunctionalPatterns.patterns[functional_pattern][1]
+        bq_obj = cls.init_bq(bq_class)
+        return bq_obj
+
+    @classmethod
+    def init_bq(cls, bq_class_name):
+        if settings.BEHAVIOR_QUALIFIER_TYPE:
+            k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
+            module_name = settings.BEHAVIOR_QUALIFIER_TYPE[:k]
+            class_name = settings.BEHAVIOR_QUALIFIER_TYPE[k+1:]
+        else:
+            module_name = "halo_bian.bian.bian"
+            class_name = bq_class_name
+        return Reflect.do_instantiate(module_name, class_name, BehaviorQualifierType,settings.BEHAVIOR_QUALIFIER,settings.SUB_QUALIFIER)

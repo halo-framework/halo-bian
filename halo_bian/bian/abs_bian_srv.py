@@ -25,6 +25,10 @@ from halo_app.ssm import get_app_config
 from halo_app.exceptions import CacheKeyError
 from halo_app.ssm import set_app_param_config,get_app_param_config
 
+from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
+from halo_bian.bian.response import BianResponse
+from halo_bian.bian.util import BianUtil
+
 settings = settingsx()
 
 logger = logging.getLogger(__name__)
@@ -86,7 +90,7 @@ class AbsBianHandler(AbsBaseHandler):
         else:
             raise GenericArtifactNameException("missing GENERIC ARTIFACT definition")
         if settings.BEHAVIOR_QUALIFIER:
-            self.behavior_qualifier_type = self.get_bq_obj()
+            self.behavior_qualifier_type = BianUtil.get_bq_obj()
         else:
             raise BehaviorQualifierNameException("missing Behavior Qualifier definition")
         if settings.CONTROL_RECORD:
@@ -274,51 +278,6 @@ class AbsBianHandler(AbsBaseHandler):
         ga_obj = self.init_cr(ga_class,init_var)
         return ga_obj
 
-    def init_ctx1(self, request):
-        if settings.BIAN_CONTEXT_CLASS:
-            k = settings.BIAN_CONTEXT_CLASS.rfind(".")
-            module_name = settings.BIAN_CONTEXT_CLASS[:k]
-            class_name = settings.BIAN_CONTEXT_CLASS[k+1:]
-        else:
-            module_name = "halo_bian.bian.bian"
-            class_name = "BianContext"
-        module = importlib.import_module(module_name)
-        class_ = getattr(module, class_name)
-        instance = class_(request)
-        if not issubclass(class_, BianContext):
-            raise BianException("BIAN CONTEXT CLASS error:"+settings.BIAN_CONTEXT_CLASS)
-        return instance
-
-    def init_bq(self, bq_class_name):
-        if settings.BEHAVIOR_QUALIFIER_TYPE:
-            k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
-            module_name = settings.BEHAVIOR_QUALIFIER_TYPE[:k]
-            class_name = settings.BEHAVIOR_QUALIFIER_TYPE[k+1:]
-        else:
-            module_name = "halo_bian.bian.bian"
-            class_name = bq_class_name
-        return Reflect.do_instantiate(module_name, class_name, BehaviorQualifierType,settings.BEHAVIOR_QUALIFIER,settings.SUB_QUALIFIER)
-
-    def init_bq1(self, bq_class_name):
-        if settings.BEHAVIOR_QUALIFIER_TYPE:
-            k = settings.BEHAVIOR_QUALIFIER_TYPE.rfind(".")
-            module_name = settings.BEHAVIOR_QUALIFIER_TYPE[:k]
-            class_name = settings.BEHAVIOR_QUALIFIER_TYPE[k+1:]
-        else:
-            module_name = "halo_bian.bian.bian"
-            class_name = bq_class_name
-        module = importlib.import_module(module_name)
-        class_ = getattr(module, class_name)
-        instance = class_(settings.BEHAVIOR_QUALIFIER,settings.SUB_QUALIFIER)
-        if not issubclass(class_, BehaviorQualifierType):
-            raise BianException("BEHAVIOR QUALIFIER TYPE class error:"+settings.BEHAVIOR_QUALIFIER)
-        return instance
-
-    def get_bq_obj(self):
-        bq_class = FunctionalPatterns.patterns[self.functional_pattern][1]
-        bq_obj = self.init_bq(bq_class)
-        return bq_obj
-
     def get_behavior_qualifier_by_id(self, op, bq_id):
         bq_obj = self.behavior_qualifier
         if bq_id in bq_obj.keys():
@@ -434,163 +393,85 @@ class AbsBianHandler(AbsBaseHandler):
             return self.process_ok(bian_response)
         raise IllegalActionTermError(bian_request.action_term)
 
-    def do_initiate_bq(self, bian_request):
-        logger.debug("in do_initiate_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
-
     def do_initiate(self, bian_request):
         logger.debug("in do_initiate ")
         if bian_request.behavior_qualifier:
-            return self.do_initiate_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_create_bq(self, bian_request):
-        logger.debug("in do_create_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_create(self, bian_request):
         logger.debug("in do_create ")
         if bian_request.behavior_qualifier:
-            return self.do_create_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_activate_bq(self, bian_request):
-        logger.debug("in do_activate_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_activate(self, bian_request):
         logger.debug("in do_activate ")
         if bian_request.behavior_qualifier:
-            return self.do_activate_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_configure_bq(self, bian_request):
-        logger.debug("in do_configure_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_configure(self, bian_request):
         logger.debug("in do_configure ")
         if bian_request.behavior_qualifier:
-            return self.do_configure_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_update_bq(self, bian_request):
-        logger.debug("in do_update_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_update(self, bian_request):
         logger.debug("in do_update ")
         if bian_request.behavior_qualifier:
-            return self.do_update_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_register_bq(self, bian_request):
-        logger.debug("in do_register_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_register(self, bian_request):
         logger.debug("in do_register ")
         if bian_request.behavior_qualifier:
-            return self.do_register_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_record_bq(self, bian_request):
-        logger.debug("in do_record_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_record(self, bian_request):
         logger.debug("in do_record ")
         if bian_request.behavior_qualifier:
-            return self.do_record_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_execute_bq(self, bian_request):
-        logger.debug("in do_execute_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_execute(self, bian_request):
         logger.debug("in do_execute ")
         if bian_request.behavior_qualifier:
-            return self.do_execute_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_evaluate_bq(self, bian_request):
-        logger.debug("in do_evaluate_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_evaluate(self, bian_request):
         logger.debug("in do_evaluate ")
         if bian_request.behavior_qualifier:
-            return self.do_evaluate_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_provide_bq(self, bian_request):
-        logger.debug("in do_provide_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_provide(self, bian_request):
         logger.debug("in do_provide ")
         if bian_request.behavior_qualifier:
-            return self.do_provide_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_authorize_bq(self, bian_request):
-        logger.debug("in do_authorize_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_authorize(self, bian_request):
         logger.debug("in do_authorize ")
         if bian_request.behavior_qualifier:
-            return self.do_authorize_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_request_bq(self, bian_request):
-        logger.debug("in do_request_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_request(self, bian_request):
         logger.debug("in do_request ")
         if bian_request.behavior_qualifier:
-            return self.do_request_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_terminate_bq(self, bian_request):
-        logger.debug("in do_terminate_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_terminate(self, bian_request):
         logger.debug("in do_terminate ")
         if bian_request.behavior_qualifier:
-            return self.do_terminate_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
 
-    def do_notify_bq(self, bian_request):
+    def do_command_bq(self, bian_request):
         logger.debug("in do_notify_bq ")
         if bian_request.behavior_qualifier is None:
             raise IllegalBQError("missing behavior_qualifier value")
@@ -599,10 +480,10 @@ class AbsBianHandler(AbsBaseHandler):
     def do_notify(self, bian_request):
         logger.debug("in do_notify ")
         if bian_request.behavior_qualifier:
-            return self.do_notify_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
 
-    def do_retrieve_bq(self, bian_request):
+    def do_query_bq(self, bian_request):
         logger.debug("in do_retrieve_bq ")
         if bian_request.behavior_qualifier is None:
             raise IllegalBQError("missing behavior_qualifier value")
@@ -611,67 +492,41 @@ class AbsBianHandler(AbsBaseHandler):
     def do_retrieve(self, bian_request):
         logger.debug("in do_retrieve ")
         if bian_request.behavior_qualifier:
-            return self.do_retrieve_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_capture_bq(self, bian_request):
-        logger.debug("in do_capture_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_capture(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
-            return self.do_retrieve_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_control_bq(self, bian_request):
-        logger.debug("in do_capture_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_control(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
-            return self.do_retrieve_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_exchange_bq(self, bian_request):
-        logger.debug("in do_capture_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_exchange(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
-            return self.do_retrieve_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_grant_bq(self, bian_request):
-        logger.debug("in do_capture_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_grant(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
-            return self.do_retrieve_bq(bian_request)
+            return self.do_operation_bq(bian_request)
         return self.do_operation(bian_request)
-
-    def do_feedback_bq(self, bian_request):
-        logger.debug("in do_capture_bq ")
-        if bian_request.behavior_qualifier is None:
-            raise IllegalBQError("missing behavior_qualifier value")
-        return self.do_operation_bq(bian_request)
 
     def do_feedback(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
-            return self.do_retrieve_bq(bian_request)
+            return self.do_operation_bq(bian_request)
+        return self.do_operation(bian_request)
+
+    #@todo get original back to use
+    def do_operation_bq(self,bian_request):
         return self.do_operation(bian_request)
 
 #@todo replace importlib with reflect
@@ -754,11 +609,18 @@ class AbsBianHandler(AbsBaseHandler):
         return self.process_service_operation(bian_request)
 
 class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
-    pass
+
+    def run_command(self,bian_request:HaloCommandRequest) ->BianResponse:
+        return self.process_bian_request(bian_request)
 
 
 class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
-    pass
+    def set_bian_businss_event(self,bian_request, action_term):
+        return None
+
+    def run_query(self, bian_request: HaloQueryRequest) -> BianResponse:
+        return self.process_bian_request(bian_request)
+
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers

@@ -2,6 +2,9 @@ from __future__ import print_function
 
 from faker import Faker
 from flask import Flask, request
+from halo_app.domain.repository import AbsRepository
+from halo_app.domain.service import AbsDomainService
+from halo_app.infra.service import AbsMailService
 from requests.auth import *
 import json
 from nose.tools import eq_
@@ -9,6 +12,7 @@ import unittest
 
 from halo_app.const import LOC
 from halo_bian.bian.context import BianContext
+from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
 from halo_bian.bian.util import BianUtil
 from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
     FeedbackAbsBianMixin, AbsBianQueryHandler
@@ -109,6 +113,22 @@ class Tst4Api(AbsRestApi):
 
 class A1(BoundaryService, AbsBianCommandHandler):  # the basic
     bian_action = ActionTerms.REQUEST
+
+    def __init__(self):
+        super(A1,self).__init__()
+        self.repository = AbsRepository()
+        self.domain_service = AbsDomainService()
+        self.infra_service = AbsMailService()
+
+    def handle(self,bian_command_request:BianCommandRequest) ->dict:
+        var_name =  'cr_reference_id'
+        item = None
+        if var_name in bian_command_request.vars:
+            item = self.repository.load(bian_command_request.vars[var_name])
+        entity = self.domain_service.validate(item)
+        self.infra_service.send(entity)
+        return {"1":{"a":"b"}}
+
     def set_back_api(self, halo_request, foi=None):
         if not foi:  # not in seq
             if halo_request.func == "x":
@@ -144,7 +164,6 @@ class A1(BoundaryService, AbsBianCommandHandler):  # the basic
             except ApiError as e:
                 raise BianException(e)
         return None
-
 
 class A2(A1):  # customized
     def validate_req(self, bian_request):
@@ -218,6 +237,21 @@ class A3(BoundaryService,AbsBianCommandHandler):  # the foi
                'count': 'count'}}
     filter_chars = {None: ['=', '>']}
 
+    def __init__(self):
+        super(A3,self).__init__()
+        self.repository = AbsRepository()
+        self.domain_service = AbsDomainService()
+        self.infra_service = AbsMailService()
+
+    def handle(self,bian_command_request:BianCommandRequest) ->dict:
+        var_name = 'cr_reference_id'
+        item = None
+        if var_name in bian_command_request.vars:
+            item = self.repository.load(bian_command_request.vars[var_name])
+        entity = self.domain_service.validate(item)
+        self.infra_service.send(entity)
+        return {"1":{"a":"b"}}
+
     def set_back_api(self, bian_request, foi=None):
         if foi:
             return super(A3, self).set_back_api(bian_request, foi)
@@ -228,11 +262,12 @@ class A3(BoundaryService,AbsBianCommandHandler):  # the foi
 
     def validate_pre(self, bian_request):
         print("in validate_req_deposit ")
-        if bian_request:
+        if bian_request and bian_request.collection_filter:
             for f in bian_request.collection_filter:
                 if "amount" == f.field:
                     return True
-        raise BianError("missing value for query var amount")
+            raise BianError("missing value for query var amount")
+        return True
 
     def set_back_api(self, bian_request, foi=None):
         if foi:
@@ -277,10 +312,10 @@ class A3(BoundaryService,AbsBianCommandHandler):  # the foi
                 raise BianException(e)
         return None
 
-    def create_resp_payload(self, bian_request, create_resp_payloaddict):
-        print("in create_resp_payload_deposit " + str(create_resp_payloaddict))
-        if create_resp_payloaddict:
-            return self.map_from_json(create_resp_payloaddict, {})
+    def create_resp_payload(self, bian_request, create_resp_payload_dict):
+        print("in create_resp_payload_deposit " + str(create_resp_payload_dict))
+        if create_resp_payload_dict:
+            return self.map_from_json(create_resp_payload_dict, {"name":""})
         return {}
 
     def extract_json(self, bian_request, api, back_json, foi=None):
@@ -289,7 +324,8 @@ class A3(BoundaryService,AbsBianCommandHandler):  # the foi
 
     def map_from_json(self, dict, payload):
         print("in map_from_json_deposit")
-        payload['name'] = dict['1']["title"]
+        if 'name' in payload:
+            payload['name'] = dict['1']["a"]
         return payload
 
 
@@ -372,7 +408,20 @@ class A7(AbsBianCommandHandler):  # the foi
         return {"name": json["title"]}
 
 class A8(BoundaryService,AbsBianQueryHandler):
-    pass
+    def __init__(self):
+        super(A8, self).__init__()
+        self.repository = AbsRepository()
+        self.domain_service = AbsDomainService()
+        self.infra_service = AbsMailService()
+
+    def run(self, bian_query_request: BianQueryRequest) -> dict:
+        var_name = 'cr_reference_id'
+        item = None
+        if var_name in bian_query_request.vars:
+            item = self.repository.load(bian_query_request.vars[var_name])
+        entity = self.domain_service.validate(item)
+        self.infra_service.send(entity)
+        return {"1": {"a": "b"}}
 
 class X1(BoundaryService,ActivationAbsBianMixin):
     pass
@@ -481,9 +530,9 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == status.HTTP_200_OK
 
     def test_1_get_request_returns_a_given_string(self):
-        with app.test_request_context('/?name=Peter'):
+        with app.test_request_context('/?cr_reference_id=123'):
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context, "x", {},ActionTerms.REQUEST)
+            bian_request = BianUtil.create_bian_request(bian_context, "x", request.args,ActionTerms.REQUEST)
             self.a1 = A1()
             ret = self.a1.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
@@ -528,7 +577,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,"x",{},ActionTerms.EXECUTE)
                 ret = self.a1.execute(bian_request)
-                assert ret.code == status.HTTP_200_OK
+                assert ret.code == status.HTTP_201_CREATED
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
@@ -550,7 +599,8 @@ class TestUserDetailTestCase(unittest.TestCase):
             bian_context = get_bian_context(request)
             self.a1 = A1()
             self.a1.bian_action = ActionTerms.INITIATE
-            ret = self.a1.execute(bian_context,"x",{})
+            bian_request = BianUtil.create_bian_request(bian_context, "x", {}, ActionTerms.INITIATE)
+            ret = self.a1.execute(bian_request)
             assert ret.code == status.HTTP_201_CREATED
 
     def test_8_patch_request_returns_a_given_string(self):
@@ -585,7 +635,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context('/?name=news'):
             bian_context = get_bian_context(request)
             self.a2 = A2()
-            ret = self.a2.execute(bian_context,"x", {"cr_reference_id": "1"})
+            bian_request = BianUtil.create_bian_request(bian_context, "x", {"cr_reference_id": "1"}, ActionTerms.INITIATE)
+            ret = self.a2.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'test'
 
@@ -594,9 +645,10 @@ class TestUserDetailTestCase(unittest.TestCase):
             bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.filter_separator = ";"
-            ret = self.a3.execute(bian_context,"x", {"behavior_qualifier": "DepositsandWithdrawals"})
+            bian_request = BianUtil.create_bian_request(bian_context, "x", {"behavior_qualifier": "DepositsandWithdrawals"}, ActionTerms.CONTROL)
+            ret = self.a3.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
-            assert ret.payload["name"] == 'good'
+            assert ret.payload["name"] == 'b'
 
     def test_96_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
