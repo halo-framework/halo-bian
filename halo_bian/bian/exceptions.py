@@ -71,3 +71,6 @@ class BianApiException(BianException):
 
 class CollectionFilterException(BianException):
     pass
+
+class BianMethodMisMatch(BianException):
+    pass

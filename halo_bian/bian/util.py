@@ -38,11 +38,14 @@ class BianUtil(AbsBaseClass):
         return ctx
 
     @classmethod
-    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=ActionTerms.RETRIEVE) -> HaloRequest:
+    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None) -> HaloRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
-        action_term = action
+        if action:
+            action_term = action
+        else:
+            action_term = cls.set_action(method_id)
         if action_term not in ActionTerms.ops:
-            raise IllegalActionTermError(action)
+            raise IllegalActionTermError(action_term)
         sd_reference_id = None
         cr_reference_id = None
         behavior_qualifier_type = None
@@ -67,7 +70,7 @@ class BianUtil(AbsBaseClass):
         if "body" in vars:
             body = vars["body"]
 
-        if action == ActionTerms.RETRIEVE:
+        if action_term == ActionTerms.RETRIEVE:
             bian_query = BianQuery(bian_context, method_id, vars)
             return BianQueryRequest(bian_query, action_term, sd_reference_id=sd_reference_id,
                                       cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id,
@@ -112,3 +115,35 @@ class BianUtil(AbsBaseClass):
             module_name = "halo_bian.bian.bian"
             class_name = bq_class_name
         return Reflect.do_instantiate(module_name, class_name, BehaviorQualifierType,settings.BEHAVIOR_QUALIFIER,settings.SUB_QUALIFIER)
+
+    @classmethod
+    def set_action(cls,method_id:str)->ActionTerms:
+        if method_id.startswith("retrieve_"):
+            return ActionTerms.RETRIEVE
+        if method_id.startswith("control_"):
+            return ActionTerms.CONTROL
+        if method_id.startswith("request_"):
+            return ActionTerms.REQUEST
+        if method_id.startswith("initiate_"):
+            return ActionTerms.INITIATE
+        if method_id.startswith("execute_"):
+            return ActionTerms.EXECUTE
+        if method_id.startswith("capture_"):
+            return ActionTerms.CAPTURE
+        if method_id.startswith("create_"):
+            return ActionTerms.CREATE
+        if method_id.startswith("evaluate_"):
+            return ActionTerms.EVALUATE
+        if method_id.startswith("exchange_"):
+            return ActionTerms.EXCHANGE
+        if method_id.startswith("grant_"):
+            return ActionTerms.GRANT
+        if method_id.startswith("provide_"):
+            return ActionTerms.PROVIDE
+        if method_id.startswith("register_"):
+            return ActionTerms.REGISTER
+        if method_id.startswith("update_"):
+            return ActionTerms.UPDATE
+        if method_id.startswith("notify_"):
+            return ActionTerms.NOTIFY
+        raise IllegalActionTermError(method_id)

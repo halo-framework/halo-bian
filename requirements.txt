@@ -8,7 +8,7 @@ requests==2.20.1
 environs
 python-json-logger
 PyJWT==1.6.3
-halo-app==0.10.22
+halo-app==0.10.23
 jsonpath-ng==1.4.3
 halo-aws==0.11.41
 boto3==1.7.16

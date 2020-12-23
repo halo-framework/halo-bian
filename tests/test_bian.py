@@ -408,6 +408,7 @@ class A7(AbsBianCommandHandler):  # the foi
         return {"name": json["title"]}
 
 class A8(BoundaryService,AbsBianQueryHandler):
+    bian_action = ActionTerms.RETRIEVE
     def __init__(self):
         super(A8, self).__init__()
         self.repository = AbsRepository()
@@ -532,38 +533,46 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1_get_request_returns_a_given_string(self):
         with app.test_request_context('/?cr_reference_id=123'):
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context, "x", request.args,ActionTerms.REQUEST)
+            method_id = "request_x"
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args)
             self.a1 = A1()
+            self.a1.method_id = method_id
             ret = self.a1.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_2_get_request_with_ref_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"},ActionTerms.CONTROL)
+            method_id = "request_x"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"})
             self.a1 = A1()
+            self.a1.method_id = method_id
             ret = self.a1.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_3_get_request_with_ref_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
+            method_id = "execute_x"
             self.a1 = A1()
+            self.a1.method_id = method_id
             try:
-                bian_request = BianUtil.create_bian_request(bian_context,"x",
-                                          {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"},ActionTerms.EXECUTE)
+                bian_request = BianUtil.create_bian_request(bian_context,method_id,
+                                          {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"})
                 ret = self.a1.execute(bian_request)
-                assert ret.code == status.HTTP_200_OK
+                assert ret.code == status.HTTP_500_INTERNAL_SERVER_ERROR
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
-                #assert type(e).__name__ == 'HaloMethodNotImplementedException'
+                assert type(e).__name__ == 'HaloMethodNotImplementedException'
 
     def test_4_get_request_with_bad_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
+            method_id = "retrieve_x"
             self.a8 = A8()
+            self.a8.method_id = method_id
             try:
-                bian_request = BianUtil.create_bian_request(bian_context,"x", {"cr_reference_id": "123"})
+                bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"})
                 ret = self.a8.execute(bian_request)
                 assert ret.code == status.HTTP_200_OK
             except Exception as e:
@@ -573,9 +582,11 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_5_post_request_returns_a_given_error(self):
         with app.test_request_context(method='POST', path='/tst'):
             bian_context = get_bian_context(request)
+            method_id = "execute_x"
             self.a1 = A1()
+            self.a1.method_id = method_id
             try:
-                bian_request = BianUtil.create_bian_request(bian_context,"x",{},ActionTerms.EXECUTE)
+                bian_request = BianUtil.create_bian_request(bian_context,method_id,{})
                 ret = self.a1.execute(bian_request)
                 assert ret.code == status.HTTP_201_CREATED
             except Exception as e:

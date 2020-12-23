@@ -206,7 +206,7 @@ class AbsBianHandler(AbsBaseHandler):
             raise ServiceNotOpenException("Service not open for processing ")
         raise ServiceStateException("missing Service State ")
 
-    def set_bian_action(self,action):
+    def set_bian_action(self,action:ActionTerms):
         self.bian_action = action
 
     def set_control_record(self, control_record):
@@ -316,18 +316,24 @@ class AbsBianHandler(AbsBaseHandler):
                 return self.filter_chars[None]
         return []
 
-
-
+    def validate_match(self, bian_request):
+        if bian_request.action_term != self.bian_action:
+            raise BianMethodMisMatch("request action:"+str(bian_request.action_term)+" -> handler action:"+str(self.bian_action))
+        if bian_request.method_id != self.method_id:
+            raise BianMethodMisMatch(
+                "request method:" + str(bian_request.method_id) + " -> handler method:" + str(self.method_id))
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")
         if bian_request:
+            self.validate_match(bian_request)
             self.validate_sd_reference_id(bian_request)
             self.validate_cr_reference_id(bian_request)
             self.validate_bq_reference_id(bian_request)
             #self.validate_filter_key_values()
             #self.validate_filter_chars()
             self.validate_collection_filter(bian_request)
+            # admin work
             if settings.SERVICING_SESSION:
                 self.validate_service_state(bian_request)
             return True
