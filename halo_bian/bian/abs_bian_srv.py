@@ -362,7 +362,7 @@ class AbsBianHandler(AbsBaseHandler):
                         response.code = status.HTTP_202_ACCEPTED
                     if response.request.context.get(HaloContext.method) == 'DELETE':
                         response.code = status.HTTP_200_OK
-                    logger.info('process_service_operation : '+response.request.context.get(HaloContext.method),
+                    logger.info('process_service_operation : '+response.request.method_id,
                                 extra=log_json(response.request.context,  {"return": "success"}))
                     return response
                 raise ActionTermFailException(response.request.action_term)
