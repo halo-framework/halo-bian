@@ -6,27 +6,27 @@ from abc import ABCMeta,abstractmethod
 import importlib
 
 from halo_app.app.context import HaloContext
-from halo_app.app.request import HaloQueryRequest
+from halo_app.app.request import HaloEventRequest
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_app.app.utilx import Util
 from halo_app.errors import status
 from halo_app.logs import log_json
 from halo_app.infra.apis import AbsBaseApi
-from halo_app.app.mixinx import AbsCommandHandler, AbsBaseHandler, AbsQueryHandler
-from halo_app.app.filterx import RequestFilter
+from halo_app.app.handler import AbsCommandHandler, AbsBaseHandler, AbsEventHandler
+from halo_app.app.anlytx_filter import RequestFilter
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
 from halo_app.models import AbsDbMixin
 
-from halo_bian.bian.context import BianContext
+from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
 from halo_app.ssm import get_app_config
 from halo_app.exceptions import CacheKeyError
 from halo_app.ssm import set_app_param_config,get_app_param_config
 
-from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
-from halo_bian.bian.response import BianResponse
+from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
+from halo_bian.bian.app.response import BianResponse
 from halo_bian.bian.util import BianUtil
 
 settings = settingsx()
@@ -620,11 +620,11 @@ class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
         return self.process_bian_request(bian_request)
 
 
-class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
+class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
     def set_bian_businss_event(self,bian_request, action_term):
         return None
 
-    def run_query(self, bian_request: HaloQueryRequest) -> BianResponse:
+    def _run_event(self, bian_request: HaloEventRequest):
         return self.process_bian_request(bian_request)
 
 
@@ -906,7 +906,7 @@ class FeedbackAbsBianMixin(AbsBianSrvMixin):
         dict = {'1': payload}
         return dict
 
-from halo_app.app.viewsx import GlobalService
+from halo_app.app.globals import GlobalService
 global_service_state = None
 global_service_props = None
 global_service_session = None

@@ -11,11 +11,11 @@ from nose.tools import eq_
 import unittest
 
 from halo_app.const import LOC
-from halo_bian.bian.context import BianContext
-from halo_bian.bian.request import BianCommandRequest, BianEventRequest
+from halo_bian.bian.app.context import BianContext
+from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
 from halo_bian.bian.util import BianUtil
 from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
-    FeedbackAbsBianMixin, AbsBianQueryHandler
+    FeedbackAbsBianMixin, AbsBianEventHandler
 from halo_bian.bian.db import AbsBianDbMixin
 from halo_app.app.anlytx_filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianRequestFilter, FunctionalPatterns
@@ -415,7 +415,7 @@ class A7(BoundaryService,AbsBianCommandHandler):  # the foi
         json = dict['1']
         return {"name": json["title"]}
 
-class A8(BoundaryService,AbsBianQueryHandler):
+class A8(BoundaryService,AbsBianEventHandler):
     bian_action = ActionTerms.RETRIEVE
     def __init__(self):
         super(A8, self).__init__()

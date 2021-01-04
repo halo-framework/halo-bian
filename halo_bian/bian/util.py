@@ -7,11 +7,12 @@ from halo_app.classes import AbsBaseClass
 from halo_app.reflect import Reflect
 
 from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifierType
-from halo_bian.bian.command import BianQuery, BianCommand
-from halo_bian.bian.context import BianContext, BianCtxFactory
+from halo_bian.bian.domain.command import BianCommand
+from halo_bian.bian.domain.event import AbsBianEvent
+from halo_bian.bian.app.context import BianContext, BianCtxFactory
 from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \
-    FunctionalPatternNameException
-from halo_bian.bian.request import BianCommandRequest, BianEventRequest
+    FunctionalPatternNameException, BianRequestActionException
+from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
 from halo_app.settingsx import settingsx
 
 settings = settingsx()
@@ -46,6 +47,8 @@ class BianUtil(AbsBaseClass):
             action_term = cls.set_action(method_id)
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermError(action_term)
+        if action_term == ActionTerms.RETRIEVE:
+            raise BianRequestActionException()
         sd_reference_id = None
         cr_reference_id = None
         behavior_qualifier_type = None
@@ -70,12 +73,6 @@ class BianUtil(AbsBaseClass):
         if "body" in vars:
             body = vars["body"]
 
-        if action_term == ActionTerms.RETRIEVE:
-            bian_query = BianQuery(bian_context, method_id, vars)
-            return BianEventRequest(bian_query, action_term, sd_reference_id=sd_reference_id,
-                                      cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id,
-                                      behavior_qualifier=behavior_qualifier, collection_filter=collection_filter,
-                                      body=body, sub_qualifiers=sub_qualifiers)
         bian_command = BianCommand(bian_context, method_id, vars)
         return BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
 
