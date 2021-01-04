@@ -1,7 +1,7 @@
 
 import logging
 
-from halo_app.app.command import HaloQuery, HaloCommand
+from halo_app.domain.command import HaloCommand
 from halo_app.app.request import HaloRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.reflect import Reflect
@@ -11,7 +11,7 @@ from halo_bian.bian.command import BianQuery, BianCommand
 from halo_bian.bian.context import BianContext, BianCtxFactory
 from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \
     FunctionalPatternNameException
-from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
+from halo_bian.bian.request import BianCommandRequest, BianEventRequest
 from halo_app.settingsx import settingsx
 
 settings = settingsx()
@@ -72,7 +72,7 @@ class BianUtil(AbsBaseClass):
 
         if action_term == ActionTerms.RETRIEVE:
             bian_query = BianQuery(bian_context, method_id, vars)
-            return BianQueryRequest(bian_query, action_term, sd_reference_id=sd_reference_id,
+            return BianEventRequest(bian_query, action_term, sd_reference_id=sd_reference_id,
                                       cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id,
                                       behavior_qualifier=behavior_qualifier, collection_filter=collection_filter,
                                       body=body, sub_qualifiers=sub_qualifiers)

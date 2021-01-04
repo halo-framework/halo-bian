@@ -4,7 +4,7 @@ from faker import Faker
 from flask import Flask, request
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
-from halo_app.infra.service import AbsMailService
+from halo_app.infra.mail import AbsMailService
 from requests.auth import *
 import json
 from nose.tools import eq_
@@ -12,21 +12,22 @@ import unittest
 
 from halo_app.const import LOC
 from halo_bian.bian.context import BianContext
-from halo_bian.bian.request import BianCommandRequest, BianQueryRequest
+from halo_bian.bian.request import BianCommandRequest, BianEventRequest
 from halo_bian.bian.util import BianUtil
 from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
     FeedbackAbsBianMixin, AbsBianQueryHandler
 from halo_bian.bian.db import AbsBianDbMixin
-from halo_app.app.filterx import RequestFilterClear
+from halo_app.app.anlytx_filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianRequestFilter, FunctionalPatterns
 from halo_app.exceptions import ApiError
 from halo_app.errors import status
 from halo_bian.bian.exceptions import BianException, BianError
 from halo_app.infra.apis import *
 from halo_app.app.utilx import Util
-from halo_app.app.servicex import FoiBusinessEvent, SagaBusinessEvent
+from halo_app.app.business_event import FoiBusinessEvent, SagaBusinessEvent
 from halo_app.ssm import set_app_param_config, set_host_param_config
-from halo_app.app.viewsx import load_global_data, AbsBoundaryService, BoundaryService
+from halo_app.app.globals import load_global_data
+from halo_app.app.boundary import AbsBoundaryService, BoundaryService
 from halo_app.base_util import BaseUtil
 
 
@@ -231,6 +232,7 @@ class SaBusinessEvent(SagaBusinessEvent):
 
 class A3(BoundaryService,AbsBianCommandHandler):  # the foi
     bian_action = ActionTerms.REQUEST
+    method_id = "x"
     filter_separator = "#"
     filter_key_values = {
         None: {'customer-reference-id': 'customerId', 'amount': 'amount', 'user': 'user', 'page_no': 'page_no',
@@ -250,6 +252,11 @@ class A3(BoundaryService,AbsBianCommandHandler):  # the foi
             item = self.repository.load(bian_command_request.vars[var_name])
         entity = self.domain_service.validate(item)
         self.infra_service.send(entity)
+        api = ApiMngr.get_api_instance("Cnn", bian_command_request.context, HTTPChoice.delete.value)
+        ret = api.run(100)
+        api = ApiMngr.get_api_instance("Tst2", bian_command_request.context)
+        ret = api.run(100,{})
+
         return {"1":{"a":"b"}}
 
     def set_back_api(self, bian_request, foi=None):
@@ -393,7 +400,8 @@ class A6(A5):
         return
 
 
-class A7(AbsBianCommandHandler):  # the foi
+class A7(BoundaryService,AbsBianCommandHandler):  # the foi
+    method_id = "execute_x"
     def set_back_api(self, bian_request, foi=None):
         print("in set_back_api ")
         if foi:
@@ -415,7 +423,7 @@ class A8(BoundaryService,AbsBianQueryHandler):
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def run(self, bian_query_request: BianQueryRequest) -> dict:
+    def run(self, bian_query_request: BianEventRequest) -> dict:
         var_name = 'cr_reference_id'
         item = None
         if var_name in bian_query_request.vars:
@@ -473,7 +481,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         #self.test_0_get_request_returns_a_given_string()
 
     def test_00_get_request_returns_a_given_string(self):
-        from halo_app.app.viewsx import load_global_data
+        #from halo_app.app.viewsx import load_global_data
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
         # app.config['FUNC_NAME'] = "FUNC_NAME"
@@ -656,7 +664,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             bian_context = get_bian_context(request)
             self.a3 = A3()
             self.a3.filter_separator = ";"
-            bian_request = BianUtil.create_bian_request(bian_context, "x", {"behavior_qualifier": "DepositsandWithdrawals"}, ActionTerms.CONTROL)
+            bian_request = BianUtil.create_bian_request(bian_context, "x", {"behavior_qualifier": "DepositsandWithdrawals"}, ActionTerms.REQUEST)
             ret = self.a3.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'b'
@@ -683,7 +691,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.filters import Filter
+                from halo_app.views.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -954,8 +962,11 @@ class TestUserDetailTestCase(unittest.TestCase):
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
             self.a7 = A7()
             self.a7.bian_action = ActionTerms.EXECUTE
+            method_id = "execute_x"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id,{"sd_reference_id": "1", "cr_reference_id": "2"})
             try:
-                ret = self.a7.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2"})
+                ret = self.a7.execute(bian_request)
+                assert ret.code == 200
             except Exception as e:
                 assert type(e).__name__ == "BianException"
 

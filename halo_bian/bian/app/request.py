@@ -6,9 +6,9 @@ import os
 import json
 from datetime import datetime
 from halo_app.classes import AbsBaseClass,ServiceInfo
-from halo_app.app.request import HaloRequest, HaloCommandRequest, HaloQueryRequest
+from halo_app.app.request import HaloRequest, HaloCommandRequest, HaloEventRequest
 from halo_app.app.response import HaloResponse
-from halo_app.app.filterx import RequestFilter
+from halo_app.app.anlytx_filter import RequestFilter
 from halo_app.settingsx import settingsx
 from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException,NoServiceConfigurationMappingException
 
@@ -51,7 +51,7 @@ class BianCommandRequest(HaloCommandRequest):
         return None
 
 
-class BianQueryRequest(HaloQueryRequest):
+class BianEventRequest(HaloEventRequest):
     action_term = None
     sd_reference_id = None
     cr_reference_id = None
@@ -64,7 +64,7 @@ class BianQueryRequest(HaloQueryRequest):
 
 
     def __init__(self,bian_command,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,body=None,sub_qualifiers=None,timeout=1000):
-        super(BianQueryRequest,self).__init__(bian_command)
+        super(BianEventRequest,self).__init__(bian_command)
         self.action_term = action_term
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
