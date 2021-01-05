@@ -73,7 +73,7 @@ class BianUtil(AbsBaseClass):
         if "body" in vars:
             body = vars["body"]
 
-        bian_command = BianCommand(bian_context, method_id, vars)
+        bian_command = BianCommand(bian_context, method_id, vars,action_term)
         return BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
 
     @classmethod

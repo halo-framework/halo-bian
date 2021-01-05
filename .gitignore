@@ -53,7 +53,7 @@ venv/
 /webfront_service/webpack/manifest.json
 
 # Configuration
-#.env
+#.env.loc
 
 # Development database
 *.db

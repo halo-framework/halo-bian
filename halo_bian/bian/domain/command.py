@@ -10,7 +10,7 @@ class BianCommand(HaloCommand):
     action_term = None
 
     def __init__(self, context:BianContext,name:str,vars:dict,action_term:ActionTerms):
-        super(BianCommand,self).__init__(context,name,vars,id)
+        super(BianCommand,self).__init__(context,name,vars)
         self.action_term = action_term
 
 

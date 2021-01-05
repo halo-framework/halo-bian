@@ -112,7 +112,7 @@ class Tst4Api(AbsRestApi):
     name = 'Tst4'
 
 
-class A1(BoundaryService, AbsBianCommandHandler):  # the basic
+class A0(AbsBianCommandHandler):  # the basic
     bian_action = ActionTerms.REQUEST
 
     def __init__(self):
@@ -165,6 +165,9 @@ class A1(BoundaryService, AbsBianCommandHandler):  # the basic
             except ApiError as e:
                 raise BianException(e)
         return None
+
+class A1(A0):
+    pass
 
 class A2(A1):  # customized
     def validate_req(self, bian_request):
@@ -230,7 +233,7 @@ class SaBusinessEvent(SagaBusinessEvent):
     pass
 
 
-class A3(BoundaryService,AbsBianCommandHandler):  # the foi
+class A3(AbsBianCommandHandler):  # the foi
     bian_action = ActionTerms.REQUEST
     method_id = "x"
     filter_separator = "#"
@@ -400,8 +403,7 @@ class A6(A5):
         return
 
 
-class A7(BoundaryService,AbsBianCommandHandler):  # the foi
-    method_id = "execute_x"
+class A7(AbsBianCommandHandler):  # the foi
     def set_back_api(self, bian_request, foi=None):
         print("in set_back_api ")
         if foi:
@@ -415,8 +417,7 @@ class A7(BoundaryService,AbsBianCommandHandler):  # the foi
         json = dict['1']
         return {"name": json["title"]}
 
-class A8(BoundaryService,AbsBianEventHandler):
-    bian_action = ActionTerms.RETRIEVE
+class A8(AbsBianEventHandler):
     def __init__(self):
         super(A8, self).__init__()
         self.repository = AbsRepository()
@@ -452,6 +453,10 @@ class BianDbMixin(AbsBianDbMixin):
     pass
 
 
+class FakeBoundry(BoundaryService):
+    def fake_process(self,event):
+        super(FakeBoundry,self)._process_event(event)
+
 class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
@@ -476,9 +481,25 @@ class TestUserDetailTestCase(unittest.TestCase):
     def setUp(self):
         print("starting...")
         # app.config.from_pyfile('../settings.py')
-        app.config.from_object('settings')
+        #app.config.from_object('settings')
+        app.config.from_object(f"halo_bian.bian.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
         self.start()
         #self.test_0_get_request_returns_a_given_string()
+        from halo_app import bootstrap
+        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
+        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
+        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
+        #bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
+        bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
+        bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+        bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
+        #bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+        self.boundary = bootstrap.bootstrap()
+        self.fake_boundary = FakeBoundry(self.boundary.uow, self.boundary.event_handlers,
+                                         self.boundary.command_handlers)
+        print("do setup")
 
     def test_00_get_request_returns_a_given_string(self):
         #from halo_app.app.viewsx import load_global_data

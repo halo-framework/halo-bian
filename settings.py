@@ -11,7 +11,7 @@ print("start base")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 env = Env()
-THE_ENV=os.path.join(BASE_DIR,'env','.env')
+THE_ENV=os.path.join(BASE_DIR,'env','.env.loc')
 env.read_env(path=THE_ENV)
 
 ENV = env.str('FLASK_ENV', default='production')
