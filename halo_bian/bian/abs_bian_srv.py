@@ -319,9 +319,9 @@ class AbsBianHandler(AbsBaseHandler):
     def validate_match(self, bian_request):
         if bian_request.action_term != self.bian_action:
             raise BianMethodMisMatch("request action:"+str(bian_request.action_term)+" -> handler action:"+str(self.bian_action))
-        if bian_request.method_id != self.method_id:
-            raise BianMethodMisMatch(
-                "request method:" + str(bian_request.method_id) + " -> handler method:" + str(self.method_id))
+        #if bian_request.method_id != self.method_id:
+        #    raise BianMethodMisMatch(
+        #        "request method:" + str(bian_request.method_id) + " -> handler method:" + str(self.method_id))
 
     def validate_req(self, bian_request):
         logger.debug("in validate_req ")

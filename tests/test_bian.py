@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from faker import Faker
 from flask import Flask, request
+from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
 from halo_app.infra.mail import AbsMailService
@@ -116,19 +117,21 @@ class A0(AbsBianCommandHandler):  # the basic
     bian_action = ActionTerms.REQUEST
 
     def __init__(self):
-        super(A1,self).__init__()
+        super(A0,self).__init__()
         self.repository = AbsRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,bian_command_request:BianCommandRequest) ->dict:
-        var_name =  'cr_reference_id'
-        item = None
-        if var_name in bian_command_request.vars:
-            item = self.repository.load(bian_command_request.vars[var_name])
-        entity = self.domain_service.validate(item)
-        self.infra_service.send(entity)
-        return {"1":{"a":"b"}}
+    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+        with uow:
+            var_name =  'cr_reference_id'
+            item = None
+            if var_name in bian_command_request.command.vars:
+                item = self.repository.load(bian_command_request.command.vars[var_name])
+            entity = self.domain_service.validate(item)
+            self.infra_service.send(entity)
+            uow.commit()
+            return {"1":{"a":"b"}}
 
     def set_back_api(self, halo_request, foi=None):
         if not foi:  # not in seq
@@ -497,8 +500,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
         #bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
         self.boundary = bootstrap.bootstrap()
-        self.fake_boundary = FakeBoundry(self.boundary.uow, self.boundary.event_handlers,
-                                         self.boundary.command_handlers)
+
         print("do setup")
 
     def test_00_get_request_returns_a_given_string(self):
@@ -562,11 +564,10 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1_get_request_returns_a_given_string(self):
         with app.test_request_context('/?cr_reference_id=123'):
             bian_context = get_bian_context(request)
-            method_id = "request_x"
-            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args)
-            self.a1 = A1()
-            self.a1.method_id = method_id
-            ret = self.a1.execute(bian_request)
+            method_id = "z0"
+            action_term = ActionTerms.REQUEST
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_2_get_request_with_ref_returns_a_given_string(self):
