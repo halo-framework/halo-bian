@@ -98,10 +98,10 @@ class Tst2Api(AbsSoapApi):
     def do_method1(self, timeout, data=None, headers=None, auth=None):
         soap_ret = self.client.service.Method1(data["first"], data['second'])
         print(str(soap_ret))
-        response = SoapResponse()
-        response.payload = {"msg": soap_ret}
-        response.status_code = 200
-        response.headers = {}
+        response = SoapResponse(soap_ret)
+        #response.payload = {"msg": soap_ret}
+        #response.status_code = 200
+        #response.headers = {}
         return response
 
 
@@ -176,8 +176,8 @@ class A2(A1):  # customized
     def validate_req(self, bian_request):
         print("in validate_req ")
         if bian_request:
-            if "name" in bian_request.vars:
-                name = bian_request.vars['name']
+            if "name" in bian_request.command.vars:
+                name = bian_request.command.vars['name']
                 if not name:
                     raise BianError("missing value for query var name")
         return True
@@ -190,7 +190,7 @@ class A2(A1):  # customized
     def set_api_vars(self, bian_request, api, seq=None, dict=None):
         print("in set_api_vars " + str(bian_request))
         ret = {}
-        name = bian_request.request.args['name']
+        name = bian_request.command.vars['name']
         if name:
             ret['name'] = name
         if bian_request:
@@ -251,19 +251,25 @@ class A3(AbsBianCommandHandler):  # the foi
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,bian_command_request:BianCommandRequest) ->dict:
-        var_name = 'cr_reference_id'
-        item = None
-        if var_name in bian_command_request.vars:
-            item = self.repository.load(bian_command_request.vars[var_name])
-        entity = self.domain_service.validate(item)
-        self.infra_service.send(entity)
-        api = ApiMngr.get_api_instance("Cnn", bian_command_request.context, HTTPChoice.delete.value)
-        ret = api.run(100)
-        api = ApiMngr.get_api_instance("Tst2", bian_command_request.context)
-        ret = api.run(100,{})
+    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+        with uow:
+            var_name = 'cr_reference_id'
+            item = None
+            if var_name in bian_command_request.command.vars:
+                item = self.repository.load(bian_command_request.command.vars[var_name])
+            entity = self.domain_service.validate(item)
+            self.infra_service.send(entity)
+            api1 = ApiMngr.get_api_instance("Cnn", bian_command_request.context)
+            ret1 = api1.run(100)
+            api2 = ApiMngr.get_api_instance("Tst2", bian_command_request.context)
+            api2.op = 'method1'
+            data = {}
+            data['first'] = 'start'
+            data['second'] = 'end'
+            ret2 = api2.run(100,data)
+            uow.commit()
 
-        return {"1":{"a":"b"}}
+        return {"1":ret1.content,"2":ret2.content}
 
     def set_back_api(self, bian_request, foi=None):
         if foi:
@@ -338,7 +344,8 @@ class A3(AbsBianCommandHandler):  # the foi
     def map_from_json(self, dict, payload):
         print("in map_from_json_deposit")
         if 'name' in payload:
-            payload['name'] = dict['1']["a"]
+            payload['name'] = dict['1']
+            payload['more'] = dict['2']
         return payload
 
 
@@ -552,13 +559,13 @@ class TestUserDetailTestCase(unittest.TestCase):
                 class_name = app.config['INIT_CLASS_NAME']
                 load_global_data(class_name, data_map)
 
-            self.x1 = X1()
-            self.x1.bian_action = ActionTerms.ACTIVATE
-            self.x1.functional_pattern = FunctionalPatterns.FULFILL
-            self.x1.filter_separator = ";"
+            action_term = ActionTerms.ACTIVATE
+            functional_pattern = FunctionalPatterns.FULFILL
+            filter_separator = ";"
+            method_id = "X"
             bian_context = get_bian_context(request)
-            bian_request = BianUtil.create_bian_request(bian_context,"X", {"body":json},ActionTerms.CONTROL)
-            ret = self.x1.execute(bian_request)
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, {"body":json},ActionTerms.CONTROL)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_1_get_request_returns_a_given_string(self):
@@ -573,23 +580,21 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_2_get_request_with_ref_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            method_id = "request_x"
-            bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"})
-            self.a1 = A1()
-            self.a1.method_id = method_id
-            ret = self.a1.execute(bian_request)
+            method_id = "z1"
+            action_term = ActionTerms.REQUEST
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_3_get_request_with_ref_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            method_id = "execute_x"
-            self.a1 = A1()
-            self.a1.method_id = method_id
+            method_id = "z2"
+            action_term = ActionTerms.REQUEST
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,method_id,
-                                          {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"})
-                ret = self.a1.execute(bian_request)
+                                          {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"},action_term)
+                ret = self.boundary.execute(bian_request)
                 assert ret.code == status.HTTP_500_INTERNAL_SERVER_ERROR
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
@@ -598,13 +603,13 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_4_get_request_with_bad_bq_returns_a_given_string(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            method_id = "retrieve_x"
-            self.a8 = A8()
-            self.a8.method_id = method_id
+            method_id = "z3"
+            action_term = ActionTerms.REQUEST
             try:
-                bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"})
-                ret = self.a8.execute(bian_request)
-                assert ret.code == status.HTTP_200_OK
+                bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
+                bian_response = self.boundary.execute(bian_request)
+                assert bian_response.code == status.HTTP_200_OK
+                eq_(bian_response.payload["more"],'Your input parameters are start and end')
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQError'
@@ -612,12 +617,11 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_5_post_request_returns_a_given_error(self):
         with app.test_request_context(method='POST', path='/tst'):
             bian_context = get_bian_context(request)
-            method_id = "execute_x"
-            self.a1 = A1()
-            self.a1.method_id = method_id
+            method_id = "z4"
+            action_term = ActionTerms.REQUEST
             try:
-                bian_request = BianUtil.create_bian_request(bian_context,method_id,{})
-                ret = self.a1.execute(bian_request)
+                bian_request = BianUtil.create_bian_request(bian_context,method_id,{},action_term)
+                ret = self.boundary.execute(bian_request)
                 assert ret.code == status.HTTP_201_CREATED
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
@@ -626,10 +630,11 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_6_post_request_returns_a_given_error1(self):
         with app.test_request_context(method='POST', path='/'):
             bian_context = get_bian_context(request)
-            self.a1 = A1()
+            method_id = "z5"
+            action_term = ActionTerms.EXECUTE
             try:
-                bian_request = BianUtil.create_bian_request(bian_context, "x1", {}, ActionTerms.EXECUTE)
-                ret = self.a1.execute(bian_request)
+                bian_request = BianUtil.create_bian_request(bian_context, method_id, {}, action_term)
+                ret = self.boundary.execute(bian_request)
                 assert False
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
@@ -638,24 +643,26 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_7_post_request_returns_a_given_string(self):
         with app.test_request_context(method='POST', path='/?name=Peter'):
             bian_context = get_bian_context(request)
-            self.a1 = A1()
-            self.a1.bian_action = ActionTerms.INITIATE
-            bian_request = BianUtil.create_bian_request(bian_context, "x", {}, ActionTerms.INITIATE)
-            ret = self.a1.execute(bian_request)
+            method_id = "z6"
+            action_term = ActionTerms.INITIATE
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, {}, action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_201_CREATED
 
     def test_8_patch_request_returns_a_given_string(self):
         with app.test_request_context(method='PATCH', path='/?name=Peter'):
             bian_context = get_bian_context(request)
-            self.a1 = A1()
-            ret = self.a1.execute(bian_context,"x",{})
+            action_term = ActionTerms.INITIATE
+            method_id = "z7"
+            ret = self.boundary.execute(bian_context,method_id,{},action_term)
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_90_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT', path='/tst?name=news'):
             bian_context = get_bian_context(request)
-            self.a1 = A1()
-            ret = self.a1.execute(bian_context,"x",{})
+            action_term = ActionTerms.INITIATE
+            method_id = "z8"
+            ret = self.a1.execute(bian_context,method_id,{},action_term)
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_91_delete_request_returns_a_given_string(self):
