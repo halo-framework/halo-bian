@@ -1,36 +1,24 @@
 {
   "A1": {
     "base": {
-      "PUT": {
-        "url": "base_seq.json",
-        "type": "seq"
-      },
-      "POST": {
-        "url": "tst_saga.json",
-        "type": "saga"
-      },
-      "PATCH": {
-        "url": "tst_saga.json",
-        "type": "saga"
+      "z1": {
+        "url": "base_api.json",
+        "type": "api"
       }
     }
   },
   "A2": {
     "base": {
-      "GET": {
+      "z4": {
+        "url": "base_api.json",
+        "type": "api"
+      },
+      "z5": {
         "url": "base_seq.json",
         "type": "seq"
       },
-      "POST": {
-        "url": "tst_saga.json",
-        "type": "saga"
-      },
-      "PUT": {
-        "url": "saga_rlbk.json",
-        "type": "saga"
-      },
-      "PATCH": {
-        "url": "saga_rlbk_brk.json",
+      "z6": {
+        "url": "saga.json",
         "type": "saga"
       }
     },

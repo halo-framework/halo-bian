@@ -1,0 +1,7 @@
+{
+  "1": {
+    "name":"Cnn",
+    "op":"GET",
+    "conn":"sync"
+  }
+}

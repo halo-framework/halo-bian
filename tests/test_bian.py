@@ -139,7 +139,7 @@ class A0(AbsBianCommandHandler):  # the basic
                 return CnnApi(halo_request.context, HTTPChoice.get.value)
             else:
                 return CnnApi(halo_request.context, HTTPChoice.delete.value)
-        return super(A1, self).set_back_api(halo_request, foi)
+        return super(A0, self).set_back_api(halo_request, foi)
 
     def set_added_api_vars(self, bian_request, vars, seq=None, dict=None):
         logger.debug("in set_api_vars " + str(bian_request))
@@ -170,7 +170,13 @@ class A0(AbsBianCommandHandler):  # the basic
         return None
 
 class A1(A0):
-    pass
+    def handle(self, bian_command_request: BianCommandRequest, uow: AbsUnitOfWork) -> dict:
+        with uow:
+            item = self.repository.load(bian_command_request.cr_reference_id)
+            entity = self.domain_service.validate(item)
+            self.infra_service.send(entity)
+            uow.commit()
+            return {"1": {"a": "d"}}
 
 class A2(A1):  # customized
     def validate_req(self, bian_request):
@@ -207,7 +213,7 @@ class A2(A1):  # customized
     def execute_api(self, bian_request, back_api, back_vars, back_headers, back_auth, back_data, seq=None, dict=None):
         print("in execute_api ")
         if back_api:
-            timeout = Util.get_timeout(bian_request.request)
+            timeout = Util.get_timeout(bian_request.context)
             try:
                 back_api.set_api_url('ID', back_vars['name'])
                 ret = back_api.get(timeout, headers=back_headers, auth=back_auth)
@@ -238,7 +244,6 @@ class SaBusinessEvent(SagaBusinessEvent):
 
 class A3(AbsBianCommandHandler):  # the foi
     bian_action = ActionTerms.REQUEST
-    method_id = "x"
     filter_separator = "#"
     filter_key_values = {
         None: {'customer-reference-id': 'customerId', 'amount': 'amount', 'user': 'user', 'page_no': 'page_no',
@@ -253,10 +258,7 @@ class A3(AbsBianCommandHandler):  # the foi
 
     def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
         with uow:
-            var_name = 'cr_reference_id'
-            item = None
-            if var_name in bian_command_request.command.vars:
-                item = self.repository.load(bian_command_request.command.vars[var_name])
+            item = self.repository.load(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             api1 = ApiMngr.get_api_instance("Cnn", bian_command_request.context)
@@ -355,6 +357,7 @@ class A3(AbsBianCommandHandler):  # the foi
 
 
 class A4(AbsBianCommandHandler):  # the foi
+    bian_action = ActionTerms.INITIATE
     def set_back_api(self, bian_request, foi=None):
         print("in set_back_api ")
         if foi:
@@ -414,18 +417,43 @@ class A6(A5):
 
 
 class A7(AbsBianCommandHandler):  # the foi
+    bian_action = ActionTerms.INITIATE
+
+    def __init__(self):
+        super(A7,self).__init__()
+        self.repository = AbsRepository()
+        self.domain_service = AbsDomainService()
+        self.infra_service = AbsMailService()
+
+    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+        with uow:
+            item = self.repository.load(bian_command_request.cr_reference_id)
+            entity = self.domain_service.validate(item)
+            self.infra_service.send(entity)
+            api1 = ApiMngr.get_api_instance("Cnn", bian_command_request.context)
+            ret1 = api1.run(100)
+            api2 = ApiMngr.get_api_instance("Tst2", bian_command_request.context)
+            api2.op = 'method1'
+            data = {}
+            data['first'] = 'start'
+            data['second'] = 'end'
+            ret2 = api2.run(100,data)
+            uow.commit()
+
+        return {"1":ret1.content,"2":ret2.content}
+
     def set_back_api(self, bian_request, foi=None):
         print("in set_back_api ")
         if foi:
-            return super(A4, self).set_back_api(bian_request, foi)
+            return super(A7, self).set_back_api(bian_request, foi)
         api = Tst2Api(bian_request.context)
         api.set_api_url("ID", "1")
         return api
 
-    def create_resp_payload(self, halo_request, api, dict):
+    def create_resp_payload(self, halo_request, dict):
         print("in create_resp_payload")
-        json = dict['1']
-        return {"name": json["title"]}
+        json = dict['2']
+        return {"name": json}
 
 class A8(AbsBianEventHandler):
     def __init__(self):
@@ -502,9 +530,9 @@ class TestUserDetailTestCase(unittest.TestCase):
         #bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
         bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
         bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
-        bootstrap.COMMAND_HANDLERS["z4"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z5"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z6"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2a"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2b"] = A2.run_command_class
         #bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
         self.boundary = bootstrap.bootstrap()
 
@@ -568,7 +596,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
-    def test_1_get_request_returns_a_given_string(self):
+    def test_1_do_handle(self):
         with app.test_request_context('/?cr_reference_id=123'):
             bian_context = get_bian_context(request)
             method_id = "z0"
@@ -577,7 +605,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
-    def test_2_get_request_with_ref_returns_a_given_string(self):
+    def test_2_do_api(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
             method_id = "z1"
@@ -586,21 +614,22 @@ class TestUserDetailTestCase(unittest.TestCase):
             ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
-    def test_3_get_request_with_ref_bq_returns_a_given_string(self):
+    def test_3_handle_bian(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
-            method_id = "z2"
+            method_id = "z1a"
             action_term = ActionTerms.REQUEST
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,method_id,
                                           {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"},action_term)
                 ret = self.boundary.execute(bian_request)
-                assert ret.code == status.HTTP_500_INTERNAL_SERVER_ERROR
+                assert ret.code == status.HTTP_200_OK
+                assert ret.payload['a'] == 'd'
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'HaloMethodNotImplementedException'
 
-    def test_4_get_request_with_bad_bq_returns_a_given_string(self):
+    def test_4_handle_bian_soap(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = get_bian_context(request)
             method_id = "z3"
@@ -614,95 +643,107 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQError'
 
-    def test_5_post_request_returns_a_given_error(self):
+    def test_5_api(self):
         with app.test_request_context(method='POST', path='/tst'):
             bian_context = get_bian_context(request)
-            method_id = "z4"
+            method_id = "z2"
             action_term = ActionTerms.REQUEST
             try:
-                bian_request = BianUtil.create_bian_request(bian_context,method_id,{},action_term)
+                bian_request = BianUtil.create_bian_request(bian_context,method_id,{"name":"x"},action_term)
                 ret = self.boundary.execute(bian_request)
                 assert ret.code == status.HTTP_201_CREATED
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
 
-    def test_6_post_request_returns_a_given_error1(self):
+    def test_6_seq(self):
         with app.test_request_context(method='POST', path='/'):
             bian_context = get_bian_context(request)
-            method_id = "z5"
+            method_id = "z2a"
             action_term = ActionTerms.EXECUTE
             try:
-                bian_request = BianUtil.create_bian_request(bian_context, method_id, {}, action_term)
+                bian_request = BianUtil.create_bian_request(bian_context, method_id, {"name":"c"}, action_term)
                 ret = self.boundary.execute(bian_request)
-                assert False
+                assert ret.code == status.HTTP_201_CREATED
+                assert ret.payload['name'] == 'test'
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
 
-    def test_7_post_request_returns_a_given_string(self):
+    def test_7_saga(self):
         with app.test_request_context(method='POST', path='/?name=Peter'):
             bian_context = get_bian_context(request)
-            method_id = "z6"
+            method_id = "z2b"
             action_term = ActionTerms.INITIATE
-            bian_request = BianUtil.create_bian_request(bian_context, method_id, {}, action_term)
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args, action_term)
             ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_201_CREATED
 
-    def test_8_patch_request_returns_a_given_string(self):
+    def test_8_soap(self):
         with app.test_request_context(method='PATCH', path='/?name=Peter'):
             bian_context = get_bian_context(request)
             action_term = ActionTerms.INITIATE
             method_id = "z7"
-            ret = self.boundary.execute(bian_context,method_id,{},action_term)
-            assert ret.code == status.HTTP_202_ACCEPTED
+            bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
+            ret = self.boundary.execute(bian_request)
+            assert ret.code == status.HTTP_200_OK
+            assert ret.payload["name"] == 'Your input parameters are start and end'
 
     def test_90_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT', path='/tst?name=news'):
             bian_context = get_bian_context(request)
             action_term = ActionTerms.INITIATE
             method_id = "z8"
-            ret = self.a1.execute(bian_context,method_id,{},action_term)
+            bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_202_ACCEPTED
 
     def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE', path='/tst'):
             bian_context = get_bian_context(request)
-            self.a1 = A1()
-            ret = self.a1.execute(bian_context,"x",{})
+            action_term = ActionTerms.INITIATE
+            method_id = "z9"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_92_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):
             bian_context = get_bian_context(request)
-            self.a1 = A1()
-            ret = self.a1.execute(bian_context,"x", {})
+            action_term = ActionTerms.INITIATE
+            method_id = "z10"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, request.args,action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_93_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=news'):
             bian_context = get_bian_context(request)
-            self.a2 = A2()
-            bian_request = BianUtil.create_bian_request(bian_context, "x", {"cr_reference_id": "1"}, ActionTerms.INITIATE)
-            ret = self.a2.execute(bian_request)
+            action_term = ActionTerms.INITIATE
+            method_id = "z11"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "1"},action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'test'
 
     def test_95_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
             bian_context = get_bian_context(request)
-            self.a3 = A3()
+            action_term = ActionTerms.INITIATE
+            method_id = "z12"
             self.a3.filter_separator = ";"
-            bian_request = BianUtil.create_bian_request(bian_context, "x", {"behavior_qualifier": "DepositsandWithdrawals"}, ActionTerms.REQUEST)
-            ret = self.a3.execute(bian_request)
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, {"behavior_qualifier": "DepositsandWithdrawals"}, action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
             assert ret.payload["name"] == 'b'
 
     def test_96_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
             bian_context = get_bian_context(request)
-            self.a3 = A3()
-            ret = self.a3.execute(bian_context,"x", {})
+            action_term = ActionTerms.INITIATE
+            method_id = "z13"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.request.collection_filter[0] == "amount>100"
 
     def test_961_cf_request_returns_a_given_string(self):
@@ -729,55 +770,61 @@ class TestUserDetailTestCase(unittest.TestCase):
                 raise e
             vars = {'collection_filter':arr}
             bian_context = get_bian_context(request)
-            self.a3 = A3()
-            ret = self.a3.do_process(bian_context,"x", vars)
+            action_term = ActionTerms.INITIATE
+            method_id = "z14"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, vars,action_term)
+            ret = self.boundary.execute(bian_request)
             assert str(ret.request.collection_filter[0]) == "Filter(field='amount', op='>', value=10.24)"
             assert ret.payload == {'name': 'good'}
 
     def test_97_cf_request_returns_a_given_list(self):
         with app.test_request_context(method='POST',
-                                      path='/?name=john&collection-filter=amount>100; user = 100   ; page_no = 2 ; count=20'):
-            self.a3 = A3()
-            self.a3.bian_action = ActionTerms.EXECUTE
+                                      path='/?name=john&collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
+            action_term = ActionTerms.INITIATE
+            method_id = "z15"
             self.a3.filter_separator = ";"
             bian_context = get_bian_context(request)
-            ret = self.a3.execute(bian_context,"x",{})
+            bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
+            ret = self.boundary.execute(bian_request)
             assert ret.request.collection_filter[0] == "amount>100"
             assert ret.request.collection_filter[1] == "user = 100"
             assert ret.request.collection_filter[2] == "page_no = 2"
             assert ret.request.collection_filter[3] == "count=20"
 
     def test_98_action_request_returns_a_given_error(self):
-        with app.test_request_context('/?collection-filter=amount>100'):
+        with app.test_request_context('/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
             bian_context = get_bian_context(request)
-            self.a3 = A3()
-            self.a3.bian_action = ActionTerms.EVALUATE
+            action_term = ActionTerms.EVALUATE
+            method_id = "z16"
             try:
-                ret = self.a3.execute(bian_context,"x", {})
+                bian_request = BianUtil.create_bian_request(bian_context,method_id, request.args,action_term)
+                ret = self.boundary.execute(bian_request)
                 assert ret.request.collection_filter[0] != "amount>100"
             except Exception as e:
                 assert type(e).__name__ == "IllegalActionTermError"
 
     def test_990_mask_cr_request_returns_a_given_error(self):
         with app.test_request_context(
-                '/consumer-loan/1a/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?collection-filter=amount>100'):
-            self.a3 = A3()
-            self.a3.bian_action = ActionTerms.EXECUTE
+                '/consumer-loan/1a/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
+            bian_context = get_bian_context(request)
+            action_term = ActionTerms.EVALUATE
+            method_id = "z17"
             try:
-                bian_context = get_bian_context(request)
-                ret = self.a3.process_get(bian_context,"x", {"cr_reference_id": "2", "bq_reference_id": "3a"})
+                bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "2", "bq_reference_id": "3a"},action_term)
+                ret = self.boundary.execute(bian_request)
                 assert False
             except Exception as e:
                 assert type(e).__name__ == "IllegalBQError"
 
     def test_991_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context(
-                '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/1b/?collection-filter=amount>100'):
+                '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/1b/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
             bian_context = get_bian_context(request)
-            self.a3 = A3()
-            self.a3.bian_action = ActionTerms.EXECUTE
+            action_term = ActionTerms.EVALUATE
+            method_id = "z18"
             try:
-                ret = self.a3.process_get(bian_context,"x", {"cr_reference_id": "", "bq_reference_id": ""})
+                bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "2", "bq_reference_id": "1b","collection-filter":""},action_term)
+                ret = self.boundary.execute(bian_request)
                 assert False
             except Exception as e:
                 assert type(e).__name__ == "IllegalBQError"
@@ -786,9 +833,10 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
             bian_context = get_bian_context(request)
-            self.a3 = A3()
-            self.a3.bian_action = ActionTerms.EXECUTE
-            ret = self.a3.process_get(bian_context,"x", {"cr_reference_id": "1", "bq_reference_id": "1"})
+            bian_action = ActionTerms.EXECUTE
+            method_id = "z19"
+            bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "1", "bq_reference_id": "1"},bian_action)
+            ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
             assert len(ret.request.collection_filter) == 1
             assert ret.request.action_term == ActionTerms.EXECUTE

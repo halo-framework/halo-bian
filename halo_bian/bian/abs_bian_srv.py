@@ -341,7 +341,7 @@ class AbsBianHandler(AbsBaseHandler):
 
     def get_request_filter(self,halo_request):
         logger.debug("get_request_filter for bian")
-        filter = super(AbsBianCommandHandler, self).get_request_filter(halo_request)
+        filter = super(AbsBianHandler, self).get_request_filter(halo_request)
         filter.set(self)
         return filter
 
@@ -541,7 +541,7 @@ class AbsBianHandler(AbsBaseHandler):
         if foi:
             foi_name = foi["name"]
             if not foi_name.startswith('bian.'):
-                return super(AbsBianCommandHandler, self).set_back_api(halo_request, foi)
+                return super(AbsBianHandler, self).set_back_api(halo_request, foi)
             foi_op = foi["op"]
             sd_class_name,sd_module_name,sd_base_url = self.get_api_from_sd(foi_name)
             module = importlib.import_module(sd_module_name)
