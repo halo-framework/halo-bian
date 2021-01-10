@@ -12,8 +12,8 @@ with open("README.md", "r") as fh:
 
 setup(
     name='halo-bian',
-    version='0.12.16',
-    packages=['halo_bian', 'halo_bian.bian','halo_bian.bian.plugins','docs'],
+    version='0.12.17',
+    packages=['halo_bian', 'halo_bian.bian','halo_bian.bian.plugins','halo_bian.bian.app','halo_bian.bian.domain','docs'],
     url='https://github.com/halo-framework/halo-bian',
     license='MIT License',
     author='halo-framework',
