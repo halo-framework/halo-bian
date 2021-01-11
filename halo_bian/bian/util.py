@@ -1,6 +1,7 @@
 
 import logging
 
+from halo_app.const import OPType
 from halo_app.domain.command import HaloCommand
 from halo_app.app.request import HaloRequest
 from halo_app.classes import AbsBaseClass
@@ -12,8 +13,10 @@ from halo_bian.bian.domain.event import AbsBianEvent
 from halo_bian.bian.app.context import BianContext, BianCtxFactory
 from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \
     FunctionalPatternNameException, BianRequestActionException
-from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
+from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest, BianQueryRequest
 from halo_app.settingsx import settingsx
+
+from halo_bian.bian.view.query import BianQuery
 
 settings = settingsx()
 
@@ -39,7 +42,7 @@ class BianUtil(AbsBaseClass):
         return ctx
 
     @classmethod
-    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None) -> HaloRequest:
+    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.command) -> HaloRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         if action:
             action_term = action
@@ -55,7 +58,6 @@ class BianUtil(AbsBaseClass):
         behavior_qualifier = None
         bq_reference_id = None
         sub_qualifiers = None
-        collection_filter = None
         body = None
         if "sd_reference_id" in vars:
             sd_reference_id = vars["sd_reference_id"]
@@ -73,8 +75,13 @@ class BianUtil(AbsBaseClass):
         if "body" in vars:
             body = vars["body"]
 
-        bian_command = BianCommand(bian_context, method_id, vars,action_term)
-        return BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,body=body,sub_qualifiers=sub_qualifiers)
+        if op_type == OPType.command:
+            bian_command = BianCommand(bian_context, method_id, vars,action_term)
+            request = BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,body=body,sub_qualifiers=sub_qualifiers)
+        else:
+            bian_query = BianQuery(bian_context, method_id, vars,action_term)
+            request = BianQueryRequest(bian_query,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,sub_qualifiers=sub_qualifiers)
+        return request
 
     @classmethod
     def get_behavior_qualifier(cls, op, bq_name):

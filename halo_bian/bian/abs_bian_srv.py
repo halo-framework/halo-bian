@@ -124,7 +124,7 @@ class AbsBianHandler(AbsBaseHandler):
     def validate_collection_filter(self, bian_request):
         logger.debug("in validate_collection_filter ")
         if bian_request:
-            if bian_request.collection_filter:
+            if hasattr(bian_request, 'collection_filter') and bian_request.collection_filter:
                 the_filter_chars = self.get_filter_chars(bian_request)
                 the_filter_key_values = self.get_filter_key_values(bian_request)
                 for f in bian_request.collection_filter:
@@ -576,8 +576,10 @@ class AbsBianHandler(AbsBaseHandler):
         ret["behavior_qualifier"] = bian_request.behavior_qualifier
         ret["cr_reference_id"] = bian_request.cr_reference_id
         ret["bq_reference_id"] = bian_request.bq_reference_id
-        ret["collection_filter"] = bian_request.collection_filter
-        ret["body"] = bian_request.body
+        if hasattr(bian_request, 'collection_filter'):
+            ret["collection_filter"] = bian_request.collection_filter
+        if hasattr(bian_request, 'body'):
+            ret["body"] = bian_request.body
         ret = self.set_added_api_vars(bian_request,ret, seq, dict)
         return ret
 

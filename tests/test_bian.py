@@ -283,7 +283,7 @@ class A3(AbsBianCommandHandler):  # the foi
 
     def validate_pre(self, bian_request):
         print("in validate_req_deposit ")
-        if bian_request and bian_request.collection_filter:
+        if bian_request and hasattr(bian_request, 'collection_filter') and bian_request.collection_filter:
             for f in bian_request.collection_filter:
                 if "amount" == f.field:
                     return True
