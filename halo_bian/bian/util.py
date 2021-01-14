@@ -3,7 +3,7 @@ import logging
 
 from halo_app.const import OPType
 from halo_app.domain.command import HaloCommand
-from halo_app.app.request import HaloRequest
+from halo_app.app.request import AbsHaloRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.reflect import Reflect
 
@@ -42,7 +42,7 @@ class BianUtil(AbsBaseClass):
         return ctx
 
     @classmethod
-    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.command) -> HaloRequest:
+    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.command) -> AbsHaloRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         if action:
             action_term = action

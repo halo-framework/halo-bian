@@ -5,6 +5,7 @@ from flask import Flask, request
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
+from halo_app.entrypoints.client_type import ClientType
 from halo_app.infra.mail import AbsMailService
 from requests.auth import *
 import json
@@ -35,12 +36,21 @@ from halo_app.base_util import BaseUtil
 fake = Faker()
 app = Flask(__name__)
 
-def get_bian_context(request) -> BianContext:
+def get_bian_context1(request) -> BianContext:
     context = BianUtil.get_bian_context()
     for i in request.headers.keys():
         if type(i) == str:
             context.put(i, request.headers[i])
     context.put(HaloContext.method, request.method)
+    return context
+
+def get_bian_context(headers=None,env={},client_type:ClientType=ClientType.api):
+    context = Util.init_halo_context(env)
+    if headers:
+        for i in headers.keys():
+            if type(i) == str:
+                context.put(i.lower(), headers[i])
+    context.put(HaloContext.client_type, client_type)
     return context
 
 class OutboundApi(AbsRestApi):
@@ -591,14 +601,14 @@ class TestUserDetailTestCase(unittest.TestCase):
             functional_pattern = FunctionalPatterns.FULFILL
             filter_separator = ";"
             method_id = "X"
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"body":json},ActionTerms.CONTROL)
             ret = self.boundary.execute(bian_request)
             assert ret.code == status.HTTP_200_OK
 
     def test_1_do_handle(self):
         with app.test_request_context('/?cr_reference_id=123'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z0"
             action_term = ActionTerms.REQUEST
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
@@ -607,7 +617,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_2_do_api(self):
         with app.test_request_context('/?name=Peter'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z1"
             action_term = ActionTerms.REQUEST
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
@@ -616,7 +626,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_3_handle_bian(self):
         with app.test_request_context('/?name=Peter'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z1a"
             action_term = ActionTerms.REQUEST
             try:
@@ -631,7 +641,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_4_handle_bian_soap(self):
         with app.test_request_context('/?name=Peter'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z3"
             action_term = ActionTerms.REQUEST
             try:
@@ -645,7 +655,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_5_api(self):
         with app.test_request_context(method='POST', path='/tst'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z2"
             action_term = ActionTerms.REQUEST
             try:
@@ -658,7 +668,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_6_seq(self):
         with app.test_request_context(method='POST', path='/'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z2a"
             action_term = ActionTerms.EXECUTE
             try:
@@ -672,7 +682,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_7_saga(self):
         with app.test_request_context(method='POST', path='/?name=Peter'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             method_id = "z2b"
             action_term = ActionTerms.INITIATE
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args, action_term)
@@ -681,7 +691,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_8_soap(self):
         with app.test_request_context(method='PATCH', path='/?name=Peter'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z7"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
@@ -691,7 +701,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_90_put_request_returns_a_given_string(self):
         with app.test_request_context(method='PUT', path='/tst?name=news'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z8"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
@@ -700,7 +710,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE', path='/tst'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z9"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
@@ -709,7 +719,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_92_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z10"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, request.args,action_term)
@@ -718,7 +728,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_93_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=news'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z11"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "1"},action_term)
@@ -728,7 +738,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_95_bq_request_returns_a_given_string(self):
         with app.test_request_context('/?name=1'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z12"
             self.a3.filter_separator = ";"
@@ -739,7 +749,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_96_cf_request_returns_a_given_string(self):
         with app.test_request_context('/?collection-filter=amount>100'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z13"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
@@ -761,7 +771,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.views.query_filters import Filter
+                from halo_app.view.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
@@ -769,7 +779,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             except Exception as e:
                 raise e
             vars = {'collection_filter':arr}
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.INITIATE
             method_id = "z14"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, vars,action_term)
@@ -783,7 +793,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             action_term = ActionTerms.INITIATE
             method_id = "z15"
             self.a3.filter_separator = ";"
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
             ret = self.boundary.execute(bian_request)
             assert ret.request.collection_filter[0] == "amount>100"
@@ -793,7 +803,7 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_98_action_request_returns_a_given_error(self):
         with app.test_request_context('/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.EVALUATE
             method_id = "z16"
             try:
@@ -806,7 +816,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_990_mask_cr_request_returns_a_given_error(self):
         with app.test_request_context(
                 '/consumer-loan/1a/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.EVALUATE
             method_id = "z17"
             try:
@@ -819,7 +829,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_991_mask_bq_request_returns_a_given_error(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/1b/?collection-filter={"field": "amount", "op": ">", "value": 10.24}'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             action_term = ActionTerms.EVALUATE
             method_id = "z18"
             try:
@@ -832,7 +842,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_992_request_returns_a_response(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             bian_action = ActionTerms.EXECUTE
             method_id = "z19"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "1", "bq_reference_id": "1"},bian_action)
@@ -847,7 +857,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_993_request_returns_a_response(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a3 = A3()
             self.a3.bian_action = ActionTerms.EXECUTE
             ret = self.a3.process_put(bian_context,"x", {"cr_reference_id": "1", "bq_reference_id": "1"})
@@ -856,7 +866,7 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_995_control_record_returns_a_given_list(self):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement//?name=1&queryparams=amount>100@x=y'):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a3 = A3()
             ret = self.a3.process_get(bian_context,"x", {"sd_reference_id": "1", "behavior_qualifier": "DepositsandWithdrawals"})
             print("x=" + str(ret.payload))
@@ -873,7 +883,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.process_put(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "1"})
@@ -884,7 +894,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/1/depositsandwithdrawals/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty1': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
@@ -898,7 +908,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
             app.config["BIAN_CONTEXT_LIST"] = [BianContext.APP_CLIENT]
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.execute(bian_context,"x",
@@ -910,7 +920,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
             app.config["HALO_CONTEXT_CLASS"] = None
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "2", "bq_reference_id": "3"})
@@ -920,7 +930,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             ret = self.a5.execute(bian_context,"x", {"sd_reference_id": "1", "cr_reference_id": "1", "bq_reference_id": "3"})
@@ -930,7 +940,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/servicefees/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["BIAN_CONTEXT_LIST"] = [CAContext.TESTER]
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
@@ -944,7 +954,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/4/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["HALO_CONTEXT_CLASS"] = None
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
@@ -956,7 +966,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["HALO_CONTEXT_CLASS"] = None
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
@@ -968,7 +978,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.a5 = A5()
             self.a5.bian_action = ActionTerms.EXECUTE
             try:
@@ -981,7 +991,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["REQUEST_FILTER_CLASS"] = 'halo_bian.bian.bian.BianRequestFilter'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
@@ -993,7 +1003,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["REQUEST_FILTER_CLASS"] = 'tests_bian.BianRequestFilterX'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
@@ -1008,7 +1018,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.BianRequestFilterClear'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
@@ -1020,7 +1030,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
             self.a6 = A6()
             self.a6.bian_action = ActionTerms.EXECUTE
@@ -1035,7 +1045,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter&collection-filter=amount>100',
                 headers={'x-bian-devparty': 'Your value'}):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             app.config["REQUEST_FILTER_CLEAR_CLASS"] = 'tests_bian.RequestFilterClearX'
             self.a7 = A7()
             self.a7.bian_action = ActionTerms.EXECUTE
@@ -1063,7 +1073,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.x1 = X1()
             self.x1.bian_action = ActionTerms.ACTIVATE
             ret = self.x1.execute(bian_context,"x", {})
@@ -1096,8 +1106,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            bian_context = get_bian_context(request)
-            from halo_app.app.viewsx import load_global_data
+            bian_context = get_bian_context(request.headers)
+            from halo_app.app.globals import load_global_data
             app.config['SSM_TYPE'] = "AWS"
             app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
             app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
@@ -1122,8 +1132,8 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            bian_context = get_bian_context(request)
-            from halo_app.app.viewsx import load_global_data
+            bian_context = get_bian_context(request.headers)
+            from halo_app.app.globals import load_global_data
             app.config['SSM_TYPE'] = "AWS"
             app.config["INIT_CLASS_NAME"] = 'halo_bian.bian.abs_bian_srv.BianGlobalService'
             app.config["INIT_DATA_MAP"] = {'INIT_STATE': "Idle", 'PROP_URL':
@@ -1148,7 +1158,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
             ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2"})
@@ -1168,7 +1178,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
             ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2",
@@ -1189,7 +1199,7 @@ class TestUserDetailTestCase(unittest.TestCase):
         with app.test_request_context(
                 '/consumer-loan/1/consumer-loan-fulfillment-arrangement/2/depositsandwithdrawals/3/deposits/1/?name=peter',
                 headers={'x-bian-devparty': 'Your value'}, json=json):
-            bian_context = get_bian_context(request)
+            bian_context = get_bian_context(request.headers)
             self.x3 = X3()
             self.x3.bian_action = ActionTerms.FEEDBACK
             ret = self.x3.execute(bian_context,"x", {"sd_reference_id": self.session_id, "cr_reference_id": "2",
