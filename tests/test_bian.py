@@ -132,7 +132,7 @@ class A0(AbsBianCommandHandler):  # the basic
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+    def handleq(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
         with uow:
             var_name =  'cr_reference_id'
             item = None

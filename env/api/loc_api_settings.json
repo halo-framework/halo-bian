@@ -5,7 +5,7 @@
     "class": "tests.test_bian.GoogleApi"
   },
   "Cnn": {
-    "url": "http://www.cnn.com",
+    "url": "http://www.google.com",
     "type": "api",
     "class": "tests.test_bian.CnnApi"
   },

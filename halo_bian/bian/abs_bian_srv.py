@@ -7,6 +7,7 @@ import importlib
 
 from halo_app.app.context import HaloContext
 from halo_app.app.request import HaloEventRequest
+from halo_app.app.uow import AbsUnitOfWork
 from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
 from halo_app.app.utilx import Util
 from halo_app.errors import status
@@ -535,7 +536,7 @@ class AbsBianHandler(AbsBaseHandler):
     def do_operation_bq(self,bian_request):
         return self.do_operation(bian_request)
 
-#@todo replace importlib with reflect
+    #@todo replace importlib with reflect
     def set_back_api(self, halo_request, foi=None):
         logger.debug("in set_back_api " + str(foi))
         if foi:
@@ -618,8 +619,15 @@ class AbsBianHandler(AbsBaseHandler):
 
 class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
 
-    def run_command(self,bian_request:HaloCommandRequest) ->BianResponse:
+    def __run_command(self,bian_request:HaloCommandRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
+        self.uow = uow
         return self.process_bian_request(bian_request)
+
+    @classmethod
+    def run_command_class(cls, halo_request: HaloCommandRequest, uow: AbsUnitOfWork) -> AbsHaloResponse:
+        handler = cls()
+        return handler.__run_command(halo_request, uow)
+
 
 
 class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
