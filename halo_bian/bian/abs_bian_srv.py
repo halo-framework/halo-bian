@@ -346,28 +346,8 @@ class AbsBianHandler(AbsBaseHandler):
         filter.set(self)
         return filter
 
-    def process_ok1(self, halo_response):
+    def process_ok(self, halo_response):
         return halo_response
-
-    def process_ok(self, response):
-        if response:
-            if response.request:
-                if response.request.context:
-                    if response.request.context.get(HaloContext.method) == 'GET':
-                        response.code = status.HTTP_200_OK
-                    if response.request.context.get(HaloContext.method) == 'POST':
-                        response.code = status.HTTP_201_CREATED
-                    if response.request.context.get(HaloContext.method) == 'PUT':
-                        response.code = status.HTTP_202_ACCEPTED
-                    if response.request.context.get(HaloContext.method) == 'PATCH':
-                        response.code = status.HTTP_202_ACCEPTED
-                    if response.request.context.get(HaloContext.method) == 'DELETE':
-                        response.code = status.HTTP_200_OK
-                    logger.info('process_service_operation : '+response.request.method_id,
-                                extra=log_json(response.request.context,  {"return": "success"}))
-                    return response
-                raise ActionTermFailException(response.request.action_term)
-        raise ActionTermFailException(response)
 
     def process_service_operation(self, bian_request):
         #logger.debug("in process_service_operation " + str(vars))

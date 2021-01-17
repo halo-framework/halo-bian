@@ -2,9 +2,11 @@
 import logging
 
 from halo_app.const import OPType
-from halo_app.domain.command import HaloCommand
+from halo_app.app.command import HaloCommand
 from halo_app.app.request import AbsHaloRequest
 from halo_app.classes import AbsBaseClass
+from halo_app.errors import status
+from halo_app.logs import log_json
 from halo_app.reflect import Reflect
 
 from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifierType
@@ -12,7 +14,7 @@ from halo_bian.bian.domain.command import BianCommand
 from halo_bian.bian.domain.event import AbsBianEvent
 from halo_bian.bian.app.context import BianContext, BianCtxFactory
 from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \
-    FunctionalPatternNameException, BianRequestActionException
+    FunctionalPatternNameException, BianRequestActionException, ActionTermFailException
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest, BianQueryRequest
 from halo_app.settingsx import settingsx
 
@@ -151,3 +153,23 @@ class BianUtil(AbsBaseClass):
         if method_id.startswith("notify_"):
             return ActionTerms.NOTIFY
         raise IllegalActionTermError(method_id)
+
+    def process_ok(self, response):
+        if response:
+            if response.request:
+                if response.request.context:
+                    if response.request.context.get(BianContext.method) == 'GET':
+                        response.code = status.HTTP_200_OK
+                    if response.request.context.get(BianContext.method) == 'POST':
+                        response.code = status.HTTP_201_CREATED
+                    if response.request.context.get(BianContext.method) == 'PUT':
+                        response.code = status.HTTP_202_ACCEPTED
+                    if response.request.context.get(BianContext.method) == 'PATCH':
+                        response.code = status.HTTP_202_ACCEPTED
+                    if response.request.context.get(BianContext.method) == 'DELETE':
+                        response.code = status.HTTP_200_OK
+                    logger.info('process_service_operation : '+response.request.method_id,
+                                extra=log_json(response.request.context,  {"return": "success"}))
+                    return response
+                raise ActionTermFailException(response.request.action_term)
+        raise ActionTermFailException(response)

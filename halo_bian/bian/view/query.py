@@ -1,6 +1,6 @@
 import uuid
 
-from halo_app.domain.command import  HaloCommand
+from halo_app.app.command import  HaloCommand
 from halo_app.domain.event import  AbsHaloEvent
 from halo_app.view.query import HaloQuery
 

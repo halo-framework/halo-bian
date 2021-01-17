@@ -11,7 +11,7 @@ from requests.auth import *
 import json
 from nose.tools import eq_
 import unittest
-
+import os
 from halo_app.const import LOC
 from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
