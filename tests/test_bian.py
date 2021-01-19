@@ -16,7 +16,7 @@ from halo_app.const import LOC
 from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
 from halo_bian.bian.util import BianUtil
-from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
+from halo_bian.bian.app.handler import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
     FeedbackAbsBianMixin, AbsBianEventHandler
 from halo_bian.bian.db import AbsBianDbMixin
 from halo_app.app.anlytx_filter import RequestFilterClear
@@ -613,7 +613,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             action_term = ActionTerms.REQUEST
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.success == True
 
     def test_2_do_api(self):
         with app.test_request_context('/?name=Peter'):
@@ -622,7 +622,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             action_term = ActionTerms.REQUEST
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.success == True
 
     def test_3_handle_bian(self):
         with app.test_request_context('/?name=Peter'):
@@ -633,7 +633,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 bian_request = BianUtil.create_bian_request(bian_context,method_id,
                                           {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"},action_term)
                 ret = self.boundary.execute(bian_request)
-                assert ret.code == status.HTTP_200_OK
+                assert ret.success == True
                 assert ret.payload['a'] == 'd'
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
@@ -647,7 +647,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
                 bian_response = self.boundary.execute(bian_request)
-                assert bian_response.code == status.HTTP_200_OK
+                assert bian_response.success == True
                 eq_(bian_response.payload["more"],'Your input parameters are start and end')
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
@@ -661,7 +661,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,method_id,{"name":"x"},action_term)
                 ret = self.boundary.execute(bian_request)
-                assert ret.code == status.HTTP_201_CREATED
+                assert ret.success == True
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
@@ -674,7 +674,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             try:
                 bian_request = BianUtil.create_bian_request(bian_context, method_id, {"name":"c"}, action_term)
                 ret = self.boundary.execute(bian_request)
-                assert ret.code == status.HTTP_201_CREATED
+                assert ret.success == True
                 assert ret.payload['name'] == 'test'
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
@@ -687,7 +687,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             action_term = ActionTerms.INITIATE
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args, action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_201_CREATED
+            assert ret.success == True
 
     def test_8_soap(self):
         with app.test_request_context(method='PATCH', path='/?name=Peter'):
@@ -696,7 +696,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             method_id = "z7"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.success == True
             assert ret.payload["name"] == 'Your input parameters are start and end'
 
     def test_90_put_request_returns_a_given_string(self):
@@ -706,7 +706,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             method_id = "z8"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_202_ACCEPTED
+            assert ret.success == True
 
     def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE', path='/tst'):

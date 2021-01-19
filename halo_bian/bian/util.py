@@ -10,7 +10,7 @@ from halo_app.logs import log_json
 from halo_app.reflect import Reflect
 
 from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifierType
-from halo_bian.bian.domain.command import BianCommand
+from halo_bian.bian.app.command import BianCommand
 from halo_bian.bian.domain.event import AbsBianEvent
 from halo_bian.bian.app.context import BianContext, BianCtxFactory
 from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \

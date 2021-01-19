@@ -18,7 +18,7 @@ settings = settingsx()
 ############################################
 from halo_app.app.mixinx import AbsApiMixinX
 from halo_app.app.viewsx import AbsBaseLinkX
-from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler
+from halo_bian.bian.handler import AbsBianCommandHandler
 from flask.views import MethodView
 from flask import request,Response
 import json

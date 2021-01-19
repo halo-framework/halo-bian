@@ -14,7 +14,7 @@ fake = Faker()
 app = Flask(__name__)
 
 with app.app_context():
-    from halo_bian.bian.abs_bian_srv import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
+    from halo_bian.bian.handler import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
         FeedbackAbsBianMixin
     from halo_bian.bian.db import AbsBianDbMixin
     from halo_app.app.filterx import RequestFilterClear
