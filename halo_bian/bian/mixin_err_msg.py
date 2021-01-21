@@ -8,7 +8,7 @@ import json
 # common
 from halo_app.const import HTTPChoice
 from halo_app.exceptions import HaloException
-from halo_app.mixin_err_msg import ErrorMessages
+from halo_app.app.err_msg import ErrorMessages
 
 
 

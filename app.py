@@ -2,8 +2,8 @@
 """Create an application instance."""
 from flask import Flask, render_template
 from halo_app.ssm import set_app_param_config,set_host_param_config,get_app_param_config
-from halo_app.apis import load_api_config
-from halo_app.app.viewsx import load_global_data
+from halo_app.infra.apis import load_api_config
+from halo_app.app.globals import load_global_data
 from halo_app.base_util import BaseUtil
 #from halo_bian.bian.abs_bian_srv import AbsBianSrvMixin
 
@@ -26,7 +26,7 @@ def create_app(config_object='settings'):
 
 def register_halo(app):
     with app.app_context():
-        from halo_app.apis import load_api_config
+        from halo_app.infra.apis import load_api_config
         if 'SSM_TYPE' in app.config and app.config['SSM_TYPE'] != 'NONE':
             load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
                             app.config['API_CONFIG'])
