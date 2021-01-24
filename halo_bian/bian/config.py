@@ -364,6 +364,12 @@ class Config(object):
     #with open(file_path) as f1:
     #    SAGA_SCHEMA = json.load(f1)
 
+    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL', default="REPEATABLE READ")
+
+    START_ORM = env.bool('START_ORM', default=True)
+    UOW_CLASS = env.str('UOW_CLASS', default="halo_app.infra.fake.FakeUnitOfWork")
+    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="halo_app.infra.fake.FakePublisher")
+
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
     HALO_CONTEXT_CLASS = None
