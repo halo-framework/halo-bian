@@ -52,8 +52,10 @@ class BianUtil(AbsBaseClass):
             action_term = cls.set_action(method_id)
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermError(action_term)
-        if action_term == ActionTerms.RETRIEVE:
-            raise BianRequestActionException()
+        if action_term == ActionTerms.RETRIEVE and op_type == OPType.command:
+            raise BianRequestActionException(action_term)
+        if action_term != ActionTerms.RETRIEVE and op_type == OPType.query:
+            raise BianRequestActionException(action_term)
         sd_reference_id = None
         cr_reference_id = None
         behavior_qualifier_type = None
