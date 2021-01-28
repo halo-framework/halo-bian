@@ -349,6 +349,26 @@ class AbsBianHandler(AbsBaseHandler):
     def process_ok(self, halo_response):
         return halo_response
 
+    def do_bian_operation(self, bian_request):
+        #pre = self.do_pre(bian_request)
+        return self.do_operation(bian_request)
+        #post = self.do_post(pre,op)
+        #return post
+
+    def do_pre(self,bian_request):
+        if bian_request.action_term in settings.REQUEST_PRE_PROCESSOR_CLASS:
+            clazz = settings.REQUEST_PRE_PROCESSOR_CLASS[bian_request.action_term]
+            pre_processor = Reflect.instantiate(clazz,RequestPreProcessor)
+            return pre_processor.process(bian_request)
+        return None
+
+    def do_post(self,bian_request,pre,op):
+        if bian_request.action_term in settings.REQUEST_POST_PROCESSOR_CLASS:
+            clazz = settings.REQUEST_POST_PROCESSOR_CLASS[bian_request.action_term]
+            post_processor = Reflect.instantiate(clazz,RequestPostProcessor)
+            return post_processor.process(bian_request)
+        return None
+
     def process_service_operation(self, bian_request):
         #logger.debug("in process_service_operation " + str(vars))
         logger.info('process_service_operation : ', extra=log_json(bian_request.context,bian_request.vars,{"action":bian_request.action_term}))
@@ -384,79 +404,78 @@ class AbsBianHandler(AbsBaseHandler):
         logger.debug("in do_initiate ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
+    #@todo implement common create action logic
     def do_create(self, bian_request):
         logger.debug("in do_create ")
-        if bian_request.behavior_qualifier:
-            return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_activate(self, bian_request):
         logger.debug("in do_activate ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_configure(self, bian_request):
         logger.debug("in do_configure ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_update(self, bian_request):
         logger.debug("in do_update ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_register(self, bian_request):
         logger.debug("in do_register ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_record(self, bian_request):
         logger.debug("in do_record ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_execute(self, bian_request):
         logger.debug("in do_execute ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_evaluate(self, bian_request):
         logger.debug("in do_evaluate ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_provide(self, bian_request):
         logger.debug("in do_provide ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_authorize(self, bian_request):
         logger.debug("in do_authorize ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_request(self, bian_request):
         logger.debug("in do_request ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_terminate(self, bian_request):
         logger.debug("in do_terminate ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_command_bq(self, bian_request):
         logger.debug("in do_notify_bq ")
@@ -468,7 +487,7 @@ class AbsBianHandler(AbsBaseHandler):
         logger.debug("in do_notify ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_query_bq(self, bian_request):
         logger.debug("in do_retrieve_bq ")
@@ -480,41 +499,41 @@ class AbsBianHandler(AbsBaseHandler):
         logger.debug("in do_retrieve ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_capture(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_control(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_exchange(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_grant(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     def do_feedback(self, bian_request):
         logger.debug("in do_capture ")
         if bian_request.behavior_qualifier:
             return self.do_operation_bq(bian_request)
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     #@todo get original back to use
     def do_operation_bq(self,bian_request):
-        return self.do_operation(bian_request)
+        return self.do_bian_operation(bian_request)
 
     #@todo replace importlib with reflect
     def set_back_api(self, halo_request, foi=None):
