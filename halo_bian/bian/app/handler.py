@@ -355,20 +355,6 @@ class AbsBianHandler(AbsBaseHandler):
         #post = self.do_post(pre,op)
         #return post
 
-    def do_pre(self,bian_request):
-        if bian_request.action_term in settings.REQUEST_PRE_PROCESSOR_CLASS:
-            clazz = settings.REQUEST_PRE_PROCESSOR_CLASS[bian_request.action_term]
-            pre_processor = Reflect.instantiate(clazz,RequestPreProcessor)
-            return pre_processor.process(bian_request)
-        return None
-
-    def do_post(self,bian_request,pre,op):
-        if bian_request.action_term in settings.REQUEST_POST_PROCESSOR_CLASS:
-            clazz = settings.REQUEST_POST_PROCESSOR_CLASS[bian_request.action_term]
-            post_processor = Reflect.instantiate(clazz,RequestPostProcessor)
-            return post_processor.process(bian_request)
-        return None
-
     def process_service_operation(self, bian_request):
         #logger.debug("in process_service_operation " + str(vars))
         logger.info('process_service_operation : ', extra=log_json(bian_request.context,bian_request.vars,{"action":bian_request.action_term}))

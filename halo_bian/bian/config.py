@@ -564,6 +564,11 @@ class Config(object):
     user, db_name = 'allocation', 'allocation'
     POSTGRES_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
+    ASYNC_MODE = False
+    DEPENDENCIES = {}  # { "sample_repo":"path to class code"}
+    REDIS_URI = get_redis_host_and_port()
+    HANDLER_TARGET = "handler_target"
+
 print('== The base settings file has been loaded.')
 
 
