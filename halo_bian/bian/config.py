@@ -569,6 +569,8 @@ class Config(object):
     REDIS_URI = get_redis_host_and_port()
     HANDLER_TARGET = "handler_target"
 
+    COMMAND_ONLY = False
+
 print('== The base settings file has been loaded.')
 
 
