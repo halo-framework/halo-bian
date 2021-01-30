@@ -62,6 +62,7 @@ class BianUtil(AbsBaseClass):
         behavior_qualifier = None
         bq_reference_id = None
         sub_qualifiers = None
+        collection_filter = None
         body = None
         if "sd_reference_id" in vars:
             sd_reference_id = vars["sd_reference_id"]
