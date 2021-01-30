@@ -157,7 +157,8 @@ class BianUtil(AbsBaseClass):
             return ActionTerms.NOTIFY
         raise IllegalActionTermError(method_id)
 
-    def process_ok(self, response):
+    @classmethod
+    def process_ok(cls, response):
         if response:
             if response.request:
                 if response.request.context:
@@ -176,3 +177,15 @@ class BianUtil(AbsBaseClass):
                     return response
                 raise ActionTermFailException(response.request.action_term)
         raise ActionTermFailException(response)
+
+    @classmethod
+    def get_headers(cls, response):
+        headers = {}
+        if response:
+            if response.request:
+                method_headers = settings.METHOD_HEADERS[response.request.method_id]
+                for h in response.request.headers:
+                    val = response.request.headers[h]
+                    if h in method_headers:
+                        headers[h] = val
+        return headers
