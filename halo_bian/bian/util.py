@@ -160,7 +160,7 @@ class BianUtil(AbsBaseClass):
     @classmethod
     def process_ok(cls, response):
         if response:
-            if response.sucess:
+            if response.success:
                 if response.request:
                     if response.request.context:
                         response.code = status.HTTP_200_OK
