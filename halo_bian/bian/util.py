@@ -162,6 +162,7 @@ class BianUtil(AbsBaseClass):
         if response:
             if response.request:
                 if response.request.context:
+                    response.code = status.HTTP_200_OK
                     if response.request.context.get(BianContext.method) == 'GET':
                         response.code = status.HTTP_200_OK
                     if response.request.context.get(BianContext.method) == 'POST':
