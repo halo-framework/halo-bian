@@ -184,8 +184,8 @@ class BianUtil(AbsBaseClass):
         if response:
             if response.request:
                 method_headers = settings.METHOD_HEADERS[response.request.method_id]
-                for h in response.request.headers:
-                    val = response.request.headers[h]
+                for h in response.request.context.keys():
+                    val = response.request.context.get(h)
                     if h in method_headers:
                         headers[h] = val
         return headers
