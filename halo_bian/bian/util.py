@@ -160,23 +160,28 @@ class BianUtil(AbsBaseClass):
     @classmethod
     def process_ok(cls, response):
         if response:
-            if response.request:
-                if response.request.context:
-                    response.code = status.HTTP_200_OK
-                    if response.request.context.get(BianContext.method) == 'GET':
+            if response.sucess:
+                if response.request:
+                    if response.request.context:
                         response.code = status.HTTP_200_OK
-                    if response.request.context.get(BianContext.method) == 'POST':
-                        response.code = status.HTTP_201_CREATED
-                    if response.request.context.get(BianContext.method) == 'PUT':
-                        response.code = status.HTTP_202_ACCEPTED
-                    if response.request.context.get(BianContext.method) == 'PATCH':
-                        response.code = status.HTTP_202_ACCEPTED
-                    if response.request.context.get(BianContext.method) == 'DELETE':
-                        response.code = status.HTTP_200_OK
-                    logger.info('process_service_operation : '+response.request.method_id,
-                                extra=log_json(response.request.context,  {"return": "success"}))
-                    return response
-                raise ActionTermFailException(response.request.action_term)
+                        if response.request.context.get(BianContext.method) == 'GET':
+                            response.code = status.HTTP_200_OK
+                        if response.request.context.get(BianContext.method) == 'POST':
+                            response.code = status.HTTP_201_CREATED
+                        if response.request.context.get(BianContext.method) == 'PUT':
+                            response.code = status.HTTP_202_ACCEPTED
+                        if response.request.context.get(BianContext.method) == 'PATCH':
+                            response.code = status.HTTP_202_ACCEPTED
+                        if response.request.context.get(BianContext.method) == 'DELETE':
+                            response.code = status.HTTP_200_OK
+                        logger.info('process_service_operation : '+response.request.method_id,
+                                    extra=log_json(response.request.context,  {"return": "success"}))
+                        return response
+            else:
+                response.code = status.HTTP_400_BAD_REQUEST
+                if response.errors:
+                    response.code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                return response
         raise ActionTermFailException(response)
 
     @classmethod
@@ -184,9 +189,10 @@ class BianUtil(AbsBaseClass):
         headers = {}
         if response:
             if response.request:
-                method_headers = settings.METHOD_HEADERS[response.request.method_id]
-                for h in response.request.context.keys():
-                    val = response.request.context.get(h)
-                    if h in method_headers:
-                        headers[h] = val
+                if settings.METHOD_HEADERS and response.request.method_id in settings.METHOD_HEADERS:
+                    method_headers = settings.METHOD_HEADERS[response.request.method_id]
+                    for h in response.request.context.keys():
+                        val = response.request.context.get(h)
+                        if h in method_headers:
+                            headers[h] = val
         return headers
