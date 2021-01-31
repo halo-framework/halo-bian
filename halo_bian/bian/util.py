@@ -178,9 +178,10 @@ class BianUtil(AbsBaseClass):
                                     extra=log_json(response.request.context,  {"return": "success"}))
                         return response
             else:
-                response.code = status.HTTP_400_BAD_REQUEST
-                if response.errors:
-                    response.code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                response.code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                if response.errors: # invalid params
+                    response.code = status.HTTP_400_BAD_REQUEST
+                response.payload = response.errors
                 return response
         raise ActionTermFailException(response)
 
