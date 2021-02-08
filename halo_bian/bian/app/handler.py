@@ -8,7 +8,7 @@ import importlib
 from halo_app.app.context import HaloContext
 from halo_app.app.request import HaloEventRequest
 from halo_app.app.uow import AbsUnitOfWork
-from halo_app.exceptions import ApiError,HaloMethodNotImplementedException
+from halo_app.app.exceptions import HaloMethodNotImplementedException
 from halo_app.app.utilx import Util
 from halo_app.errors import status
 from halo_app.logs import log_json
@@ -23,7 +23,7 @@ from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.exceptions import *
 from halo_bian.bian.bian import *
 from halo_app.ssm import get_app_config
-from halo_app.exceptions import CacheKeyError
+from halo_app.infra.exceptions import CacheKeyException
 from halo_app.ssm import set_app_param_config,get_app_param_config
 
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
@@ -539,7 +539,7 @@ class AbsBianHandler(AbsBaseHandler):
             instance.op = foi_op
             instance.set_api_base(sd_base_url)
             return instance
-        from halo_app.exceptions import NoApiClassException
+        from halo_app.infra.exceptions import NoApiClassException
         raise NoApiClassException("api class not defined")
 
     def get_api_from_sd(self, foi_name):
@@ -939,7 +939,7 @@ class BianGlobalService(GlobalService):
                     param_val = app_config[param_name]
                     logger.info("in load_app_param " + param_name + " = " + param_val)
                     global_service_props.update_list(param_name,param_val)
-        except CacheKeyError as e:
+        except CacheKeyException as e:
             logger.debug(e.message)
         if settings.FUNC_NAME != settings.SERVICE_DOMAIN + '_service':
             try:
@@ -949,7 +949,7 @@ class BianGlobalService(GlobalService):
                 if session_id:
                     global global_service_session
                     global_service_session = BianServicingSession(session_id)
-            except CacheKeyError as e:
+            except CacheKeyException as e:
                 logger.debug(e.message)
             try:
                 state = get_app_param_config(settings.SSM_TYPE, settings.SERVICE_DOMAIN + '_service',
@@ -966,7 +966,7 @@ class BianGlobalService(GlobalService):
                         global_service_state.set_new_state(global_service_state.Idle)
                     else:
                         raise BianException("bad state :"+str(state))
-            except CacheKeyError as e:
+            except CacheKeyException as e:
                 global_service_state.set_new_state(global_service_state.Idle)
                 logger.debug(e.message)
 

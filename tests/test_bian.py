@@ -6,11 +6,14 @@ from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
 from halo_app.entrypoints.client_type import ClientType
+from tests.fake import FakeBoundary
 from halo_app.infra.mail import AbsMailService
+from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from requests.auth import *
 import json
 from nose.tools import eq_
 import unittest
+import pytest
 import os
 from halo_app.const import LOC
 from halo_bian.bian.app.context import BianContext
@@ -21,7 +24,7 @@ from halo_bian.bian.app.handler import AbsBianCommandHandler, ActivationAbsBianM
 from halo_bian.bian.db import AbsBianDbMixin
 from halo_app.app.anlytx_filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianRequestFilter, FunctionalPatterns
-from halo_app.exceptions import ApiError
+from halo_app.infra.exceptions import ApiException
 from halo_app.errors import status
 from halo_bian.bian.exceptions import BianException, BianError
 from halo_app.infra.apis import *
@@ -29,12 +32,15 @@ from halo_app.app.utilx import Util
 from halo_app.app.business_event import FoiBusinessEvent, SagaBusinessEvent
 from halo_app.ssm import set_app_param_config, set_host_param_config
 from halo_app.app.globals import load_global_data
-from halo_app.app.boundary import AbsBoundaryService, BoundaryService
+from halo_app.app.boundary import IBoundaryService, BoundaryService
 from halo_app.base_util import BaseUtil
 
 
-fake = Faker()
+
+faker = Faker()
 app = Flask(__name__)
+boundary = None
+
 
 def get_bian_context1(request) -> BianContext:
     context = BianUtil.get_bian_context()
@@ -175,7 +181,7 @@ class A0(AbsBianCommandHandler):  # the basic
                 msg = "in execute_api. " + seq_msg + " code= " + str(ret.status_code)
                 logger.info(msg)
                 return ret
-            except ApiError as e:
+            except ApiException as e:
                 raise BianException(e)
         return None
 
@@ -228,7 +234,7 @@ class A2(A1):  # customized
                 back_api.set_api_url('ID', back_vars['name'])
                 ret = back_api.get(timeout, headers=back_headers, auth=back_auth)
                 return ret
-            except ApiError as e:
+            except ApiException as e:
                 raise BianException(e)
         return None
 
@@ -339,7 +345,7 @@ class A3(AbsBianCommandHandler):  # the foi
                 back_api.set_api_url('ID', back_vars['name'])
                 ret = back_api.get(timeout, headers=back_headers, auth=back_auth)
                 return ret
-            except ApiError as e:
+            except ApiException as e:
                 raise BianException(e)
         return None
 
@@ -505,48 +511,70 @@ class FakeBoundry(BoundaryService):
     def fake_process(self,event):
         super(FakeBoundry,self)._process_event(event)
 
+
+
+@pytest.fixture
+def sqlite_boundary(sqlite_session_factory):
+    from halo_app import bootstrap
+    global boundary
+    if boundary:
+        return boundary
+    from sqlalchemy.orm import clear_mappers
+    clear_mappers()
+    boundary = bootstrap.bootstrap(
+        start_orm=True,
+        uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
+        publish=lambda *args: None,
+    )
+    return boundary
+
 class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
     """
 
-    def start(self):
+    session_id = None
+
+    @classmethod
+    def setUpClass(cls):
         from halo_app.const import LOC
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
         app.config['FUNC_NAME'] = "FUNC_NAME"
         # app.config['API_CONFIG'] =
         app.config['AWS_REGION'] = 'us-east-1'
+
+        # config
+        from halo_app import bootstrap
+        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
+        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
+        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
+        # bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
+        bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
+        bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2a"] = A2.run_command_class
+        bootstrap.COMMAND_HANDLERS["z2b"] = A2.run_command_class
+        # bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+
+
+    def setUp(self):
+        print("starting...")
+        # app.config.from_pyfile('../settings.py')
+        #app.config.from_object('settings')
+        app.config.from_object(f"halo_bian.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
+
         with app.test_request_context(method='GET', path='/?abc=def'):
             try:
                 load_api_config(app.config['ENV_TYPE'], app.config['SSM_TYPE'], app.config['FUNC_NAME'],
                                 app.config['API_CONFIG'])
             except Exception as e:
                 eq_(e.__class__.__name__, "NoApiClassException")
-
-    session_id = None
-
-    def setUp(self):
-        print("starting...")
-        # app.config.from_pyfile('../settings.py')
-        #app.config.from_object('settings')
-        app.config.from_object(f"halo_bian.bian.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
-        self.start()
-        #self.test_0_get_request_returns_a_given_string()
-        from halo_app import bootstrap
-        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
-        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
-        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
-        #bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
-        bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
-        bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
-        bootstrap.COMMAND_HANDLERS["z2"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z2a"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z2b"] = A2.run_command_class
-        #bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
-        self.boundary = bootstrap.bootstrap()
-
         print("do setup")
+
+    @pytest.fixture(autouse=True)
+    def init_boundary(self, sqlite_boundary):
+        self.boundary = sqlite_boundary
 
     def test_00_get_request_returns_a_given_string(self):
         #from halo_app.app.viewsx import load_global_data

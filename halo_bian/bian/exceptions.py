@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from halo_app.exceptions import HaloException, HaloError,BadRequestError
+from halo_app.app.exceptions import HaloException, HaloError,BadRequestError
 from abc import ABCMeta
 
 class BianException(HaloException):

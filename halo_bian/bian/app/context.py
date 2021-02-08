@@ -17,8 +17,6 @@ class BianContext(HaloContext):
     CONSUMER = "Consumer"
     BIZ_SCENARIO = "Biz Scenario"
 
-    method = "method"
-
     HaloContext.items[COMPANY] = "x-bian-company"
     HaloContext.items[OPERATIONAL_ENTITY] = "x-bian-op-entity"
     HaloContext.items[BRAND] = "x-bian-brand"
