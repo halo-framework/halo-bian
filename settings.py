@@ -398,7 +398,7 @@ from halo_bian.bian.bian import FunctionalPatterns
 BIAN_VER = "8"
 BIAN_API_VER = "2.0"
 HALO_CONTEXT_LIST = []
-HALO_CONTEXT_CLASS = 'tests.test_bian.CAContext'
+HALO_CONTEXT_CLASS = 'tests1.test_bian.CAContext'
 REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'
 REQUEST_FILTER_CLEAR_CLASS = None
 CIRCUIT_BREAKER = True
@@ -406,7 +406,7 @@ SERVICE_DOMAIN = "halo_current_account_service"
 ASSET_TYPE = "currentaccount"
 FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
 GENERIC_ARTIFACT = 'halo_bian.bian.bian.FulfillmentArrangement'#extended classes of FulfillmentArrangement
-BEHAVIOR_QUALIFIER_TYPE = 'tests.test_bian.CAFeature'
+BEHAVIOR_QUALIFIER_TYPE = 'tests1.test_bian.CAFeature'
 BEHAVIOR_QUALIFIER = {
   "Interest":"Interest",
   "ServiceFees":"ServiceFees",
@@ -447,7 +447,7 @@ SUB_QUALIFIER = {
       "Paymentsk":{"name":"Paymentsk","subs":{}}
   }
 }
-CONTROL_RECORD = 'tests.test_bian.CAControlRecord'#extended classes of ControlRecord
+CONTROL_RECORD = 'tests1.test_bian.CAControlRecord'#extended classes of ControlRecord
 DBACCESS_CLASS = "halo_bian.bian.db.AbsBianDbMixin"
 
 PROVIDER = 'AWS'

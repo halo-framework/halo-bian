@@ -1,4 +1,3 @@
-from halo_app import bootstrap
 from halo_app.app.boundary import BoundaryService
 from halo_app.app.event import AbsHaloEvent
 from halo_app.classes import AbsBaseClass
@@ -53,8 +52,7 @@ class FakePublisher(AbsPublisher):
 
 class FakeConsumer(AbsConsumer):
     def __init__(self):
-        self.consumer = None
-        self.boundary = bootstrap.bootstrap(start_orm=False)
+        super(FakeConsumer, self).__init__()
 
 
 class FakeBoundary(BoundaryService):

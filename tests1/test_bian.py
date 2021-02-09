@@ -6,7 +6,7 @@ from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
 from halo_app.entrypoints.client_type import ClientType
-from tests.fake import FakeBoundary
+from tests1.fake import FakeBoundary, FakePublisher
 from halo_app.infra.mail import AbsMailService
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from requests.auth import *
@@ -39,7 +39,6 @@ from halo_app.base_util import BaseUtil
 
 faker = Faker()
 app = Flask(__name__)
-boundary = None
 
 
 def get_bian_context1(request) -> BianContext:
@@ -513,21 +512,22 @@ class FakeBoundry(BoundaryService):
 
 
 
+boundary = None
+
 @pytest.fixture
 def sqlite_boundary(sqlite_session_factory):
     from halo_app import bootstrap
     global boundary
     if boundary:
         return boundary
-    from sqlalchemy.orm import clear_mappers
-    clear_mappers()
     boundary = bootstrap.bootstrap(
         start_orm=True,
         uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
-        publish=lambda *args: None,
+        publish=FakePublisher()
     )
     return boundary
 
+@pytest.mark.usefixtures("sqlite_boundary")
 class TestUserDetailTestCase(unittest.TestCase):
     """
     Tests /users detail operations.
@@ -608,7 +608,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 }
             }
         }
-        app.config["DBACCESS_CLASS"] = "tests.test_bian.BianDbMixin"
+        app.config["DBACCESS_CLASS"] = "tests1.test_bian.BianDbMixin"
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
         app.config['HALO_HOST'] = "halo_bian"

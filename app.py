@@ -18,7 +18,7 @@ def create_app(config_object='settings'):
     with app.app_context():
         app.config.from_object(config_object)
         stage = '/' + app.config['ENV_NAME']
-        from tests.test_viewsx import TestLinkX
+        from tests1.test_viewsx import TestLinkX
         app.add_url_rule(stage, view_func=TestLinkX.as_view("member"))
     #register_halo(app)
 
