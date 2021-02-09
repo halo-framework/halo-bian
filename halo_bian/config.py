@@ -377,8 +377,8 @@ class Config(object):
     UOW_CLASS = env.str('UOW_CLASS', default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
     PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="halo_app.infra.impl.redis_event_publisher.Publisher")
 
-    #UOW_CLASS = env.str('UOW_CLASS', default="tests1.fake.FakeUnitOfWork")
-    #PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="tests1.fake.FakePublisher")
+    #UOW_CLASS = env.str('UOW_CLASS', default="tests.fake.FakeUnitOfWork")
+    #PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="tests.fake.FakePublisher")
 
     ############################################################################################
     HALO_CONTEXT_LIST = []  # ["CORRELATION"]
@@ -455,7 +455,7 @@ class Config(object):
     BIAN_VER = "8"
     BIAN_API_VER = "2.0"
     HALO_CONTEXT_LIST = []
-    HALO_CONTEXT_CLASS = 'tests1.test_bian.CAContext'
+    HALO_CONTEXT_CLASS = 'tests.test_bian.CAContext'
     REQUEST_FILTER_CLASS = 'halo_bian.bian.bian.BianRequestFilter'
     REQUEST_FILTER_CLEAR_CLASS = None
     CIRCUIT_BREAKER = True
@@ -463,7 +463,7 @@ class Config(object):
     ASSET_TYPE = "currentaccount"
     FUNCTIONAL_PATTERN = FunctionalPatterns.FULFILL
     GENERIC_ARTIFACT = 'halo_bian.bian.bian.FulfillmentArrangement'  # extended classes of FulfillmentArrangement
-    BEHAVIOR_QUALIFIER_TYPE = 'tests1.test_bian.CAFeature'
+    BEHAVIOR_QUALIFIER_TYPE = 'tests.test_bian.CAFeature'
     BEHAVIOR_QUALIFIER = {
         "Interest": "Interest",
         "ServiceFees": "ServiceFees",
@@ -504,7 +504,7 @@ class Config(object):
             "Paymentsk": {"name": "Paymentsk", "subs": {}}
         }
     }
-    CONTROL_RECORD = 'tests1.test_bian.CAControlRecord'  # extended classes of ControlRecord
+    CONTROL_RECORD = 'tests.test_bian.CAControlRecord'  # extended classes of ControlRecord
     DBACCESS_CLASS = "halo_bian.bian.db.AbsBianDbMixin"
 
     PROVIDER = 'AWS'

@@ -608,7 +608,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 }
             }
         }
-        app.config["DBACCESS_CLASS"] = "tests1.test_bian.BianDbMixin"
+        app.config["DBACCESS_CLASS"] = "tests.test_bian.BianDbMixin"
         app.config['ENV_TYPE'] = LOC
         app.config['SSM_TYPE'] = "AWS"
         app.config['HALO_HOST'] = "halo_bian"
