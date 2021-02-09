@@ -6,7 +6,7 @@ from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
 from halo_app.entrypoints.client_type import ClientType
-from tests1.fake import FakeBoundary, FakePublisher
+from tests.fake import FakeBoundary, FakePublisher
 from halo_app.infra.mail import AbsMailService
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from requests.auth import *

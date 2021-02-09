@@ -16,7 +16,7 @@ from halo_app.app.utilx import Util
 from halo_app.infra.orm import metadata, start_mappers
 from halo_bian import config
 
-pytest.register_assert_rewrite('tests1.test_bian')
+pytest.register_assert_rewrite('tests.e2e.api_client')
 
 @pytest.fixture
 def in_memory_sqlite_db():
