@@ -6,14 +6,14 @@ from abc import ABCMeta,abstractmethod
 import importlib
 
 from halo_app.app.context import HaloContext
-from halo_app.app.request import HaloEventRequest
+from halo_app.app.request import HaloEventRequest, HaloQueryRequest
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.app.exceptions import HaloMethodNotImplementedException
 from halo_app.app.utilx import Util
 from halo_app.errors import status
 from halo_app.logs import log_json
 from halo_app.infra.apis import AbsBaseApi
-from halo_app.app.handler import AbsCommandHandler, AbsBaseHandler, AbsEventHandler
+from halo_app.app.handler import AbsCommandHandler, AbsBaseHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.anlytx_filter import RequestFilter
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
@@ -357,7 +357,7 @@ class AbsBianHandler(AbsBaseHandler):
 
     def process_service_operation(self, bian_request):
         #logger.debug("in process_service_operation " + str(vars))
-        logger.info('process_service_operation : ', extra=log_json(bian_request.context,bian_request.vars,{"action":bian_request.action_term}))
+        logger.info('process_service_operation : ', extra=log_json(bian_request.context,{},{"action":bian_request.action_term}))
         functionName = {
             ActionTerms.INITIATE: self.do_initiate,
             ActionTerms.CREATE: self.do_create,
@@ -613,15 +613,27 @@ class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
         handler = cls()
         return handler.__run_command(halo_request, uow)
 
-
-
 class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
-    def set_bian_businss_event(self,bian_request, action_term):
-        return None
+    #def set_bian_businss_event(self,bian_request, action_term):
+    #    return None
 
-    def _run_event(self, bian_request: HaloEventRequest):
+    def __run_event(self, bian_request: HaloEventRequest):
         return self.process_bian_request(bian_request)
 
+    @classmethod
+    def run_event_class(cls, halo_request: HaloEventRequest, uow: AbsUnitOfWork) -> AbsHaloResponse:
+        handler = cls()
+        return handler.__run_event(halo_request, uow)
+
+class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
+
+    def __run_query(self, bian_request: HaloQueryRequest):
+        return self.process_bian_request(bian_request)
+
+    @classmethod
+    def run_query_class(cls, halo_request: HaloQueryRequest, uow: AbsUnitOfWork) -> AbsHaloResponse:
+        handler = cls()
+        return handler.__run_query(halo_request, uow)
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers
@@ -650,8 +662,8 @@ class ActivationAbsBianMixin(AbsBianSrvMixin):
 
     def process_request(self, bian_request):
         data = {}
-        if 'body' in bian_request.vars:
-            data = bian_request.vars['body']
+        if 'body' in bian_request.command.vars:
+            data = bian_request.command.vars['body']
         self.center_id = data["serviceDomainCenterReference"]
         self.service_id = data["serviceDomainServiceReference"]
         self.configuration_setting_id = data["serviceDomainServiceConfigurationRecord"][

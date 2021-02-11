@@ -480,8 +480,8 @@ class A8(AbsBianEventHandler):
     def run(self, bian_query_request: BianEventRequest) -> dict:
         var_name = 'cr_reference_id'
         item = None
-        if var_name in bian_query_request.vars:
-            item = self.repository.load(bian_query_request.vars[var_name])
+        if var_name in bian_query_request.event.vars:
+            item = self.repository.load(bian_query_request.event.vars[var_name])
         entity = self.domain_service.validate(item)
         self.infra_service.send(entity)
         return {"1": {"a": "b"}}
@@ -641,6 +641,18 @@ class TestUserDetailTestCase(unittest.TestCase):
             action_term = ActionTerms.REQUEST
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
             ret = self.boundary.execute(bian_request)
+            assert ret.success == True
+
+    def test_1a_do_query(self):
+        with app.test_request_context('/?cr_reference_id=123'):
+            bian_context = get_bian_context(request.headers)
+            method_id = "z0"
+            action_term = ActionTerms.RETRIEVE
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
+            ret = self.boundary.execute(bian_request)
+            d = ret.__dict__
+            for i in d:
+                print(str(i)+":"+str(d[i]))
             assert ret.success == True
 
     def test_2_do_api(self):

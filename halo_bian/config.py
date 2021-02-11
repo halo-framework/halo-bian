@@ -339,7 +339,7 @@ class Config(object):
 
     HTTP_RETRY_SLEEP = 10  # 0.100  # in seconds = 100 ms
 
-    ERR_MSG_CLASS = 'halo_app.app.err_msg'
+    ERR_MSG_CLASS = 'halo_bian.bian.app.err_msg'
 
     # in case a web edge
     FRONT_WEB = False  # env.str('FRONT_API',default=False)
@@ -565,6 +565,9 @@ class Config(object):
     SERVICE_INFO_CLASS = 'halo_bian.bian.bian.TheBianServiceInfo'
 
     ISOLATION_LEVEL = env.str('ISOLATION_LEVEL', default="REPEATABLE READ")
+    START_ORM = env.bool('START_ORM', default=True)
+    UOW_CLASS = env.str('UOW_CLASS', default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
+    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="halo_app.infra.impl.redis_event_publisher.Publisher")
 
     host = os.environ.get('DB_HOST', 'localhost')
     port = 54321 if host == 'localhost' else 5432
