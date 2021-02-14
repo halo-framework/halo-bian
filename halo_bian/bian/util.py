@@ -44,7 +44,7 @@ class BianUtil(AbsBaseClass):
         return ctx
 
     @classmethod
-    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.command) -> AbsHaloRequest:
+    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.COMMAND) -> AbsHaloRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         if action:
             action_term = action
@@ -53,9 +53,9 @@ class BianUtil(AbsBaseClass):
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermError(action_term)
         if action_term == ActionTerms.RETRIEVE:
-            op_type = OPType.query
+            op_type = OPType.QUERY
         if settings.COMMANDS_ONLY:
-            op_type = OPType.command
+            op_type = OPType.COMMAND
         sd_reference_id = None
         cr_reference_id = None
         behavior_qualifier_type = None
@@ -80,7 +80,7 @@ class BianUtil(AbsBaseClass):
         if "body" in vars:
             body = vars["body"]
 
-        if op_type == OPType.command:
+        if op_type == OPType.COMMAND:
             bian_command = BianCommand(bian_context, method_id, vars,action_term)
             request = BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,body=body,sub_qualifiers=sub_qualifiers)
         else:
