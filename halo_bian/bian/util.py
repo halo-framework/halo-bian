@@ -27,23 +27,6 @@ logger = logging.getLogger(__name__)
 class BianUtil(AbsBaseClass):
 
     @classmethod
-    def get_bian_context(cls, api_key=None, x_correlation_id=None, x_user_agent=None, dlog=None, request_id=None):
-        """
-        :param request:
-        :param api_key:
-        :return:
-        """
-
-        env = {BianContext.items[BianContext.USER_AGENT]: x_user_agent,
-               BianContext.items[BianContext.REQUEST]: request_id,
-               BianContext.items[BianContext.CORRELATION]: x_correlation_id,
-               BianContext.items[BianContext.DEBUG_LOG]: dlog}
-        if api_key:
-            env[BianContext.items[BianContext.API_KEY]] = api_key
-        ctx = BianCtxFactory.get_initial_context(env)
-        return ctx
-
-    @classmethod
     def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.COMMAND) -> AbsHaloRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         if action:
