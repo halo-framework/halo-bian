@@ -34,7 +34,7 @@ from halo_app.ssm import set_app_param_config, set_host_param_config
 from halo_app.app.globals import load_global_data
 from halo_app.app.boundary import IBoundaryService, BoundaryService
 from halo_app.base_util import BaseUtil
-
+from tests.util import Util as TUtil
 
 
 faker = Faker()
@@ -650,6 +650,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             action_term = ActionTerms.RETRIEVE
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
             ret = self.boundary.execute(bian_request)
+            response = TUtil.process_api_ok(ret, request.method)
             d = ret.__dict__
             for i in d:
                 print(str(i)+":"+str(d[i]))

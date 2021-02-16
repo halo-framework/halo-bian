@@ -593,13 +593,13 @@ class AbsBianHandler(AbsBaseHandler):
             action = self.bian_action
         return action
 
-    def set_bian_businss_event(self,request,bian_action):
+    def set_bian_business_event(self,request,bian_action):
        event_category = ActionTerms.categories[bian_action]
-       self.set_businss_event(request, event_category)
+       self.set_business_event(request, event_category)
 
     def process_bian_request(self,bian_request):
         logger.debug("sd=" + str(self.service_domain))
-        self.set_bian_businss_event(bian_request, bian_request.action_term)
+        self.set_bian_business_event(bian_request, bian_request.action_term)
         return self.process_service_operation(bian_request)
 
 class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
@@ -614,7 +614,7 @@ class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
         return handler.__run_command(halo_request, uow)
 
 class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
-    #def set_bian_businss_event(self,bian_request, action_term):
+    #def set_bian_business_event(self,bian_request, action_term):
     #    return None
 
     def __run_event(self, bian_request: HaloEventRequest,uow:AbsUnitOfWork):
