@@ -158,34 +158,6 @@ class BianUtil(AbsBaseClass):
         raise IllegalActionTermError(method_id)
 
     @classmethod
-    def process_ok(cls, response):
-        if response:
-            if response.success:
-                if response.request:
-                    if response.request.context:
-                        response.code = status.HTTP_200_OK
-                        if response.request.context.get(BianContext.method) == 'GET':
-                            response.code = status.HTTP_200_OK
-                        if response.request.context.get(BianContext.method) == 'POST':
-                            response.code = status.HTTP_201_CREATED
-                        if response.request.context.get(BianContext.method) == 'PUT':
-                            response.code = status.HTTP_202_ACCEPTED
-                        if response.request.context.get(BianContext.method) == 'PATCH':
-                            response.code = status.HTTP_202_ACCEPTED
-                        if response.request.context.get(BianContext.method) == 'DELETE':
-                            response.code = status.HTTP_200_OK
-                        logger.info('process_service_operation : '+response.request.method_id,
-                                    extra=log_json(response.request.context,  {"return": "success"}))
-                        return response
-            else:
-                response.code = status.HTTP_500_INTERNAL_SERVER_ERROR
-                if response.errors: # invalid params
-                    response.code = status.HTTP_400_BAD_REQUEST
-                response.payload = response.errors
-                return response
-        raise ActionTermFailException(response)
-
-    @classmethod
     def get_headers(cls, response):
         headers = {}
         if response:
