@@ -1,7 +1,6 @@
 {
   "integration/test_views.py::test_allocations_view": true,
   "integration/test_views.py::test_deallocation": true,
-  "test_bian.py::TestUserDetailTestCase": true,
   "test_bian.py::TestUserDetailTestCase::test_00_get_request_returns_a_given_string": true,
   "test_bian.py::TestUserDetailTestCase::test_0_get_request_returns_a_given_string": true,
   "test_bian.py::TestUserDetailTestCase::test_1a_do_query": true,
