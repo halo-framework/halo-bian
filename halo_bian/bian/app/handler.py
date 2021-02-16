@@ -617,7 +617,8 @@ class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
     #def set_bian_businss_event(self,bian_request, action_term):
     #    return None
 
-    def __run_event(self, bian_request: HaloEventRequest):
+    def __run_event(self, bian_request: HaloEventRequest,uow:AbsUnitOfWork):
+        self.uow = uow
         return self.process_bian_request(bian_request)
 
     @classmethod
@@ -627,7 +628,8 @@ class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
 
 class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
 
-    def __run_query(self, bian_request: HaloQueryRequest):
+    def __run_query(self, bian_request: HaloQueryRequest,uow:AbsUnitOfWork):
+        self.uow = uow
         return self.process_bian_request(bian_request)
 
     @classmethod
