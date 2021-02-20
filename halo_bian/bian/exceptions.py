@@ -1,18 +1,12 @@
 #!/usr/bin/env python
 
-from halo_app.app.exceptions import HaloException, HaloError,BadRequestError
+from halo_app.app.exceptions import HaloException
 from abc import ABCMeta
 
 class BianException(HaloException):
     pass
 
-class BianError(HaloError):
-    pass
-
-class BadBianRequestError(BadRequestError):
-    pass
-
-class IllegalActionTermError(BianError):
+class IllegalActionTermException(BianException):
     pass
 
 #class MissingBianContextException(BianException):
@@ -21,13 +15,13 @@ class IllegalActionTermError(BianError):
 class ActionTermFailException(BianException):
     pass
 
-class IllegalBQError(BianError):
+class IllegalBQException(BianException):
     pass
 
-class IllegalBQIdError(BianError):
+class IllegalBQIdException(BianException):
     pass
 
-class SystemBQIdError(BianError):
+class SystemBQIdException(BianException):
     pass
 
 class ServiceDomainNameException(BianException):

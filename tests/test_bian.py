@@ -26,8 +26,7 @@ from halo_bian.bian.db import AbsBianDbMixin
 from halo_app.app.anlytx_filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianRequestFilter, FunctionalPatterns
 from halo_app.infra.exceptions import ApiException
-from halo_app.errors import status
-from halo_bian.bian.exceptions import BianException, BianError
+from halo_bian.bian.exceptions import BianException
 from halo_app.infra.apis import *
 from halo_app.app.utilx import Util
 from halo_app.app.business_event import FoiBusinessEvent, SagaBusinessEvent
@@ -36,7 +35,7 @@ from halo_app.app.globals import load_global_data
 from halo_app.app.boundary import IBoundaryService, BoundaryService
 from halo_app.base_util import BaseUtil
 from halo_app.sys_util import SysUtil
-
+from http import HTTPStatus
 
 faker = Faker()
 app = Flask(__name__)
@@ -193,7 +192,7 @@ class A2(A1):  # customized
             if "name" in bian_request.command.vars:
                 name = bian_request.command.vars['name']
                 if not name:
-                    raise BianError("missing value for query var name")
+                    raise BianException("missing value for query var name")
         return True
 
     def set_api_headers(self, bian_request, api, seq=None, dict=None):
@@ -295,7 +294,7 @@ class A3(AbsBianCommandHandler):  # the foi
             for f in bian_request.collection_filter:
                 if "amount" == f.field:
                     return True
-            raise BianError("missing value for query var amount")
+            raise BianException("missing value for query var amount")
         return True
 
     def set_back_api(self, bian_request, foi=None):
@@ -625,7 +624,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             bian_context = client_util.get_halo_context(request.headers)
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"body":json},ActionTerms.CONTROL)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
 
     def test_1_do_handle(self):
         with app.test_request_context('/?cr_reference_id=123'):
@@ -750,7 +749,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             method_id = "z9"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
 
     def test_92_get_request_returns_a_given_stringx_for_test(self):
         with app.test_request_context('/tst'):
@@ -759,7 +758,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             method_id = "z10"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, request.args,action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
 
     def test_93_full_request_returns_a_given_string(self):
         with app.test_request_context('/?name=news'):
@@ -768,7 +767,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             method_id = "z11"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "1"},action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
             assert ret.payload["name"] == 'test'
 
     def test_95_bq_request_returns_a_given_string(self):
@@ -779,7 +778,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a3.filter_separator = ";"
             bian_request = BianUtil.create_bian_request(bian_context, method_id, {"behavior_qualifier": "DepositsandWithdrawals"}, action_term)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
             assert ret.payload["name"] == 'b'
 
     def test_96_cf_request_returns_a_given_string(self):
@@ -882,7 +881,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             method_id = "z19"
             bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "1", "bq_reference_id": "1"},bian_action)
             ret = self.boundary.execute(bian_request)
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
             assert len(ret.request.collection_filter) == 1
             assert ret.request.action_term == ActionTerms.EXECUTE
             assert ret.request.cr_reference_id == "1"
@@ -905,7 +904,7 @@ class TestUserDetailTestCase(unittest.TestCase):
             self.a3 = A3()
             ret = self.a3.process_get(bian_context,"x", {"sd_reference_id": "1", "behavior_qualifier": "DepositsandWithdrawals"})
             print("x=" + str(ret.payload))
-            assert ret.code == status.HTTP_200_OK
+            assert ret.code == HTTPStatus.OK
             assert ret.request.behavior_qualifier == 'DepositsandWithdrawals'
             assert ret.request.request == request
             assert ret.request.sd_reference_id == "1"

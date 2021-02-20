@@ -5,7 +5,6 @@ from halo_app.const import OPType
 from halo_app.app.command import HaloCommand
 from halo_app.app.request import AbsHaloRequest
 from halo_app.classes import AbsBaseClass
-from halo_app.errors import status
 from halo_app.logs import log_json
 from halo_app.reflect import Reflect
 
@@ -13,7 +12,7 @@ from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifi
 from halo_bian.bian.app.command import BianCommand
 from halo_bian.bian.domain.event import AbsBianEvent
 from halo_bian.bian.app.context import BianContext, BianCtxFactory
-from halo_bian.bian.exceptions import IllegalActionTermError, IllegalBQError, BehaviorQualifierNameException, \
+from halo_bian.bian.exceptions import IllegalActionTermException, IllegalBQException, BehaviorQualifierNameException, \
     FunctionalPatternNameException, BianRequestActionException, ActionTermFailException
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest, BianQueryRequest
 from halo_app.settingsx import settingsx
@@ -34,7 +33,7 @@ class BianUtil(AbsBaseClass):
         else:
             action_term = cls.set_action(method_id)
         if action_term not in ActionTerms.ops:
-            raise IllegalActionTermError(action_term)
+            raise IllegalActionTermException(action_term)
         if action_term == ActionTerms.RETRIEVE:
             op_type = OPType.QUERY
         if settings.COMMANDS_ONLY:
@@ -78,7 +77,7 @@ class BianUtil(AbsBaseClass):
             bq_obj = bqt_obj.get(bq_id)
             if bq_obj.name == bq_name.strip().replace("-","_").replace(" ","_"):
                 return bq_name
-        raise IllegalBQError(bq_name)
+        raise IllegalBQException(bq_name)
 
     @classmethod
     def get_behavior_qualifier_type(cls):
@@ -138,7 +137,7 @@ class BianUtil(AbsBaseClass):
             return ActionTerms.UPDATE
         if method_id.startswith("notify_"):
             return ActionTerms.NOTIFY
-        raise IllegalActionTermError(method_id)
+        raise IllegalActionTermException(method_id)
 
     @classmethod
     def get_headers(cls, response):
