@@ -1,0 +1,22 @@
+{
+  "1": {
+    "name":"Cnn",
+    "op":"GET",
+    "conn":"sync"
+  },
+  "2":{
+    "name":"Google",
+    "op":"GET",
+    "conn":"sync"
+  },
+  "3":{
+    "name":"Tst2",
+    "op":"method1",
+    "conn":"sync"
+  },
+  "4":{
+    "name":"Aws",
+    "op":"GET",
+    "conn":"sync"
+  }
+}

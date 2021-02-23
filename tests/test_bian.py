@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from faker import Faker
 from flask import Flask, request
+from halo_app.app.result import Result
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
@@ -129,7 +130,7 @@ class A0(AbsBianCommandHandler):  # the basic
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
             var_name =  'cr_reference_id'
             item = None
@@ -138,7 +139,8 @@ class A0(AbsBianCommandHandler):  # the basic
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
-            return {"1":{"a":"b"}}
+            payload = {"1":{"a":"b"}}
+            return Result.ok(payload)
 
     def set_back_api(self, halo_request, foi=None):
         if not foi:  # not in seq
