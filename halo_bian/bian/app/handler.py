@@ -9,7 +9,7 @@ from halo_app.app.context import HaloContext
 from halo_app.app.notification import Notification
 from halo_app.app.request import HaloEventRequest, HaloQueryRequest
 from halo_app.app.uow import AbsUnitOfWork
-from halo_app.app.exceptions import HaloMethodNotImplementedException, AppException
+from halo_app.app.exceptions import HaloMethodNotImplementedException, AbsAppException
 from halo_app.app.utilx import Util
 from halo_app.logs import log_json
 from halo_app.infra.apis import AbsBaseApi
@@ -116,11 +116,11 @@ class AbsBianHandler(AbsBaseHandler):
     def get_filter_char(self,bian_request, item):
         the_filter_chars = self.get_filter_chars(bian_request)
         if len(the_filter_chars) == 0:
-            raise AppException("no defined comperator for query collection-filter defined")
+            raise BianException("no defined comperator for query collection-filter defined")
         for c in the_filter_chars:
             if c in item:
                 return c
-        raise AppException("wrong comperator for query var collection-filter :"+item)
+        raise BianException("wrong comperator for query var collection-filter :"+item)
 
     def validate_collection_filter(self, bian_request,notification):
         #@todo check filter validation works
@@ -134,11 +134,11 @@ class AbsBianHandler(AbsBaseHandler):
                     key = f.field
                     val = f.value
                     if sign not in the_filter_chars:
-                        raise AppException("filter sign for query var collection-filter is not allowed: " + sign)
+                        raise BianException("filter sign for query var collection-filter is not allowed: " + sign)
                     if key not in the_filter_key_values.keys():
-                        raise AppException("filter key value for query var collection-filter is not allowed: " + key)
+                        raise BianException("filter key value for query var collection-filter is not allowed: " + key)
                     if not val:
-                        raise AppException("missing value for query var collection-filter")
+                        raise BianException("missing value for query var collection-filter")
 
     def validate_queryparams(self, bian_request,notification):
         #@todo check filter validation works
@@ -152,11 +152,11 @@ class AbsBianHandler(AbsBaseHandler):
                     key = f.field
                     val = f.value
                     if sign not in the_filter_chars:
-                        raise AppException("filter sign for query var collection-filter is not allowed: " + sign)
+                        raise BianException("filter sign for query var collection-filter is not allowed: " + sign)
                     if key not in the_filter_key_values.keys():
-                        raise AppException("filter key value for query var collection-filter is not allowed: " + key)
+                        raise BianException("filter key value for query var collection-filter is not allowed: " + key)
                     if not val:
-                        raise AppException("missing value for query var collection-filter")
+                        raise BianException("missing value for query var collection-filter")
 
     def break_filter(self,bian_request,f):
         if f:
@@ -183,13 +183,13 @@ class AbsBianHandler(AbsBaseHandler):
                 if self.sd_reference_id_mask:
                     if not re.match(self.sd_reference_id_mask,bian_request.sd_reference_id):
                         notification.addError("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
-                        #raise AppException("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
+                        #raise BianException("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
                 if settings.SERVICING_SESSION:
                     if self.servicing_session:
                         if bian_request.sd_reference_id != self.servicing_session.get_session_id():
-                            raise AppException("sd_reference_id value is not valid:" + bian_request.sd_reference_id)
+                            raise BianException("sd_reference_id value is not valid:" + bian_request.sd_reference_id)
                     else:
-                        raise AppException("no service session available:" + bian_request.sd_reference_id)
+                        raise BianException("no service session available:" + bian_request.sd_reference_id)
 
     def validate_cr_reference_id(self, bian_request,notification):
         logger.debug("in validate_validate_cr_reference_id ")
@@ -198,7 +198,7 @@ class AbsBianHandler(AbsBaseHandler):
                 if re.match(self.cr_reference_id_mask,bian_request.cr_reference_id):
                     return
                 notification.addError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
-                #raise AppException("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
+                #raise BianException("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
 
     def validate_bq_reference_id(self, bian_request,notification):
         logger.debug("in validate_validate_bq_reference_id ")
@@ -207,7 +207,7 @@ class AbsBianHandler(AbsBaseHandler):
                 if re.match(self.bq_reference_id_mask,bian_request.bq_reference_id):
                     return
                 notification.addError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
-                #raise AppException("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
+                #raise BianException("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
 
     def validate_service_state(self,bian_request):
         if self.service_state:
@@ -327,8 +327,10 @@ class AbsBianHandler(AbsBaseHandler):
         return []
 
     def validate_match(self, bian_request,notification):
+        if not bian_request.action_term:
+            notification.addError("request action:"+str(bian_request.action_term)+" not defined")
         if bian_request.action_term != self.bian_action:
-            notification.addError("request action:"+str(bian_request.action_term)+" -> handler action:"+str(self.bian_action))
+            notification.addError("request action:"+str(bian_request.action_term)+" not matching handler action:"+str(self.bian_action))
             #raise BianMethodMisMatch("request action:"+str(bian_request.action_term)+" -> handler action:"+str(self.bian_action))
         #if bian_request.method_id != self.method_id:
         #    raise BianMethodMisMatch(

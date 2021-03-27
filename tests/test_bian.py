@@ -1,14 +1,18 @@
 from __future__ import print_function
 
+from typing import Tuple
+
 from faker import Faker
 from flask import Flask, request
+from halo_app.app.notification import Notification
+from halo_app.app.request import HaloQueryRequest
 from halo_app.app.result import Result
 from halo_app.app.uow import AbsUnitOfWork
 from halo_app.domain.repository import AbsRepository
 from halo_app.domain.service import AbsDomainService
 from halo_app.entrypoints import client_util
 from halo_app.entrypoints.client_type import ClientType
-from tests.fake import FakeBoundary, FakePublisher
+#from tests.fake import FakeBoundary, FakePublisher
 from halo_app.infra.mail import AbsMailService
 from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
 from requests.auth import *
@@ -22,7 +26,7 @@ from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
 from halo_bian.bian.util import BianUtil
 from halo_bian.bian.app.handler import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
-    FeedbackAbsBianMixin, AbsBianEventHandler
+    FeedbackAbsBianMixin, AbsBianEventHandler, AbsBianQueryHandler
 from halo_bian.bian.db import AbsBianDbMixin
 from halo_app.app.anlytx_filter import RequestFilterClear
 from halo_bian.bian.bian import BianCategory, ActionTerms, Feature, ControlRecord, GenericArtifact, BianRequestFilter, FunctionalPatterns
@@ -144,7 +148,7 @@ class A0(AbsBianCommandHandler):  # the basic
 
     def set_back_api(self, halo_request, foi=None):
         if not foi:  # not in seq
-            if halo_request.func == "x":
+            if True:
                 return CnnApi(halo_request.context, HTTPChoice.get.value)
             else:
                 return CnnApi(halo_request.context, HTTPChoice.delete.value)
@@ -179,23 +183,24 @@ class A0(AbsBianCommandHandler):  # the basic
         return None
 
 class A1(A0):
-    def handle(self, bian_command_request: BianCommandRequest, uow: AbsUnitOfWork) -> dict:
+    def handle(self, bian_command_request: BianCommandRequest, uow: AbsUnitOfWork) -> Result:
         with uow:
             item = self.repository.load(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
-            return {"1": {"a": "d"}}
+            return Result.ok({"1": {"a": "d"}})
 
 class A2(A1):  # customized
     def validate_req(self, bian_request):
         print("in validate_req ")
+        notification:Notification = Notification()
         if bian_request:
             if "name" in bian_request.command.vars:
                 name = bian_request.command.vars['name']
                 if not name:
-                    raise BianException("missing value for query var name")
-        return True
+                    notification.addError("missing value for query var name")
+        return notification
 
     def set_api_headers(self, bian_request, api, seq=None, dict=None):
         print("in set_api_headers ")
@@ -265,7 +270,7 @@ class A3(AbsBianCommandHandler):  # the foi
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
             item = self.repository.load(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
@@ -280,7 +285,7 @@ class A3(AbsBianCommandHandler):  # the foi
             ret2 = api2.run(100,data)
             uow.commit()
 
-        return {"1":ret1.content,"2":ret2.content}
+        return Result.ok({"1":ret1.content,"2":ret2.content})
 
     def set_back_api(self, bian_request, foi=None):
         if foi:
@@ -290,14 +295,14 @@ class A3(AbsBianCommandHandler):  # the foi
         api.set_api_url("ID", "1")
         return api
 
-    def validate_pre(self, bian_request):
+    def validate_pre(self, bian_request)->Notification:
         print("in validate_req_deposit ")
+        notification: Notification = Notification()
         if bian_request and hasattr(bian_request, 'collection_filter') and bian_request.collection_filter:
             for f in bian_request.collection_filter:
                 if "amount" == f.field:
-                    return True
-            raise BianException("missing value for query var amount")
-        return True
+                    pass
+        return notification
 
     def set_back_api(self, bian_request, foi=None):
         if foi:
@@ -434,7 +439,7 @@ class A7(AbsBianCommandHandler):  # the foi
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->dict:
+    def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
             item = self.repository.load(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
@@ -480,6 +485,16 @@ class A8(AbsBianEventHandler):
         self.infra_service.send(entity)
         return {"1": {"a": "b"}}
 
+class A9(AbsBianQueryHandler):
+    bian_action = ActionTerms.RETRIEVE
+
+    def __init__(self):
+        super(A9, self).__init__()
+
+    def set_query_data(self,halo_query_request: HaloQueryRequest)->Tuple[str,dict]:
+        return "select 1",{}
+
+
 class X1(BoundaryService,ActivationAbsBianMixin):
     pass
 
@@ -510,16 +525,19 @@ boundary = None
 
 @pytest.fixture
 def sqlite_boundary(sqlite_session_factory):
-    from halo_app import bootstrap
-    global boundary
-    if boundary:
+    app.config.from_object(f"halo_bian.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
+    with app.test_request_context(method='GET', path='/?abc=def'):
+        from halo_app import bootstrap
+        from tests.fake import FakePublisher
+        global boundary
+        if boundary:
+            return boundary
+        boundary = bootstrap.bootstrap(
+            start_orm=True,
+            uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
+            publish=FakePublisher()
+        )
         return boundary
-    boundary = bootstrap.bootstrap(
-        start_orm=True,
-        uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
-        publish=FakePublisher()
-    )
-    return boundary
 
 @pytest.mark.usefixtures("sqlite_boundary")
 class TestUserDetailTestCase(unittest.TestCase):
@@ -531,25 +549,28 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from halo_app.const import LOC
-        app.config['ENV_TYPE'] = LOC
-        app.config['SSM_TYPE'] = "AWS"
-        app.config['FUNC_NAME'] = "FUNC_NAME"
-        # app.config['API_CONFIG'] =
-        app.config['AWS_REGION'] = 'us-east-1'
+        app.config.from_object(f"halo_bian.config.Config_{os.getenv('HALO_STAGE', 'loc')}")
+        with app.test_request_context(method='GET', path='/?abc=def'):
+            from halo_app.const import LOC
+            app.config['ENV_TYPE'] = LOC
+            app.config['SSM_TYPE'] = "AWS"
+            app.config['FUNC_NAME'] = "FUNC_NAME"
+            # app.config['API_CONFIG'] =
+            app.config['AWS_REGION'] = 'us-east-1'
 
-        # config
-        from halo_app import bootstrap
-        bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
-        bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
-        bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
-        # bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
-        bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
-        bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
-        bootstrap.COMMAND_HANDLERS["z2"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z2a"] = A2.run_command_class
-        bootstrap.COMMAND_HANDLERS["z2b"] = A2.run_command_class
-        # bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+            # config
+            from halo_app import bootstrap
+            bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
+            bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
+            bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
+            # bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
+            bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
+            bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
+            bootstrap.COMMAND_HANDLERS["z2"] = A2.run_command_class
+            bootstrap.COMMAND_HANDLERS["z2a"] = A2.run_command_class
+            bootstrap.COMMAND_HANDLERS["z2b"] = A2.run_command_class
+            # bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+            bootstrap.QUERY_HANDLERS["q1"] = A9.run_query_class
 
 
     def setUp(self):
@@ -641,11 +662,24 @@ class TestUserDetailTestCase(unittest.TestCase):
     def test_1a_do_query(self):
         with app.test_request_context('/?cr_reference_id=123'):
             bian_context = client_util.get_halo_context(request.headers)
-            method_id = "z0"
+            method_id = "q1"
             action_term = ActionTerms.RETRIEVE
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
             ret = self.boundary.execute(bian_request)
-            response = SysUtil.process_api_ok(ret, request.method)
+            response = SysUtil.process_response_for_client(ret, request.method)
+            d = ret.__dict__
+            for i in d:
+                print(str(i)+":"+str(d[i]))
+            assert ret.success == True
+
+    def test_1b_do_query_error(self):
+        with app.test_request_context('/?cr_reference_id=123'):
+            bian_context = client_util.get_halo_context(request.headers)
+            method_id = "q1"
+            action_term = ActionTerms.RETRIEVE
+            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
+            ret = self.boundary.execute(bian_request)
+            response = SysUtil.process_response_for_client(ret, request.method)
             d = ret.__dict__
             for i in d:
                 print(str(i)+":"+str(d[i]))
@@ -670,7 +704,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                                           {"cr_reference_id": "123", "behavior_qualifier": "DepositsandWithdrawals"},action_term)
                 ret = self.boundary.execute(bian_request)
                 assert ret.success == True
-                assert ret.payload['a'] == 'd'
+                assert ret.payload['1'] == {}
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'HaloMethodNotImplementedException'
@@ -684,7 +718,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
                 bian_response = self.boundary.execute(bian_request)
                 assert bian_response.success == True
-                eq_(bian_response.payload["more"],'Your input parameters are start and end')
+                eq_(bian_response.payload["2"],'Your input parameters are start and end')
             except Exception as e:
                 print(str(e) + " " + str(type(e).__name__))
                 assert type(e).__name__ == 'IllegalBQError'

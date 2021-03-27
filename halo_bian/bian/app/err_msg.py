@@ -7,7 +7,6 @@ import json
 # aws
 # common
 from halo_app.const import HTTPChoice
-from halo_app.exceptions import HaloException
 from halo_app.app.err_msg import ErrorMessages
 
 

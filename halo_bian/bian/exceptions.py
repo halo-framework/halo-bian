@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from halo_app.app.exceptions import HaloException
+from halo_app.app.exceptions import AbsHaloException
 from abc import ABCMeta
 
-class BianException(HaloException):
+class BianException(AbsHaloException):
     pass
 
 class IllegalActionTermException(BianException):

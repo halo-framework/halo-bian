@@ -31,6 +31,10 @@
   "tests.test_bian.A3": {
     "command": {
       "z3": {
+      }
+    },
+    "command": {
+      "z3a": {
         "url": "saga.json",
         "type": "saga"
       }
