@@ -2,7 +2,7 @@ import uuid
 
 from halo_app.app.command import  HaloCommand
 from halo_app.domain.event import  AbsHaloEvent
-from halo_app.view.query import HaloQuery
+from halo_app.app.query import HaloQuery
 
 from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.bian import ActionTerms
