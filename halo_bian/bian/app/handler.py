@@ -353,7 +353,10 @@ class AbsBianHandler(AbsBaseHandler):
 
     def get_request_filter(self,halo_request):
         logger.debug("get_request_filter for bian")
-        filter = super(AbsBianHandler, self).get_request_filter(halo_request)
+        if settings.REQUEST_FILTER_CLASS:
+            filter = Reflect.instantiate(settings.REQUEST_FILTER_CLASS, RequestFilter)
+        else:
+            filter = BianRequestFilter()
         filter.set(self)
         return filter
 
