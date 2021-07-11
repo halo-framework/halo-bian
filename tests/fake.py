@@ -1,4 +1,4 @@
-from halo_app.app.boundary import BoundaryService
+from halo_app.app.bus import Bus
 from halo_app.app.event import AbsHaloEvent
 from halo_app.classes import AbsBaseClass
 from halo_app.domain.repository import AbsRepository
@@ -55,7 +55,7 @@ class FakeConsumer(AbsConsumer):
         super(FakeConsumer, self).__init__()
 
 
-class FakeBoundary(BoundaryService):
+class FakeBoundary(Bus):
     def fake_process(self,event):
         super(FakeBoundary,self)._process_event(event)
 

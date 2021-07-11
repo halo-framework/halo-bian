@@ -1,0 +1,21 @@
+{
+  "halo_app.domain.model.Item": "tests.test_bian.ItemAssembler",
+  "tests.test_bian.ItemDto": "tests.test_bian.ItemAssembler",
+  "tests.test_bian.Part": "tests.test_bian.PartAssembler",
+  "tests.test_bian.PartDto": "tests.test_bian.PartAssembler",
+  "z0": "tests.test_bian.BaseCmdAssembler",
+  "z1": "tests.test_bian.BaseCmdAssembler",
+  "z1a": "tests.test_bian.BaseCmdAssembler",
+  "z1b": "tests.test_bian.BaseCmdAssembler",
+  "z1c": "tests.test_bian.BaseCmdAssembler",
+  "z3": "tests.test_bian.BaseCmdAssembler",
+  "z4": "tests.test_bian.BaseCmdAssembler",
+  "z5": "tests.test_bian.BaseCmdAssembler",
+  "z6": "tests.test_bian.BaseCmdAssembler",
+  "z8": "tests.test_bian.BaseCmdAssembler",
+  "z10": "tests.test_bian.BaseCmdAssembler",
+  "z15": "tests.test_bian.BaseCmdAssembler",
+  "z16": "tests.test_bian.BaseCmdAssembler",
+  "z17": "tests.test_bian.BaseCmdAssembler",
+  "z18": "tests.test_bian.TestCmdAssembler"
+}

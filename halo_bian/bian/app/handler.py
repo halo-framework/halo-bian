@@ -8,12 +8,12 @@ import importlib
 from halo_app.app.context import HaloContext
 from halo_app.app.notification import Notification
 from halo_app.app.request import HaloEventRequest, HaloQueryRequest
-from halo_app.app.uow import AbsUnitOfWork
+from halo_app.app.uow import AbsUnitOfWork, AbsUnitOfWorkManager
 from halo_app.app.exceptions import HaloMethodNotImplementedException, AbsAppException
 from halo_app.app.utilx import Util
 from halo_app.logs import log_json
 from halo_app.infra.apis import AbsBaseApi
-from halo_app.app.handler import AbsCommandHandler, AbsBaseHandler, AbsEventHandler, AbsQueryHandler
+from halo_app.app.handlers import AbsCommandHandler, AbsBaseHandler, AbsEventHandler, AbsQueryHandler
 from halo_app.app.anlytx_filter import RequestFilter
 from halo_app.reflect import Reflect
 from halo_app.settingsx import settingsx
@@ -620,12 +620,14 @@ class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
 
     def __run_command(self,bian_request:HaloCommandRequest,uow:AbsUnitOfWork)->AbsHaloResponse:
         self.uow = uow
-        return self.process_bian_request(bian_request)
+        ret:AbsHaloResponse = self.process_bian_request(bian_request)
+        bian_request.uow = uow
+        return ret
 
     @classmethod
-    def run_command_class(cls, halo_request: HaloCommandRequest, uow: AbsUnitOfWork) -> AbsHaloResponse:
+    def run_command_class(cls, halo_request: HaloCommandRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
         handler = cls()
-        return handler.__run_command(halo_request, uow)
+        return handler.__run_command(halo_request, uowm.start(halo_request.method_id))
 
 class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
     #def set_bian_business_event(self,bian_request, action_term):
@@ -636,20 +638,22 @@ class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
         return self.process_bian_request(bian_request)
 
     @classmethod
-    def run_event_class(cls, halo_request: HaloEventRequest, uow: AbsUnitOfWork) -> AbsHaloResponse:
+    def run_event_class(cls, halo_request: HaloEventRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
         handler = cls()
-        return handler.__run_event(halo_request, uow)
+        return handler.__run_event(halo_request, uowm.start(halo_request.method_id))
 
 class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
 
     def __run_query(self, bian_request: HaloQueryRequest,uow:AbsUnitOfWork):
         self.uow = uow
-        return self.process_bian_request(bian_request)
+        ret:AbsHaloResponse = self.process_bian_request(bian_request)
+        bian_request.uow = uow
+        return ret
 
     @classmethod
-    def run_query_class(cls, halo_request: HaloQueryRequest, uow: AbsUnitOfWork) -> AbsHaloResponse:
+    def run_query_class(cls, halo_request: HaloQueryRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
         handler = cls()
-        return handler.__run_query(halo_request, uow)
+        return handler.__run_query(halo_request, uowm.start(halo_request.method_id))
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers

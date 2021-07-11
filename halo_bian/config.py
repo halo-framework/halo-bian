@@ -371,10 +371,20 @@ class Config(object):
     # with open(file_path) as f1:
     #    SAGA_SCHEMA = json.load(f1)
 
-    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL', default="REPEATABLE READ")
+    # uow setting
+    UOW_MAPPING = None
+    UOW_SETTINGS = ENV_NAME + '_uow_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', UOW_SETTINGS)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as fi:
+            UOW_MAPPING = json.load(fi)
+            print("api_config:" + str(UOW_MAPPING))
+    else:
+        print("no uow config file")
 
+    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL', default="REPEATABLE READ")
     START_ORM = env.bool('START_ORM', default=True)
-    UOW_CLASS = env.str('UOW_CLASS', default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
+    UOWM_CLASS = env.str('UOWM_CLASS', default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWorkManager")
     PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="halo_app.infra.impl.redis_event_publisher.Publisher")
 
     #UOW_CLASS = env.str('UOW_CLASS', default="tests.fake.FakeUnitOfWork")
@@ -515,6 +525,27 @@ class Config(object):
     CR_REFERENCE_ID_MASK = '^([\s\d]+)$'  # '././.{4} .{2}:.{2}'#"[0-9]{1,5}"#None
     BQ_REFERENCE_ID_MASK = "^([\s\d]+)$"  # None
 
+    DTO_ASSEMBLERS = None
+    DTO_ASSEMBLER_SETTINGS = ENV_NAME + '_dto_assembler_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', DTO_ASSEMBLER_SETTINGS)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as fi:
+            map = json.load(fi)
+            DTO_ASSEMBLERS = map
+    else:
+        print("no DTO assembler config files")
+
+    CMD_ASSEMBLERS = None
+    CMD_ASSEMBLER_SETTINGS = ENV_NAME + '_cmd_assembler_settings.json'
+    file_path = os.path.join(BASE_DIR, '..', 'env', 'config', CMD_ASSEMBLER_SETTINGS)
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as fi:
+            map = json.load(fi)
+            CMD_ASSEMBLERS = map
+    else:
+        print("no CMD assembler config files")
+
+
     BUSINESS_EVENT_MAP = None
     EVENT_SETTINGS = ENV_NAME + '_event_settings.json'
     file_dir = os.path.dirname(__file__)
@@ -564,11 +595,6 @@ class Config(object):
     SSM_TYPE = "AWS"
     SERVICE_INFO_CLASS = 'halo_bian.bian.bian.TheBianServiceInfo'
 
-    ISOLATION_LEVEL = env.str('ISOLATION_LEVEL', default="REPEATABLE READ")
-    START_ORM = env.bool('START_ORM', default=True)
-    UOW_CLASS = env.str('UOW_CLASS', default="halo_app.infra.sql_uow.SqlAlchemyUnitOfWork")
-    PUBLISHER_CLASS = env.str('PUBLISHER_CLASS', default="halo_app.infra.impl.redis_event_publisher.Publisher")
-
     host = os.environ.get('DB_HOST', 'localhost')
     port = 54321 if host == 'localhost' else 5432
     password = os.environ.get('DB_PASSWORD', 'abc123')
@@ -581,8 +607,8 @@ class Config(object):
     HANDLER_TARGET = "handler_target"
     METHOD_HEADERS = {}
     COMMAND_ONLY = False
-    ORM_METHOD = env.str('ORM_METHOD', default='halo_app.infra.orm.start_mappers')
-
+    ORM_METHOD = env.str('ORM_METHOD',default='halo_bian.bian.infra.sql_orm.start_mappers')
+    ORM_CLEAR = env.str('ORM_CLEAR', default='halo_bian.bian.infra.sql_orm.clear_mappers')
 
 print('== The base settings file has been loaded.')
 

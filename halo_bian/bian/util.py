@@ -1,15 +1,16 @@
 
 import logging
 
+from halo_app.app.cmd_assembler import CmdAssemblerFactory
 from halo_app.const import OPType
-from halo_app.app.command import HaloCommand
+from halo_app.app.command import DictHaloCommand
 from halo_app.app.request import AbsHaloRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.reflect import Reflect
 
 from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifierType
-from halo_bian.bian.app.command import BianCommand
+from halo_bian.bian.app.command import DictBianCommand
 from halo_bian.bian.domain.event import AbsBianEvent
 from halo_bian.bian.app.context import BianContext, BianCtxFactory
 from halo_bian.bian.exceptions import IllegalActionTermException, IllegalBQException, BehaviorQualifierNameException, \
@@ -17,7 +18,7 @@ from halo_bian.bian.exceptions import IllegalActionTermException, IllegalBQExcep
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest, BianQueryRequest
 from halo_app.settingsx import settingsx
 
-from halo_bian.bian.view.query import BianQuery
+from halo_bian.bian.app.query import BianQuery
 
 settings = settingsx()
 
@@ -63,11 +64,14 @@ class BianUtil(AbsBaseClass):
             body = vars["body"]
 
         if op_type == OPType.COMMAND:
-            bian_command = BianCommand(bian_context, method_id, vars,action_term)
-            request = BianCommandRequest(bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,body=body,sub_qualifiers=sub_qualifiers)
+            #bian_command = DictBianCommand(method_id, vars,action_term)
+            cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(method_id)
+            bian_command = cmd_assembler.write_cmd_for_method(method_id, vars,action_term)
+            bian_command.action_term = action_term
+            request = BianCommandRequest(bian_context,bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,body=body,sub_qualifiers=sub_qualifiers)
         else:
-            bian_query = BianQuery(bian_context, method_id, vars,action_term)
-            request = BianQueryRequest(bian_query,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,sub_qualifiers=sub_qualifiers)
+            bian_query = BianQuery(method_id, vars,action_term)
+            request = BianQueryRequest(bian_context,bian_query,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,sub_qualifiers=sub_qualifiers)
         return request
 
     @classmethod

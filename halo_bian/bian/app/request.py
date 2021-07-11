@@ -10,6 +10,8 @@ from halo_app.app.request import AbsHaloRequest, HaloCommandRequest, HaloEventRe
 from halo_app.app.response import AbsHaloResponse
 from halo_app.app.anlytx_filter import RequestFilter
 from halo_app.settingsx import settingsx
+
+from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.exceptions import LifeCycleInitStateException,LifeCycleNewStateException,NoServiceConfigurationMappingException
 
 settings = settingsx()
@@ -28,8 +30,8 @@ class BianCommandRequest(HaloCommandRequest):
     timeout = None
 
 
-    def __init__(self,bian_command,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,body=None,sub_qualifiers=None,timeout=1000):
-        super(BianCommandRequest,self).__init__(bian_command)
+    def __init__(self,bian_context,bian_command,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,body=None,sub_qualifiers=None,timeout=1000):
+        super(BianCommandRequest,self).__init__(bian_context,bian_command)
         self.action_term = action_term
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
@@ -60,8 +62,8 @@ class BianQueryRequest(HaloQueryRequest):
     timeout = None
 
 
-    def __init__(self,bian_query,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,sub_qualifiers=None,timeout=1000):
-        super(BianQueryRequest,self).__init__(bian_query)
+    def __init__(self,bian_context:BianContext,bian_query,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,sub_qualifiers=None,timeout=1000):
+        super(BianQueryRequest,self).__init__(bian_context,bian_query)
         self.action_term = action_term
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id

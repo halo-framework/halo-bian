@@ -1,9 +1,10 @@
 from __future__ import print_function
 
-from typing import Tuple
+from typing import Tuple, Dict
 
 from faker import Faker
 from flask import Flask, request
+from halo_app.app.cmd_assembler import AbsCmdAssembler
 from halo_app.app.notification import Notification
 from halo_app.app.request import HaloQueryRequest
 from halo_app.app.result import Result
@@ -14,7 +15,8 @@ from halo_app.entrypoints import client_util
 from halo_app.entrypoints.client_type import ClientType
 #from tests.fake import FakeBoundary, FakePublisher
 from halo_app.infra.mail import AbsMailService
-from halo_app.infra.sql_uow import SqlAlchemyUnitOfWork
+from halo_app.infra.sql_repository import SqlAlchemyRepository
+from halo_app.infra.sql_uow import SqlAlchemyUnitOfWorkManager, SqlAlchemyUnitOfWork
 from requests.auth import *
 import json
 from nose.tools import eq_
@@ -22,8 +24,11 @@ import unittest
 import pytest
 import os
 from halo_app.const import LOC
+
+from halo_bian.bian.app.command import AbsBianCommand
 from halo_bian.bian.app.context import BianContext
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest
+from halo_bian.bian.domain.model import CurrentAccount
 from halo_bian.bian.util import BianUtil
 from halo_bian.bian.app.handler import AbsBianCommandHandler, ActivationAbsBianMixin, ConfigurationAbsBianMixin, \
     FeedbackAbsBianMixin, AbsBianEventHandler, AbsBianQueryHandler
@@ -37,7 +42,7 @@ from halo_app.app.utilx import Util
 from halo_app.app.business_event import FoiBusinessEvent, SagaBusinessEvent
 from halo_app.ssm import set_app_param_config, set_host_param_config
 from halo_app.app.globals import load_global_data
-from halo_app.app.boundary import IBoundaryService, BoundaryService
+from halo_app.app.bus import IBus, Bus
 from halo_app.base_util import BaseUtil
 from halo_app.sys_util import SysUtil
 from http import HTTPStatus
@@ -70,6 +75,15 @@ class BankingProduct(GenericArtifact):
 class CAControlRecord(BankingProduct):
     pass
 
+
+class BaseCmdAssembler(AbsCmdAssembler):
+    def get_command_type(self,method_id:str)-> str:
+        return "halo_bian.bian.app.command.DictBianCommand"
+
+    def write_cmd_for_method(self, method_id: str, data: Dict,action_term:str, flag: str = None) -> AbsBianCommand:
+        command_type = self.get_command_type(method_id)
+        cmd_instance = Reflect.instantiate(command_type,AbsBianCommand,method_id,data,action_term)
+        return cmd_instance
 
 class CAContext(BianContext):
     TESTER = "Tester"
@@ -125,12 +139,32 @@ class Tst4Api(AbsRestApi):
     name = 'Tst4'
 
 
+class CurrentAccountRepository(SqlAlchemyRepository):
+    def get_type(self) ->type:
+        return CurrentAccount
+
+class ExCurrentAccountRepository(SqlAlchemyRepository):
+    def get_type(self) ->type:
+        return CurrentAccount
+
+class CurrentAccountUow(SqlAlchemyUnitOfWork):
+    def init_repository(self):
+        return CurrentAccountRepository(self.session)
+
+class ExCurrentAccountUow(CurrentAccountUow):
+
+    exRepository:AbsRepository = None
+
+    def __enter__(self):
+        self.exRepositoryrepository = ExCurrentAccountRepository(self.session)
+        return super().__enter__()
+
+
 class A0(AbsBianCommandHandler):  # the basic
     bian_action = ActionTerms.REQUEST
 
     def __init__(self):
         super(A0,self).__init__()
-        self.repository = AbsRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
@@ -139,7 +173,7 @@ class A0(AbsBianCommandHandler):  # the basic
             var_name =  'cr_reference_id'
             item = None
             if var_name in bian_command_request.command.vars:
-                item = self.repository.load(bian_command_request.command.vars[var_name])
+                item = uow.repository.get(bian_command_request.command.vars[var_name])
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
@@ -266,13 +300,12 @@ class A3(AbsBianCommandHandler):  # the foi
 
     def __init__(self):
         super(A3,self).__init__()
-        self.repository = AbsRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
     def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            item = self.repository.load(bian_command_request.cr_reference_id)
+            item = uow.repository.get(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             api1 = ApiMngr.get_api_instance("Cnn", bian_command_request.context)
@@ -435,13 +468,12 @@ class A7(AbsBianCommandHandler):  # the foi
 
     def __init__(self):
         super(A7,self).__init__()
-        self.repository = AbsRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
     def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            item = self.repository.load(bian_command_request.cr_reference_id)
+            item = uow.repository.load(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             api1 = ApiMngr.get_api_instance("Cnn", bian_command_request.context)
@@ -472,15 +504,14 @@ class A7(AbsBianCommandHandler):  # the foi
 class A8(AbsBianEventHandler):
     def __init__(self):
         super(A8, self).__init__()
-        self.repository = AbsRepository()
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
-    def run(self, bian_query_request: BianEventRequest) -> dict:
+    def handle(self, bian_event_request: BianEventRequest, uow: AbsUnitOfWork)->Result:
         var_name = 'cr_reference_id'
         item = None
-        if var_name in bian_query_request.event.vars:
-            item = self.repository.load(bian_query_request.event.vars[var_name])
+        if var_name in bian_event_request.event.vars:
+            item = uow.repository.load(bian_event_request.event.vars[var_name])
         entity = self.domain_service.validate(item)
         self.infra_service.send(entity)
         return {"1": {"a": "b"}}
@@ -495,15 +526,15 @@ class A9(AbsBianQueryHandler):
         return "select 1",{}
 
 
-class X1(BoundaryService,ActivationAbsBianMixin):
+class X1(Bus,ActivationAbsBianMixin):
     pass
 
 
-class X2(BoundaryService,ConfigurationAbsBianMixin):
+class X2(Bus,ConfigurationAbsBianMixin):
     pass
 
 
-class X3(BoundaryService,FeedbackAbsBianMixin):
+class X3(Bus,FeedbackAbsBianMixin):
     def persist_feedback_request(self, bian_request, servicing_session_id, cr_id, bq_id):
         pass
 
@@ -515,7 +546,7 @@ class BianDbMixin(AbsBianDbMixin):
     pass
 
 
-class FakeBoundry(BoundaryService):
+class FakeBoundry(Bus):
     def fake_process(self,event):
         super(FakeBoundry,self)._process_event(event)
 
@@ -534,7 +565,7 @@ def sqlite_boundary(sqlite_session_factory):
             return boundary
         boundary = bootstrap.bootstrap(
             start_orm=True,
-            uow=SqlAlchemyUnitOfWork(sqlite_session_factory),
+            uowm=SqlAlchemyUnitOfWorkManager(sqlite_session_factory),
             publish=FakePublisher()
         )
         return boundary
@@ -650,40 +681,46 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.code == HTTPStatus.OK
 
     def test_1_do_handle(self):
+        os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context('/?cr_reference_id=123'):
-            #bian_context = client_util.get_halo_context(request.headers)
-            bian_context = client_util.get_halo_context(request.headers)
-            method_id = "z0"
+            bian_context = client_util.get_halo_context(request.headers,request)
             action_term = ActionTerms.REQUEST
-            bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
-            ret = self.boundary.execute(bian_request)
-            assert ret.success == True
+            bian_request = BianUtil.create_bian_request(bian_context, "z0", request.args,action_term)
+            bian_response = self.boundary.execute(bian_request)
+            response = SysUtil.process_response_for_client(bian_response)
+            if response.error:
+                print(json.dumps(response.error, indent=4, sort_keys=True))
+            assert response.success == True
 
     def test_1a_do_query(self):
         with app.test_request_context('/?cr_reference_id=123'):
-            bian_context = client_util.get_halo_context(request.headers)
+            bian_context = client_util.get_halo_context(request.headers,request)
             method_id = "q1"
             action_term = ActionTerms.RETRIEVE
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
-            ret = self.boundary.execute(bian_request)
-            response = SysUtil.process_response_for_client(ret, request.method)
-            d = ret.__dict__
+            bian_response = self.boundary.execute(bian_request)
+            response = SysUtil.process_response_for_client(bian_response)
+            if response.error:
+                print(json.dumps(response.error, indent=4, sort_keys=True))
+            d = response.__dict__
             for i in d:
                 print(str(i)+":"+str(d[i]))
-            assert ret.success == True
+            assert response.success == True
 
     def test_1b_do_query_error(self):
         with app.test_request_context('/?cr_reference_id=123'):
-            bian_context = client_util.get_halo_context(request.headers)
-            method_id = "q1"
+            bian_context = client_util.get_halo_context(request.headers,request)
+            method_id = "q2"
             action_term = ActionTerms.RETRIEVE
             bian_request = BianUtil.create_bian_request(bian_context, method_id, request.args,action_term)
-            ret = self.boundary.execute(bian_request)
-            response = SysUtil.process_response_for_client(ret, request.method)
-            d = ret.__dict__
+            bian_response = self.boundary.execute(bian_request)
+            response = SysUtil.process_response_for_client(bian_response)
+            if response.error:
+                print(json.dumps(response.error, indent=4, sort_keys=True))
+            d = response.__dict__
             for i in d:
                 print(str(i)+":"+str(d[i]))
-            assert ret.success == True
+            assert bian_response.success == False
 
     def test_2_do_api(self):
         with app.test_request_context('/?name=Peter'):
@@ -711,12 +748,15 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_4_handle_bian_soap(self):
         with app.test_request_context('/?name=Peter'):
-            bian_context = client_util.get_halo_context(request.headers)
+            bian_context = client_util.get_halo_context(request.headers,request)
             method_id = "z3"
             action_term = ActionTerms.REQUEST
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,method_id, {"cr_reference_id": "123"},action_term)
                 bian_response = self.boundary.execute(bian_request)
+                response = SysUtil.process_response_for_client(bian_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
                 assert bian_response.success == True
                 eq_(bian_response.payload["2"],'Your input parameters are start and end')
             except Exception as e:
@@ -841,7 +881,7 @@ class TestUserDetailTestCase(unittest.TestCase):
                 filters = filter_schema.load(collection_filter_json, many=many)
                 if not many:
                     filters = [filters]
-                from halo_app.view.query_filters import Filter
+                from halo_app.app.query_filters import Filter
                 arr = []
                 for f in filters:
                     filter = Filter(f.field, f.OP, f.value)
