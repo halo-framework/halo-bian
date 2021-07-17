@@ -55,8 +55,8 @@ class FakeConsumer(AbsConsumer):
         super(FakeConsumer, self).__init__()
 
 
-class FakeBoundary(Bus):
+class FakeBus(Bus):
     def fake_process(self,event):
-        super(FakeBoundary,self)._process_event(event)
+        super(FakeBus,self)._process_event(event)
 
 

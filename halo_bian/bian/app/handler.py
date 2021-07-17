@@ -69,8 +69,8 @@ class AbsBianHandler(AbsBaseHandler):
     servicing_session = None
 
 
-    def __init__(self):
-        super(AbsBianHandler, self).__init__()
+    def __init__(self,usecase_id):
+        super(AbsBianHandler, self).__init__(usecase_id)
         logger.debug("in __init__ ")
         if settings.SERVICE_DOMAIN:
             self.service_domain = settings.SERVICE_DOMAIN
@@ -182,7 +182,7 @@ class AbsBianHandler(AbsBaseHandler):
             if bian_request.sd_reference_id:
                 if self.sd_reference_id_mask:
                     if not re.match(self.sd_reference_id_mask,bian_request.sd_reference_id):
-                        notification.addError("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
+                        notification.addError("sd_reference_id","sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
                         #raise BianException("sd_reference_id value is not of valid format:"+bian_request.sd_reference_id)
                 if settings.SERVICING_SESSION:
                     if self.servicing_session:
@@ -197,7 +197,7 @@ class AbsBianHandler(AbsBaseHandler):
             if bian_request.cr_reference_id and self.cr_reference_id_mask:
                 if re.match(self.cr_reference_id_mask,bian_request.cr_reference_id):
                     return
-                notification.addError("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
+                notification.addError("cr_reference_id","cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
                 #raise BianException("cr_reference_id value is not of valid format:"+bian_request.cr_reference_id)
 
     def validate_bq_reference_id(self, bian_request,notification):
@@ -206,7 +206,7 @@ class AbsBianHandler(AbsBaseHandler):
             if bian_request.bq_reference_id and self.bq_reference_id_mask:
                 if re.match(self.bq_reference_id_mask,bian_request.bq_reference_id):
                     return
-                notification.addError("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
+                notification.addError("bq_reference_id","bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
                 #raise BianException("bq_reference_id value is not of valid format:"+bian_request.bq_reference_id)
 
     def validate_service_state(self,bian_request):
@@ -328,9 +328,9 @@ class AbsBianHandler(AbsBaseHandler):
 
     def validate_match(self, bian_request,notification):
         if not bian_request.action_term:
-            notification.addError("request action:"+str(bian_request.action_term)+" not defined")
+            notification.addError("action_term","request action:"+str(bian_request.action_term)+" not defined")
         if bian_request.action_term != self.bian_action:
-            notification.addError("request action:"+str(bian_request.action_term)+" not matching handler action:"+str(self.bian_action))
+            notification.addError("action_term_mismatch","request action:"+str(bian_request.action_term)+" not matching handler action:"+str(self.bian_action))
             #raise BianMethodMisMatch("request action:"+str(bian_request.action_term)+" -> handler action:"+str(self.bian_action))
         #if bian_request.method_id != self.method_id:
         #    raise BianMethodMisMatch(
@@ -625,9 +625,9 @@ class AbsBianCommandHandler(AbsBianHandler,AbsCommandHandler):
         return ret
 
     @classmethod
-    def run_command_class(cls, halo_request: HaloCommandRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
-        handler = cls()
-        return handler.__run_command(halo_request, uowm.start(halo_request.method_id))
+    def run_command_class(cls, bian_request: BianCommandRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
+        handler = cls(bian_request.usecase_id)
+        return handler.__run_command(bian_request, uowm.start(bian_request.usecase_id))
 
 class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
     #def set_bian_business_event(self,bian_request, action_term):
@@ -638,9 +638,9 @@ class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
         return self.process_bian_request(bian_request)
 
     @classmethod
-    def run_event_class(cls, halo_request: HaloEventRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
-        handler = cls()
-        return handler.__run_event(halo_request, uowm.start(halo_request.method_id))
+    def run_event_class(cls, bian_request: HaloEventRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
+        handler = cls(bian_request.usecase_id)
+        return handler.__run_event(bian_request, uowm.start(bian_request.method_id))
 
 class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
 
@@ -651,9 +651,9 @@ class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
         return ret
 
     @classmethod
-    def run_query_class(cls, halo_request: HaloQueryRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
-        handler = cls()
-        return handler.__run_query(halo_request, uowm.start(halo_request.method_id))
+    def run_query_class(cls, bian_request: HaloQueryRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
+        handler = cls(bian_request.usecase_id)
+        return handler.__run_query(bian_request, uowm.start(bian_request.usecase_id))
 
 #@TODO externelize all strings
 #@todo add log print of the method name and add x-header with method name to headers

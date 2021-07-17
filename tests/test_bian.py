@@ -5,6 +5,7 @@ from typing import Tuple, Dict
 from faker import Faker
 from flask import Flask, request
 from halo_app.app.cmd_assembler import AbsCmdAssembler
+from halo_app.app.event import AbsHaloEvent
 from halo_app.app.notification import Notification
 from halo_app.app.request import HaloQueryRequest
 from halo_app.app.result import Result
@@ -46,6 +47,8 @@ from halo_app.app.bus import IBus, Bus
 from halo_app.base_util import BaseUtil
 from halo_app.sys_util import SysUtil
 from http import HTTPStatus
+
+from tests.fake import FakeBus
 
 faker = Faker()
 app = Flask(__name__)
@@ -159,12 +162,18 @@ class ExCurrentAccountUow(CurrentAccountUow):
         self.exRepositoryrepository = ExCurrentAccountRepository(self.session)
         return super().__enter__()
 
+class TestBianEvent(AbsHaloEvent):
+    xid:str = None
+
+    def __init__(self, mid, xid:str):
+        super(TestBianEvent,self).__init__(mid)
+        self.xid = xid
 
 class A0(AbsBianCommandHandler):  # the basic
     bian_action = ActionTerms.REQUEST
 
-    def __init__(self):
-        super(A0,self).__init__()
+    def __init__(self,usecase_id):
+        super(A0,self).__init__(usecase_id)
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
@@ -219,7 +228,7 @@ class A0(AbsBianCommandHandler):  # the basic
 class A1(A0):
     def handle(self, bian_command_request: BianCommandRequest, uow: AbsUnitOfWork) -> Result:
         with uow:
-            item = self.repository.load(bian_command_request.cr_reference_id)
+            item = uow.repository.get(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             uow.commit()
@@ -233,7 +242,7 @@ class A2(A1):  # customized
             if "name" in bian_request.command.vars:
                 name = bian_request.command.vars['name']
                 if not name:
-                    notification.addError("missing value for query var name")
+                    notification.addError("missing_query_var","missing value for query var name")
         return notification
 
     def set_api_headers(self, bian_request, api, seq=None, dict=None):
@@ -298,8 +307,8 @@ class A3(AbsBianCommandHandler):  # the foi
                'count': 'count'}}
     filter_chars = {None: ['=', '>']}
 
-    def __init__(self):
-        super(A3,self).__init__()
+    def __init__(self,usecase_id):
+        super(A3,self).__init__(usecase_id)
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
@@ -466,14 +475,14 @@ class A6(A5):
 class A7(AbsBianCommandHandler):  # the foi
     bian_action = ActionTerms.INITIATE
 
-    def __init__(self):
-        super(A7,self).__init__()
+    def __init__(self,usecase_id):
+        super(A7,self).__init__(usecase_id)
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
     def handle(self,bian_command_request:BianCommandRequest,uow:AbsUnitOfWork) ->Result:
         with uow:
-            item = uow.repository.load(bian_command_request.cr_reference_id)
+            item = uow.repository.get(bian_command_request.cr_reference_id)
             entity = self.domain_service.validate(item)
             self.infra_service.send(entity)
             api1 = ApiMngr.get_api_instance("Cnn", bian_command_request.context)
@@ -486,7 +495,7 @@ class A7(AbsBianCommandHandler):  # the foi
             ret2 = api2.run(100,data)
             uow.commit()
 
-        return {"1":ret1.content,"2":ret2.content}
+        return Result.ok({"1":ret1.content,"2":ret2.content})
 
     def set_back_api(self, bian_request, foi=None):
         print("in set_back_api ")
@@ -502,8 +511,8 @@ class A7(AbsBianCommandHandler):  # the foi
         return {"name": json}
 
 class A8(AbsBianEventHandler):
-    def __init__(self):
-        super(A8, self).__init__()
+    def __init__(self,usecase_id):
+        super(A8, self).__init__(usecase_id)
         self.domain_service = AbsDomainService()
         self.infra_service = AbsMailService()
 
@@ -511,7 +520,7 @@ class A8(AbsBianEventHandler):
         var_name = 'cr_reference_id'
         item = None
         if var_name in bian_event_request.event.vars:
-            item = uow.repository.load(bian_event_request.event.vars[var_name])
+            item = uow.repository.get(bian_event_request.event.vars[var_name])
         entity = self.domain_service.validate(item)
         self.infra_service.send(entity)
         return {"1": {"a": "b"}}
@@ -519,8 +528,8 @@ class A8(AbsBianEventHandler):
 class A9(AbsBianQueryHandler):
     bian_action = ActionTerms.RETRIEVE
 
-    def __init__(self):
-        super(A9, self).__init__()
+    def __init__(self,usecase_id):
+        super(A9, self).__init__(usecase_id)
 
     def set_query_data(self,halo_query_request: HaloQueryRequest)->Tuple[str,dict]:
         return "select 1",{}
@@ -594,13 +603,13 @@ class TestUserDetailTestCase(unittest.TestCase):
             bootstrap.COMMAND_HANDLERS["z0"] = A0.run_command_class
             bootstrap.COMMAND_HANDLERS["z1"] = A1.run_command_class
             bootstrap.COMMAND_HANDLERS["z1a"] = A1.run_command_class
-            # bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
             bootstrap.COMMAND_HANDLERS["z3"] = A3.run_command_class
             bootstrap.COMMAND_HANDLERS["z7"] = A7.run_command_class
             bootstrap.COMMAND_HANDLERS["z2"] = A2.run_command_class
             bootstrap.COMMAND_HANDLERS["z2a"] = A2.run_command_class
             bootstrap.COMMAND_HANDLERS["z2b"] = A2.run_command_class
-            # bootstrap.EVENT_HANDLERS[TestHaloEvent] = [A9.run_event_class]
+            #bootstrap.COMMAND_HANDLERS["z8"] = A8.run_command_class
+            bootstrap.EVENT_HANDLERS[TestBianEvent] = [A8.run_event_class]
             bootstrap.QUERY_HANDLERS["q1"] = A9.run_query_class
 
 
@@ -765,27 +774,33 @@ class TestUserDetailTestCase(unittest.TestCase):
 
     def test_5_api(self):
         with app.test_request_context(method='POST', path='/tst'):
-            bian_context = client_util.get_halo_context(request.headers)
+            bian_context = client_util.get_halo_context(request.headers,request)
             method_id = "z2"
             action_term = ActionTerms.REQUEST
             try:
                 bian_request = BianUtil.create_bian_request(bian_context,method_id,{"name":"x"},action_term)
-                ret = self.boundary.execute(bian_request)
-                assert ret.success == True
+                bian_response = self.boundary.execute(bian_request)
+                response = SysUtil.process_response_for_client(bian_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                assert bian_response.success == True
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
 
     def test_6_seq(self):
         with app.test_request_context(method='POST', path='/'):
-            bian_context = client_util.get_halo_context(request.headers)
+            bian_context = client_util.get_halo_context(request.headers,request)
             method_id = "z2a"
             action_term = ActionTerms.EXECUTE
             try:
                 bian_request = BianUtil.create_bian_request(bian_context, method_id, {"name":"c"}, action_term)
-                ret = self.boundary.execute(bian_request)
-                assert ret.success == True
-                assert ret.payload['name'] == 'test'
+                bian_response = self.boundary.execute(bian_request)
+                response = SysUtil.process_response_for_client(bian_response)
+                if response.error:
+                    print(json.dumps(response.error, indent=4, sort_keys=True))
+                assert response.success == True
+                assert response.payload == {'1': {'a': 'd'}}
             except Exception as e:
                 print(str(e) + " " + str(type(e)))
                 assert type(e).__name__ == "IllegalActionTermError"
@@ -800,23 +815,47 @@ class TestUserDetailTestCase(unittest.TestCase):
             assert ret.success == True
 
     def test_8_soap(self):
+        os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context(method='PATCH', path='/?name=Peter'):
-            bian_context = client_util.get_halo_context(request.headers)
+            bian_context = client_util.get_halo_context(request.headers,request)
             action_term = ActionTerms.INITIATE
             method_id = "z7"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
-            ret = self.boundary.execute(bian_request)
-            assert ret.success == True
-            assert ret.payload["name"] == 'Your input parameters are start and end'
+            bian_response = self.boundary.execute(bian_request)
+            response = SysUtil.process_response_for_client(bian_response)
+            if response.error:
+                print(json.dumps(response.error, indent=4, sort_keys=True))
+            assert response.success == True
+            assert response.payload["2"] == 'Your input parameters are start and end'
+
+    def test_10_event(self):
+        halo_context = client_util.get_halo_context({},client_type=ClientType.cli)
+        halo_event = TestBianEvent( "z9","12")
+        halo_request = SysUtil.create_event_request(halo_context,halo_event)
+        fake_boundary = FakeBus(self.boundary.uowm,self.boundary.publisher,self.boundary.event_handlers,self.boundary.command_handlers,self.boundary.query_handlers)
+        fake_boundary.fake_process(halo_request)
+
+    def test_10a_event(self):
+        with app.test_request_context(method='GET', path='/?a=b'):
+            halo_context = client_util.get_halo_context(request.headers,request)
+            halo_event = TestBianEvent( "z9", "12")
+            halo_request = SysUtil.create_event_request(halo_context,halo_event)
+            fake_boundary = FakeBus(self.boundary.uowm,self.boundary.publisher, self.boundary.event_handlers, self.boundary.command_handlers,
+                                        self.boundary.query_handlers)
+            fake_boundary.fake_process(halo_request)
 
     def test_90_put_request_returns_a_given_string(self):
+        os.environ['DEBUG_LOG'] = 'true'
         with app.test_request_context(method='PUT', path='/tst?name=news'):
-            bian_context = client_util.get_halo_context(request.headers)
+            bian_context = client_util.get_halo_context(request.headers,request)
             action_term = ActionTerms.INITIATE
             method_id = "z8"
             bian_request = BianUtil.create_bian_request(bian_context,method_id,request.args,action_term)
-            ret = self.boundary.execute(bian_request)
-            assert ret.success == True
+            bian_response = self.boundary.execute(bian_request)
+            response = SysUtil.process_response_for_client(bian_response)
+            if response.error:
+                print(json.dumps(response.error, indent=4, sort_keys=True))
+            assert response.success == True
 
     def test_91_delete_request_returns_a_given_string(self):
         with app.test_request_context(method='DELETE', path='/tst'):

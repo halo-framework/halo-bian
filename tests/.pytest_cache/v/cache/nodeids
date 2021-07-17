@@ -1,6 +1,8 @@
 [
   "test_bian.py::TestUserDetailTestCase::test_00_get_request_returns_a_given_string",
   "test_bian.py::TestUserDetailTestCase::test_0_get_request_returns_a_given_string",
+  "test_bian.py::TestUserDetailTestCase::test_10_event",
+  "test_bian.py::TestUserDetailTestCase::test_10a_event",
   "test_bian.py::TestUserDetailTestCase::test_1_do_handle",
   "test_bian.py::TestUserDetailTestCase::test_1a_do_query",
   "test_bian.py::TestUserDetailTestCase::test_1b_do_query_error",
