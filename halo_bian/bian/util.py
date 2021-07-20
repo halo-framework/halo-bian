@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 class BianUtil(AbsBaseClass):
 
     @classmethod
-    def create_bian_request(cls,bian_context:BianContext, method_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.COMMAND) -> AbsHaloRequest:
+    def create_bian_request(cls,bian_context:BianContext, usecase_id:str, vars:dict,action: ActionTerms=None,op_type:OPType=OPType.COMMAND) -> AbsHaloRequest:
         logger.debug("in bian_validate_req " + str(action) + " vars=" + str(vars))
         if action:
             action_term = action
         else:
-            action_term = cls.set_action(method_id)
+            action_term = cls.set_action(usecase_id)
         if action_term not in ActionTerms.ops:
             raise IllegalActionTermException(action_term)
         if action_term == ActionTerms.RETRIEVE:
@@ -65,12 +65,12 @@ class BianUtil(AbsBaseClass):
 
         if op_type == OPType.COMMAND:
             #bian_command = DictBianCommand(method_id, vars,action_term)
-            cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(method_id)
-            bian_command = cmd_assembler.write_cmd_for_method(method_id, vars,action_term)
+            cmd_assembler = CmdAssemblerFactory.get_assembler_by_method_id(usecase_id)
+            bian_command = cmd_assembler.write_cmd_for_method(usecase_id, vars,action_term)
             bian_command.action_term = action_term
             request = BianCommandRequest(bian_context,bian_command,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,body=body,sub_qualifiers=sub_qualifiers)
         else:
-            bian_query = BianQuery(method_id, vars,action_term)
+            bian_query = BianQuery(usecase_id, vars,action_term)
             request = BianQueryRequest(bian_context,bian_query,action_term,sd_reference_id=sd_reference_id, cr_reference_id=cr_reference_id, bq_reference_id=bq_reference_id, behavior_qualifier=behavior_qualifier,collection_filter=collection_filter,sub_qualifiers=sub_qualifiers)
         return request
 

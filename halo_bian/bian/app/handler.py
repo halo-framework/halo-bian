@@ -640,7 +640,7 @@ class AbsBianEventHandler(AbsBianHandler,AbsEventHandler):
     @classmethod
     def run_event_class(cls, bian_request: HaloEventRequest, uowm: AbsUnitOfWorkManager) -> AbsHaloResponse:
         handler = cls(bian_request.usecase_id)
-        return handler.__run_event(bian_request, uowm.start(bian_request.method_id))
+        return handler.__run_event(bian_request, uowm.start(bian_request.usecase_id))
 
 class AbsBianQueryHandler(AbsBianHandler,AbsQueryHandler):
 
