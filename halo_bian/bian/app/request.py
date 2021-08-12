@@ -58,11 +58,12 @@ class BianQueryRequest(HaloQueryRequest):
     bq_reference_id = None
     behavior_qualifier = None
     collection_filter = None
+    queryparams = None
     sub_qualifiers = None
     timeout = None
 
 
-    def __init__(self,bian_context:BianContext,bian_query,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,sub_qualifiers=None,timeout=1000):
+    def __init__(self,bian_context:BianContext,bian_query,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,queryparams=None,sub_qualifiers=None,timeout=1000):
         super(BianQueryRequest,self).__init__(bian_context,bian_query)
         self.action_term = action_term
         self.sd_reference_id = sd_reference_id
@@ -70,6 +71,7 @@ class BianQueryRequest(HaloQueryRequest):
         self.behavior_qualifier = behavior_qualifier
         self.bq_reference_id = bq_reference_id
         self.collection_filter = collection_filter
+        self.queryparams = queryparams
         self.sub_qualifiers = sub_qualifiers
         self.timeout = timeout
 
@@ -88,20 +90,18 @@ class BianEventRequest(HaloEventRequest):
     cr_reference_id = None
     bq_reference_id = None
     behavior_qualifier = None
-    collection_filter = None
     body = None
     sub_qualifiers = None
     timeout = None
 
 
-    def __init__(self,bian_command,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,collection_filter=None,body=None,sub_qualifiers=None,timeout=1000):
+    def __init__(self,bian_command,action_term, sd_reference_id=None,cr_reference_id=None, bq_reference_id=None, behavior_qualifier=None,body=None,sub_qualifiers=None,timeout=1000):
         super(BianEventRequest,self).__init__(bian_command)
         self.action_term = action_term
         self.sd_reference_id = sd_reference_id
         self.cr_reference_id = cr_reference_id
         self.behavior_qualifier = behavior_qualifier
         self.bq_reference_id = bq_reference_id
-        self.collection_filter = collection_filter
         self.body = body
         self.sub_qualifiers = sub_qualifiers
         self.timeout = timeout

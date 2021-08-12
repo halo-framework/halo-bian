@@ -1,12 +1,34 @@
-connexion >= 2.6.0
 
-pytest~=6.1.2 # needed for python 2.7+3.4
-#pytest-cov>=2.8.1
-#pytest-randomly==1.2.3 # needed for python 2.7+3.4
-#Flask-Testing==0.8.0
-flask_sqlalchemy
-flask-filter
+# Testing
+pytest==3.7.4
+WebTest==2.0.30
+factory-boy==2.11.1
+coverage
+pylint
+pytest-icdiff
+flask-testing
+tenacity
+
+# Lint and code style
+flake8==3.5.0
+flake8-blind-except==0.1.1
+flake8-debugger==3.1.0
+flake8-docstrings==1.3.1
+flake8-isort==2.5
+flake8-quotes==1.0.0
+isort==4.3.4
+pep8-naming==0.7.0
+
+nose==1.3.7
+nose-progressive==1.5.1
+wheel
+
+
 Faker==0.9.0
+halo_aws
+botocore
+boto3
+
+
 mock==2.0.0
 newrelic==3.2.0.91
-tenacity
