@@ -731,6 +731,24 @@ class TestUserDetailTestCase(unittest.TestCase):
                 print(str(i)+":"+str(d[i]))
             assert bian_response.success == False
 
+    def test_1c_do_vars(self):
+        with app.test_request_context('/queryparams=a'):
+            sd_reference_id = '1'
+            cr_reference_id = '2'
+            bq_reference_id = '3'
+            behavior_qualifier = 'abc'
+            queryparams = '{"field": "a", "op": "<", "value": 4}'
+            collection_filter = '{"field": "b", "op": "<", "value": 5}'
+            body = {}
+            varsx = BianUtil.get_bian_vars(vars())
+            assert varsx['sd_reference_id'] == '1'
+            assert varsx['cr_reference_id'] == '2'
+            assert varsx['bq_reference_id'] == '3'
+            assert varsx['behavior_qualifier'] == 'abc'
+            assert varsx['queryparams'].__len__() == 1
+            assert varsx['collection_filter'].__len__() == 1
+            assert varsx['body'] == {}
+
     def test_2_do_api(self):
         with app.test_request_context('/?name=Peter'):
             bian_context = client_util.get_halo_context(request.headers)

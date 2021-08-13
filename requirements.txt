@@ -1,4 +1,4 @@
-halo-app==0.10.91
+halo-app==0.10.92
 
 redis
 

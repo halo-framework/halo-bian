@@ -1,6 +1,7 @@
 
 import logging
-
+import json
+from flask_filter.schemas import FilterSchema
 from halo_app.app.cmd_assembler import CmdAssemblerFactory
 from halo_app.const import OPType
 from halo_app.app.command import DictHaloCommand
@@ -8,7 +9,6 @@ from halo_app.app.request import AbsHaloRequest
 from halo_app.classes import AbsBaseClass
 from halo_app.logs import log_json
 from halo_app.reflect import Reflect
-
 from halo_bian.bian.bian import ActionTerms, FunctionalPatterns, BehaviorQualifierType
 from halo_bian.bian.app.command import DictBianCommand
 from halo_bian.bian.domain.event import AbsBianEvent
@@ -17,8 +17,8 @@ from halo_bian.bian.exceptions import IllegalActionTermException, IllegalBQExcep
     FunctionalPatternNameException, BianRequestActionException, ActionTermFailException
 from halo_bian.bian.app.request import BianCommandRequest, BianEventRequest, BianQueryRequest
 from halo_app.settingsx import settingsx
-
 from halo_bian.bian.app.query import BianQuery
+from halo_app.app.query_filters import Filter
 
 settings = settingsx()
 
@@ -155,3 +155,58 @@ class BianUtil(AbsBaseClass):
                         if h in method_headers:
                             headers[h] = val
         return headers
+
+    @classmethod
+    def get_flask_filters(cls,collection_filter):
+        filter_schema = FilterSchema()
+        try:
+            collection_filter_json = json.loads(collection_filter)
+            if "field" in collection_filter_json:
+                many = False
+            else:
+                many = True
+            filters = filter_schema.load(collection_filter_json, many=many)
+            if not many:
+                filters = [filters]
+            return cls.get_app_filters(filters)
+        except Exception as e:  # {'_schema': ['Invalid input type.']}
+            logger.error("Encountered a request error in filter: " + str(e))
+            raise e
+
+    @classmethod
+    def get_app_filters(cls,collection_filters):
+        arr = []
+        for f in collection_filters:
+            filter = Filter(f.field, f.OP, f.value)
+            arr.append(filter)
+        return arr
+
+    @classmethod
+    def get_bian_vars(cls,vars):
+        varsx = {}
+        if 'collection_filter' in vars or 'queryparams' in vars:
+            try:
+                if 'collection_filter' in vars:
+                    item = vars['collection_filter']
+                    if item:
+                        collection_filter = cls.get_flask_filters(vars['collection_filter'])
+                        varsx['collection_filter'] = collection_filter
+                if 'queryparams' in vars:
+                    item = vars['queryparams']
+                    if item:
+                        queryparams = cls.get_flask_filters(vars['queryparams'])
+                        varsx['queryparams'] = queryparams
+            except Exception as e:
+                raise e
+
+        if 'sd_reference_id' in vars:
+            varsx['sd_reference_id'] = vars['sd_reference_id']
+        if 'cr_reference_id' in vars:
+            varsx['cr_reference_id'] = vars['cr_reference_id']
+        if 'bq_reference_id' in vars:
+            varsx['bq_reference_id'] = vars['bq_reference_id']
+        if 'behavior_qualifier' in vars:
+            varsx['behavior_qualifier'] = vars['behavior_qualifier']
+        if 'body' in vars:
+            varsx['body'] = vars['body']
+        return varsx
